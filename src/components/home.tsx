@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "@/components/layout/AuthLayout";
 import LoginForm from "./auth/LoginForm";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Home = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
 
   const handleLogin = async (values: {
     email: string;
@@ -14,6 +16,7 @@ const Home = () => {
     rememberMe?: boolean;
   }) => {
     setIsLoading(true);
+    
     setError("");
 
     try {
@@ -36,15 +39,10 @@ const Home = () => {
 
         console.log('login response', data);
 
-        const user = data.user;
-        const token = data.token;
+        const { token, user } = data;
 
-        localStorage.setItem("userRole", user.role);
-        localStorage.setItem('username', user.name);
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem('auth-token', token);
-
-        window.location.href = '/';
+        login(token, user);
+        
       } else {
         console.log(response.status, data.message);
         setError(data.message);
@@ -53,7 +51,7 @@ const Home = () => {
 
     } catch (err) {
       console.error("Login error:", err);
-      setError("Invalid credentials. Please try again.");
+      setError("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }

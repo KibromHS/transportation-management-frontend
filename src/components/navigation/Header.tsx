@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/popover";
 import { useTheme } from "@/components/ui/theme-provider";
 import { ThemeProvider } from "@/components/ui/theme-provider";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HeaderProps {
   title?: string;
@@ -47,19 +48,18 @@ const Header = ({
 }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   // const { theme, setTheme } = useTheme();
-
-  const userRole = localStorage.getItem('userRole');
-  const userName = localStorage.getItem('username');
-  const userAvatar = localStorage.getItem('');
+  const { user } = useAuth();
 
   // Get initials for avatar fallback
   const getInitials = () => {
-    return userName
+    return user.name
       .split(" ")
       .map((part) => part[0])
       .join("")
       .toUpperCase();
   };
+
+  const userAvatar = ''; // TODO: change later
 
 
   // Simple theme toggle component
@@ -227,7 +227,7 @@ const Header = ({
                 >
                   <Avatar className="h-8 w-8">
                     {userAvatar ? (
-                      <AvatarImage src={userAvatar} alt={userName} />
+                      <AvatarImage src={userAvatar} alt={user.name} />
                     ) : (
                       <AvatarFallback>{getInitials()}</AvatarFallback>
                     )}
@@ -238,10 +238,10 @@ const Header = ({
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {userName}
+                      {user.name}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {userRole}
+                      {user.role}
                     </p>
                   </div>
                 </DropdownMenuLabel>

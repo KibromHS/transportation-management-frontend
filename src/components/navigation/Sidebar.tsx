@@ -58,6 +58,7 @@ import {
   Truck as TruckDelivery,
 } from "lucide-react";
 import { useNavigate } from "react-router";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   userRole?: string;
@@ -72,9 +73,7 @@ const Sidebar = ({
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const [activeItem, setActiveItem] = useState<string>("");
-  const navigate = useNavigate();
-
-  const userRole = localStorage.getItem('userRole');
+  const { user, logout } = useAuth();
 
   // Set active item based on current URL
   useEffect(() => {
@@ -127,8 +126,8 @@ const Sidebar = ({
       });
       const data = await response.json();
       
-      localStorage.clear();
-      window.location.href = '/';
+      logout();
+
       console.log('logout response:', data);
     } catch (e) {
       console.error('Couldn\'t logout:', e);
@@ -140,7 +139,7 @@ const Sidebar = ({
     const commonItems = [
       {
         title: "Dashboard",
-        icon: <LayoutDashboard className="h-5 w-5" />,
+        icon: <LayoutDashboard className="h-5 w-5 text-white" />,
         href: "/",
       },
       {
@@ -361,7 +360,7 @@ const Sidebar = ({
 
     // If the role doesn't exist in our mapping, default to Dispatcher
     
-    const role = roleSpecificItems[userRole] ? userRole : "Dispatcher";
+    const role = roleSpecificItems[user.role] ? user.role : "Dispatcher";
     return [...commonItems, ...roleSpecificItems[role]];
   };
 
@@ -536,9 +535,9 @@ const Sidebar = ({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">
-                  {localStorage.getItem('username')}
+                  {user.name}
                 </p>
-                <p className="text-xs text-slate-400 truncate">{userRole}</p>
+                <p className="text-xs text-slate-400 truncate">{user.role}</p>
               </div>
             </div>
           )}

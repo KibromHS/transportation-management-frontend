@@ -46,7 +46,6 @@ const DashboardLayout = ({
         )}
       >
         <Sidebar
-          userRole={userRole}
           collapsed={sidebarCollapsed}
           onToggleCollapse={handleSidebarToggle}
         />

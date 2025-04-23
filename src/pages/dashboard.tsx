@@ -8,6 +8,7 @@ import ReviewerDashboard from "@/components/dashboard/ReviewerDashboard";
 import ConnectDashboard from "@/components/dashboard/ConnectDashboard";
 import DriverDashboard from "@/components/dashboard/DriverDashboard";
 import { ThemeProvider } from "@/components/ui/theme-provider";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DashboardPageProps {
   userRole?: string;
@@ -17,11 +18,11 @@ interface DashboardPageProps {
 
 const DashboardPage: React.FC<DashboardPageProps> = () => {
   // State to track the current role (could be changed via role switcher in a real app)
-  const userRole = localStorage.getItem('userRole');
-  const userName = localStorage.getItem('username');
-  const userAvatar = '';
+  const { user } = useAuth();
 
-  const [currentRole, setCurrentRole] = useState(userRole);
+  const userAvatar = ''; // TODO: change later
+
+  const [currentRole, setCurrentRole] = useState(user.role);
 
   // Get page title based on role
   const getPageTitle = () => {
@@ -80,7 +81,7 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
     <ThemeProvider defaultTheme="system" enableSystem>
       <DashboardLayout
         userRole={currentRole}
-        userName={userName}
+        userName={user.name}
         userAvatar={userAvatar}
         pageTitle={getPageTitle()}
       >

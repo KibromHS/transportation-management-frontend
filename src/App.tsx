@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import { useRoutes, Routes, Route, Navigate, BrowserRouter } from "react-router-dom";
 import Home from "./components/home";
 import routes from "tempo-routes";
+import { useAuth } from "./contexts/AuthContext";
 
 // Lazy load pages for better performance
 const Dashboard = lazy(() => import("./pages/dashboard"));
@@ -26,8 +27,13 @@ function TempoRoutesWrapper() {
 }
 
 function App() {
-  // Check if user is authenticated
-  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
+
+  const isAuthenticated = !!user;
 
   return (
     <Suspense

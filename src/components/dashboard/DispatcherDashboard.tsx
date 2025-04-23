@@ -43,6 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DispatcherDashboardProps {
   userName?: string;
@@ -65,8 +66,8 @@ const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
   const [showTrucksPanel, setShowTrucksPanel] = useState(false);
   const [truckSearchQuery, setTruckSearchQuery] = useState("");
   const [isAddOfficerModalOpen, setIsAddOfficerModalOpen] = useState(false);
+  const { user } = useAuth();
 
-  const userName = localStorage.getItem('username');
 
   // Mock data for quick stats
   const quickStats = [
@@ -182,7 +183,7 @@ const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              Welcome, {userName}
+              Welcome, {user.name}
             </h1>
             <p className="text-muted-foreground mt-1">
               Manage and monitor all dispatch operations from your dashboard.

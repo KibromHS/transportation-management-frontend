@@ -22,5 +22,7 @@ export default defineConfig({
   server: {
     // @ts-ignore
     allowedHosts: true,
+    cors: true,
+    origin: 'http://localhost:5173',
   }
 });

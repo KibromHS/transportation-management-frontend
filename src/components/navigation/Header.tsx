@@ -38,29 +38,29 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 interface HeaderProps {
   title?: string;
   onMenuToggle?: () => void;
-  userRole?: "Admin" | "Dispatcher" | "Officer" | "Reviewer";
-  userName?: string;
-  userAvatar?: string;
+
 }
 
 const Header = ({
   title = "Dashboard",
   onMenuToggle = () => {},
-  userRole = "Dispatcher",
-  userName = "Jane Doe",
-  userAvatar = "",
 }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const { theme, setTheme } = useTheme();
+  // const { theme, setTheme } = useTheme();
+
+  const userRole = localStorage.getItem('userRole');
+  const userName = localStorage.getItem('username');
+  const userAvatar = localStorage.getItem('');
 
   // Get initials for avatar fallback
-  const getInitials = (name: string) => {
-    return name
+  const getInitials = () => {
+    return userName
       .split(" ")
       .map((part) => part[0])
       .join("")
       .toUpperCase();
   };
+
 
   // Simple theme toggle component
   const ThemeToggle = () => {
@@ -71,18 +71,19 @@ const Header = ({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              // onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               aria-label="Toggle theme"
             >
-              {theme === "dark" ? (
+              {/* {theme === "dark" ? (
                 <Sun className="h-5 w-5" />
               ) : (
                 <Moon className="h-5 w-5" />
-              )}
+              )} */}
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            {theme === "dark" ? "Light mode" : "Dark mode"}
+            {/* {theme === "dark" ? "Light mode" : "Dark mode"} */}
+            Dark Mode
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -228,7 +229,7 @@ const Header = ({
                     {userAvatar ? (
                       <AvatarImage src={userAvatar} alt={userName} />
                     ) : (
-                      <AvatarFallback>{getInitials(userName)}</AvatarFallback>
+                      <AvatarFallback>{getInitials()}</AvatarFallback>
                     )}
                   </Avatar>
                 </Button>

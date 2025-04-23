@@ -5,13 +5,7 @@ import Header from "@/components/navigation/Header";
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  userRole?:
-    | "Admin"
-    | "Dispatcher"
-    | "Officer"
-    | "Reviewer"
-    | "Connect"
-    | "Driver";
+  userRole?: string;
   userName?: string;
   userAvatar?: string;
   pageTitle?: string;
@@ -68,13 +62,11 @@ const DashboardLayout = ({
         <Header
           title={pageTitle}
           onMenuToggle={handleMobileMenuToggle}
-          userRole={userRole}
-          userName={userName}
-          userAvatar={userAvatar}
+        
         />
-        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
+        {/* <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
           Header 1
-        </h1>
+        </h1> */}
         {/* Page content with scrolling */}
         <main className="flex-1 overflow-auto p-4 md:p-6">
           <div className="mx-auto max-w-7xl">{children}</div>

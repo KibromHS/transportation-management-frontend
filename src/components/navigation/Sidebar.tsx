@@ -57,27 +57,24 @@ import {
   Landmark,
   Truck as TruckDelivery,
 } from "lucide-react";
+import { useNavigate } from "react-router";
 
 interface SidebarProps {
-  userRole?:
-    | "Admin"
-    | "Dispatcher"
-    | "Officer"
-    | "Reviewer"
-    | "Connect"
-    | "Driver";
+  userRole?: string;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
 }
 
 const Sidebar = ({
-  userRole = "Dispatcher",
   collapsed = false,
   onToggleCollapse = () => {},
 }: SidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const [activeItem, setActiveItem] = useState<string>("");
+  const navigate = useNavigate();
+
+  const userRole = localStorage.getItem('userRole');
 
   // Set active item based on current URL
   useEffect(() => {
@@ -117,13 +114,34 @@ const Sidebar = ({
     window.location.href = href;
   };
 
+  const handleLogout = async (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('auth-token');
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+      });
+      const data = await response.json();
+      
+      localStorage.clear();
+      window.location.href = '/';
+      console.log('logout response:', data);
+    } catch (e) {
+      console.error('Couldn\'t logout:', e);
+    }
+  }
+
   // Define navigation items based on user role
   const getNavigationItems = () => {
     const commonItems = [
       {
         title: "Dashboard",
         icon: <LayoutDashboard className="h-5 w-5" />,
-        href: "/dashboard",
+        href: "/",
       },
       {
         title: "Notifications",
@@ -342,6 +360,7 @@ const Sidebar = ({
     };
 
     // If the role doesn't exist in our mapping, default to Dispatcher
+    
     const role = roleSpecificItems[userRole] ? userRole : "Dispatcher";
     return [...commonItems, ...roleSpecificItems[role]];
   };
@@ -517,7 +536,7 @@ const Sidebar = ({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">
-                  Jane Doe
+                  {localStorage.getItem('username')}
                 </p>
                 <p className="text-xs text-slate-400 truncate">{userRole}</p>
               </div>
@@ -528,13 +547,7 @@ const Sidebar = ({
               <TooltipTrigger asChild>
                 <a
                   href="/"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    // Clear authentication
-                    localStorage.removeItem("isAuthenticated");
-                    localStorage.removeItem("userRole");
-                    window.location.href = "/";
-                  }}
+                  onClick={handleLogout}
                 >
                   <Button
                     variant="ghost"

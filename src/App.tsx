@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { useRoutes, Routes, Route, Navigate } from "react-router-dom";
+import { useRoutes, Routes, Route, Navigate, BrowserRouter } from "react-router-dom";
 import Home from "./components/home";
 import routes from "tempo-routes";
 
@@ -21,6 +21,10 @@ const ContragentsPage = lazy(() => import("./pages/dispatcher/contragents"));
 const TasksPage = lazy(() => import("./pages/dispatcher/tasks"));
 const DispatcherMapPage = lazy(() => import("./pages/dispatcher/map"));
 
+function TempoRoutesWrapper() {
+  return useRoutes(routes);
+}
+
 function App() {
   // Check if user is authenticated
   const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
@@ -33,16 +37,12 @@ function App() {
         </div>
       }
     >
-      <>
         {/* For the tempo routes */}
-        {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
+        {import.meta.env.VITE_TEMPO === "true" && <TempoRoutesWrapper />}
 
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route
-            path="/dashboard"
-            element={isAuthenticated ? <Dashboard /> : <Navigate to="/" />}
-          />
+          <Route path="/" element={isAuthenticated ? <Dashboard /> : <Home />} />
+          
           <Route
             path="/map"
             element={isAuthenticated ? <MapPage /> : <Navigate to="/" />}
@@ -59,8 +59,8 @@ function App() {
           {/* Dispatcher routes */}
           <Route
             path="/dispatcher/trucks"
-            element={isAuthenticated ? <TrucksPage /> : <Navigate to="/" />}
-          />
+         
+            />
           <Route
             path="/dispatcher/auction"
             element={isAuthenticated ? <AuctionPage /> : <Navigate to="/" />}
@@ -166,7 +166,6 @@ function App() {
           {/* Catch-all route */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-      </>
     </Suspense>
   );
 }

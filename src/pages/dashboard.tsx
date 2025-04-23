@@ -10,26 +10,18 @@ import DriverDashboard from "@/components/dashboard/DriverDashboard";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 
 interface DashboardPageProps {
-  userRole?:
-    | "Admin"
-    | "Dispatcher"
-    | "Officer"
-    | "Reviewer"
-    | "Connect"
-    | "Driver";
+  userRole?: string;
   userName?: string;
   userAvatar?: string;
 }
 
-const DashboardPage: React.FC<DashboardPageProps> = ({
-  userRole = "Dispatcher", // Default role
-  userName = "Jane Doe",
-  userAvatar = "",
-}) => {
+const DashboardPage: React.FC<DashboardPageProps> = () => {
   // State to track the current role (could be changed via role switcher in a real app)
-  const [currentRole, setCurrentRole] = useState<
-    "Admin" | "Dispatcher" | "Officer" | "Reviewer" | "Connect" | "Driver"
-  >(userRole);
+  const userRole = localStorage.getItem('userRole');
+  const userName = localStorage.getItem('username');
+  const userAvatar = '';
+
+  const [currentRole, setCurrentRole] = useState(userRole);
 
   // Get page title based on role
   const getPageTitle = () => {

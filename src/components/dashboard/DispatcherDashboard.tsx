@@ -53,7 +53,6 @@ interface DispatcherDashboardProps {
 }
 
 const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
-  userName = "Sarah Johnson",
   activeDispatches = 8,
   pendingDispatches = 12,
   completedDispatches = 24,
@@ -66,6 +65,8 @@ const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
   const [showTrucksPanel, setShowTrucksPanel] = useState(false);
   const [truckSearchQuery, setTruckSearchQuery] = useState("");
   const [isAddOfficerModalOpen, setIsAddOfficerModalOpen] = useState(false);
+
+  const userName = localStorage.getItem('username');
 
   // Mock data for quick stats
   const quickStats = [

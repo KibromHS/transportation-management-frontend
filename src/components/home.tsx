@@ -19,28 +19,38 @@ const Home = () => {
     try {
       console.log("Login attempt with:", values);
 
+      const {email, password} = values;
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
         method: 'POST',
-        body: JSON.stringify({
-          email: values.email,
-          password: values.password,
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
+      
+      if (response.status == 200) {
 
-      if (response.ok) {
+        console.log('login response', data);
+
         const user = data.user;
         const token = data.token;
 
         localStorage.setItem("userRole", user.role);
+        localStorage.setItem('username', user.name);
         localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem('auth-token', token);
 
-        navigate("/dashboard");
+        window.location.href = '/';
+      } else {
+        console.log(response.status, data.message);
+        setError(data.message);
       }
-     
-      
+
+
     } catch (err) {
       console.error("Login error:", err);
       setError("Invalid credentials. Please try again.");

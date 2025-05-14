@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, memo } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -43,10 +43,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuthContext } from "@/context/AuthContext";
+import { User } from "@/api";
 
 interface DispatcherDashboardProps {
-  userName?: string;
+  user: User;
   activeDispatches?: number;
   pendingDispatches?: number;
   completedDispatches?: number;
@@ -54,6 +55,7 @@ interface DispatcherDashboardProps {
 }
 
 const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
+  user,
   activeDispatches = 8,
   pendingDispatches = 12,
   completedDispatches = 24,
@@ -66,8 +68,6 @@ const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
   const [showTrucksPanel, setShowTrucksPanel] = useState(false);
   const [truckSearchQuery, setTruckSearchQuery] = useState("");
   const [isAddOfficerModalOpen, setIsAddOfficerModalOpen] = useState(false);
-  const { user } = useAuth();
-
 
   // Mock data for quick stats
   const quickStats = [
@@ -133,41 +133,41 @@ const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
     },
   ];
 
-  const handleCreateDispatch = (data: any) => {
+  const handleCreateDispatch = useCallback((data: any) => {
     console.log("New dispatch created:", data);
     // In a real application, this would send the data to an API
     setIsCreateModalOpen(false);
-  };
+  }, []);
 
-  const handleViewDispatch = (id: string) => {
+  const handleViewDispatch = useCallback((id: string) => {
     console.log(`Viewing dispatch with ID: ${id}`);
     // In a real application, this would open a detailed view or navigate to a details page
-  };
+  }, []);
 
-  const handleEditDispatch = (id: string) => {
+  const handleEditDispatch = useCallback((id: string) => {
     console.log(`Editing dispatch with ID: ${id}`);
     // In a real application, this would open the edit modal with pre-filled data
-  };
+  }, []);
 
-  const handleDeleteDispatch = (id: string) => {
+  const handleDeleteDispatch = useCallback((id: string) => {
     console.log(`Deleting dispatch with ID: ${id}`);
     // In a real application, this would show a confirmation dialog and then delete
-  };
+  }, []);
 
-  // Function to handle Add Officer button click
-  const handleAddOfficer = () => {
+  // Function to handle Add Officer button click - memoized
+  const handleAddOfficer = useCallback(() => {
     setIsAddOfficerModalOpen(true);
-  };
+  }, []);
 
-  // Function to handle View Map button click
-  const handleViewMap = () => {
+  // Function to handle View Map button click - memoized
+  const handleViewMap = useCallback(() => {
     navigate("/map");
-  };
+  }, [navigate]);
 
-  // Function to handle Reports button click
-  const handleReports = () => {
+  // Function to handle Reports button click - memoized
+  const handleReports = useCallback(() => {
     navigate("/reports");
-  };
+  }, [navigate]);
 
   // Function to handle Add Officer form submission
   const handleAddOfficerSubmit = (data: any) => {
@@ -177,8 +177,8 @@ const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
   };
 
   return (
-    <div className="w-full h-full bg-background p-6 overflow-auto">
-      <div className="flex flex-col space-y-6">
+    <div className="w-full h-full bg-background overflow-auto">
+      <div className="space-y-6 w-full h-full">
         {/* Welcome section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
           <div>
@@ -508,18 +508,21 @@ const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
           </div>
         </div>
       </div>
+
       {/* Trucks Management Panel */}
       {showTrucksPanel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <TruckManagement onClose={() => setShowTrucksPanel(false)} />
         </div>
       )}
+
       {/* Create Dispatch Modal */}
       <CreateDispatchModal
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         onSubmit={handleCreateDispatch}
       />
+
       {/* Add Officer Modal */}
       <Dialog
         open={isAddOfficerModalOpen}
@@ -602,7 +605,6 @@ const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="w-[166px] h-[5px]"></div>
     </div>
   );
 };

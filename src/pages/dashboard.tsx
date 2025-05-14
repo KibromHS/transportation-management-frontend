@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "@/context/AuthContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import DispatcherDashboard from "@/components/dashboard/DispatcherDashboard";
@@ -7,22 +8,19 @@ import OfficerDashboard from "@/components/dashboard/OfficerDashboard";
 import ReviewerDashboard from "@/components/dashboard/ReviewerDashboard";
 import ConnectDashboard from "@/components/dashboard/ConnectDashboard";
 import DriverDashboard from "@/components/dashboard/DriverDashboard";
-import { ThemeProvider } from "@/components/ui/theme-provider";
-import { useAuth } from "@/contexts/AuthContext";
+import { User } from "@/api";
 
 interface DashboardPageProps {
-  userRole?: string;
-  userName?: string;
+  user: User;
   userAvatar?: string;
 }
 
-const DashboardPage: React.FC<DashboardPageProps> = () => {
+const DashboardPage: React.FC<DashboardPageProps> = ({
+  user,
+  userAvatar = "",
+}) => {
   // State to track the current role (could be changed via role switcher in a real app)
-  const { user } = useAuth();
-
-  const userAvatar = ''; // TODO: change later
-
-  const [currentRole, setCurrentRole] = useState(user.role);
+  const [currentRole, setCurrentRole] = useState<string>(user?.role);
 
   // Get page title based on role
   const getPageTitle = () => {
@@ -50,7 +48,7 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
       case "Admin":
         return <AdminDashboard />;
       case "Dispatcher":
-        return <DispatcherDashboard />;
+        return <DispatcherDashboard user={user} />;
       case "Officer":
         return <OfficerDashboard />;
       case "Reviewer":
@@ -60,7 +58,7 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
       case "Driver":
         return <DriverDashboard />;
       default:
-        return <DispatcherDashboard />; // Default to dispatcher dashboard
+        return <DispatcherDashboard user={user} />; // Default to dispatcher dashboard
     }
   };
 
@@ -78,15 +76,13 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
   };
 
   return (
-    <ThemeProvider defaultTheme="system" enableSystem>
-      <DashboardLayout
-        userRole={currentRole}
-        userName={user.name}
-        userAvatar={userAvatar}
-        pageTitle={getPageTitle()}
-      >
-        {/* Role switcher for demo purposes */}
-        <div className="mb-6 p-4 bg-muted/30 rounded-lg border border-dashed">
+    <DashboardLayout
+      userAvatar={userAvatar}
+      pageTitle={getPageTitle()}
+    >
+      {/* Role switcher for demo purposes */}
+      <div className="w-full h-full">
+        <div className="mb-4 bg-muted/30 p-3 rounded-md">
           <p className="text-sm text-muted-foreground mb-2">
             Demo Mode: Switch between different user roles
           </p>
@@ -132,8 +128,8 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
 
         {/* Render the appropriate dashboard based on role */}
         {renderDashboard()}
-      </DashboardLayout>
-    </ThemeProvider>
+      </div>
+    </DashboardLayout>
   );
 };
 

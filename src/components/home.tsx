@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "@/components/layout/AuthLayout";
 import LoginForm from "./auth/LoginForm";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuthContext } from "@/context/AuthContext";
 
 const Home = () => {
   const navigate = useNavigate();
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const [error, setError] = useState("");
+  const { login } = useAuthContext();
 
   const handleLogin = async (values: {
     email: string;
@@ -55,11 +55,14 @@ const Home = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <AuthLayout
+        title="Welcome to TMS"
+        subtitle="Sign in to access your account."
       >
         <LoginForm onSubmit={handleLogin} isLoading={isLoading} error={error} />
       </AuthLayout>

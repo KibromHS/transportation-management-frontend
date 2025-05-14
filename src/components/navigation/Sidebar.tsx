@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
+import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import MessageIndicator from "@/components/messaging/MessageIndicator";
 import {
   ChevronLeft,
   ChevronRight,
@@ -43,7 +45,7 @@ import {
   HelpCircle,
   CheckCircle,
   Activity,
-  User,
+  User as U,
   Calendar,
   Briefcase,
   Building,
@@ -57,27 +59,30 @@ import {
   Landmark,
   Truck as TruckDelivery,
 } from "lucide-react";
-import { useNavigate } from "react-router";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuthContext, AuthProvider } from "@/context/AuthContext";
+import { User } from "@/api";
 
 interface SidebarProps {
-  userRole?: string;
+  user: User;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
 }
 
-const Sidebar = ({
+const SidebarContent = ({
+  user,
   collapsed = false,
   onToggleCollapse = () => {},
 }: SidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const [activeItem, setActiveItem] = useState<string>("");
-  const { user, logout } = useAuth();
+  const { logout } = useAuthContext();
+
+  const location = useLocation();
 
   // Set active item based on current URL
   useEffect(() => {
-    const path = window.location.pathname;
+    const path = location.pathname;
     setActiveItem(path);
 
     // Auto-expand parent items if a child is active
@@ -92,61 +97,36 @@ const Sidebar = ({
         }
       }
     });
-  }, []);
+  }, [location.pathname]);
 
-  const handleToggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
+  const handleToggleCollapse = useCallback(() => {
+    setIsCollapsed((prev) => !prev);
     onToggleCollapse();
-  };
+  }, [onToggleCollapse]);
 
-  const toggleSubMenu = (title: string) => {
+  const toggleSubMenu = useCallback((title: string) => {
     setOpenItems((prev) => ({
       ...prev,
       [title]: !prev[title],
     }));
-  };
+  }, []);
 
-  // Handle navigation to different pages
-  const handleNavigation = (href: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    setActiveItem(href);
-    window.location.href = href;
-  };
-
-  const handleLogout = async (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('auth-token');
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-      });
-      const data = await response.json();
-      
-      logout();
-
-      console.log('logout response:', data);
-    } catch (e) {
-      console.error('Couldn\'t logout:', e);
-    }
-  }
+  // No longer need handleNavigation as we're using React Router's Link component
 
   // Define navigation items based on user role
   const getNavigationItems = () => {
     const commonItems = [
       {
         title: "Dashboard",
-        icon: <LayoutDashboard className="h-5 w-5 text-white" />,
-        href: "/",
+        icon: <LayoutDashboard className="h-5 w-5" />,
+        href: "/dashboard",
       },
-      {
-        title: "Notifications",
-        icon: <Bell className="h-5 w-5" />,
-        href: "/notifications",
-      },
+      // {
+      //   title: "Notifications",
+      //   icon: <Bell className="h-5 w-5" />,
+      //   href: "/notifications",
+      // },
+      // Messages moved to popup/right panel
     ];
 
     const roleSpecificItems = {
@@ -215,7 +195,7 @@ const Sidebar = ({
         },
         {
           title: "Drivers",
-          icon: <User className="h-5 w-5" />,
+          icon: <U className="h-5 w-5" />,
           href: "/dispatcher/drivers",
         },
         {
@@ -359,8 +339,7 @@ const Sidebar = ({
     };
 
     // If the role doesn't exist in our mapping, default to Dispatcher
-    
-    const role = roleSpecificItems[user.role] ? user.role : "Dispatcher";
+    const role = roleSpecificItems[user?.role] ? user.role : "Dispatcher";
     return [...commonItems, ...roleSpecificItems[role]];
   };
 
@@ -369,23 +348,25 @@ const Sidebar = ({
   return (
     <div
       className={cn(
-        "flex h-full flex-col bg-slate-900 text-white transition-all duration-300",
+        "flex h-full flex-col bg-gradient-to-b from-slate-900 to-slate-950 dark:from-slate-950 dark:to-slate-900 text-white transition-all duration-300",
         isCollapsed ? "w-[70px]" : "w-[280px]",
       )}
     >
       {/* Logo and collapse toggle */}
-      <div className="flex h-16 items-center justify-between px-4">
+      <div className="flex h-16 items-center justify-between px-4 bg-slate-900/50 backdrop-blur-sm">
         <div className="flex items-center">
-          <Shield className="h-8 w-8 text-teal-400" />
+          <Shield className="h-8 w-8 text-teal-400 drop-shadow-md" />
           {!isCollapsed && (
-            <span className="ml-2 text-xl font-bold">Dispatch MS</span>
+            <span className="ml-2 text-xl font-bold tracking-tight bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
+              TMS
+            </span>
           )}
         </div>
         <Button
           variant="ghost"
           size="icon"
           onClick={handleToggleCollapse}
-          className="text-slate-400 hover:text-white hover:bg-slate-800"
+          className="text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-200"
         >
           {isCollapsed ? (
             <ChevronRight className="h-5 w-5" />
@@ -415,19 +396,20 @@ const Sidebar = ({
                           <Button
                             variant="ghost"
                             className={cn(
-                              "flex h-10 w-full items-center justify-start gap-3 rounded-md px-3 text-slate-300 hover:bg-slate-800 hover:text-white",
+                              "flex h-10 w-full items-center justify-start gap-3 rounded-md px-3 text-slate-300 hover:bg-slate-800/70 hover:text-white transition-all duration-200",
                               isCollapsed && "justify-center px-2",
                               item.subItems.some((subItem) =>
                                 activeItem.startsWith(subItem.href),
-                              ) && "bg-slate-800/50 text-white font-medium",
+                              ) &&
+                                "bg-slate-800/50 text-white font-medium border-l-2 border-teal-500",
                             )}
                           >
                             <div
                               className={cn(
-                                "flex items-center justify-center",
+                                "flex items-center justify-center transition-transform duration-200",
                                 item.subItems.some((subItem) =>
                                   activeItem.startsWith(subItem.href),
-                                ) && "text-primary",
+                                ) && "text-teal-400",
                               )}
                             >
                               {item.icon}
@@ -461,18 +443,15 @@ const Sidebar = ({
                             key={subIndex}
                             variant="ghost"
                             className={cn(
-                              "flex h-8 w-full items-center justify-start gap-2 rounded-md px-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white",
+                              "flex h-8 w-full items-center justify-start gap-2 rounded-md px-2 text-sm text-slate-300 hover:bg-slate-800/70 hover:text-white transition-all duration-200",
                               activeItem.startsWith(subItem.href) &&
-                                "bg-slate-800 text-white font-medium",
+                                "bg-slate-800/50 text-white font-medium border-l-2 border-teal-500",
                             )}
                             asChild
                           >
-                            <a
-                              href={subItem.href}
-                              onClick={(e) => handleNavigation(subItem.href, e)}
-                            >
+                            <Link to={subItem.href}>
                               <span>{subItem.title}</span>
-                            </a>
+                            </Link>
                           </Button>
                         ))}
                       </div>
@@ -486,28 +465,29 @@ const Sidebar = ({
                       <Button
                         variant="ghost"
                         className={cn(
-                          "flex h-10 w-full items-center justify-start gap-3 rounded-md px-3 text-slate-300 hover:bg-slate-800 hover:text-white",
+                          "flex h-10 w-full items-center justify-start gap-3 rounded-md px-3 text-slate-300 hover:bg-slate-800/70 hover:text-white transition-all duration-200",
                           isCollapsed && "justify-center px-2",
                           activeItem.startsWith(item.href) &&
-                            "bg-slate-800/50 text-white font-medium",
+                            "bg-slate-800/50 text-white font-medium border-l-2 border-teal-500",
                         )}
                         asChild
                       >
-                        <a
-                          href={item.href}
-                          onClick={(e) => handleNavigation(item.href, e)}
-                        >
+                        <Link to={item.href}>
                           <div
                             className={cn(
-                              "flex items-center justify-center",
+                              "flex items-center justify-center transition-transform duration-200",
                               activeItem.startsWith(item.href) &&
-                                "text-primary",
+                                "text-teal-400",
                             )}
                           >
                             {item.icon}
                           </div>
-                          {!isCollapsed && <span>{item.title}</span>}
-                        </a>
+                          {!isCollapsed && (
+                            <span className="transition-colors duration-200">
+                              {item.title}
+                            </span>
+                          )}
+                        </Link>
                       </Button>
                     </TooltipTrigger>
                     {isCollapsed && (
@@ -531,7 +511,7 @@ const Sidebar = ({
           {!isCollapsed && (
             <div className="flex items-center gap-3 mb-2">
               <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
-                <User size={16} className="text-primary" />
+                <U size={16} className="text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">
@@ -544,21 +524,25 @@ const Sidebar = ({
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <a
-                  href="/"
-                  onClick={handleLogout}
+                <Link
+                  to="/"
+                  onClick={() => {
+                    // Clear authentication
+                    localStorage.clear();
+                    logout();
+                  }}
                 >
                   <Button
                     variant="ghost"
                     className={cn(
-                      "flex h-10 w-full items-center justify-start gap-3 rounded-md px-3 text-slate-300 hover:bg-slate-800 hover:text-white",
+                      "flex h-10 w-full items-center justify-start gap-3 rounded-md px-3 text-slate-300 hover:bg-slate-800/70 hover:text-white transition-all duration-200",
                       isCollapsed && "justify-center px-2",
                     )}
                   >
                     <LogOut className="h-5 w-5 text-red-400" />
                     {!isCollapsed && <span>Logout</span>}
                   </Button>
-                </a>
+                </Link>
               </TooltipTrigger>
               {isCollapsed && (
                 <TooltipContent side="right">
@@ -573,4 +557,14 @@ const Sidebar = ({
   );
 };
 
-export default Sidebar;
+const MemoizedSidebarContent = memo(SidebarContent);
+
+const Sidebar = (props: SidebarProps) => {
+  return (
+    <AuthProvider>
+      <MemoizedSidebarContent {...props} />
+    </AuthProvider>
+  );
+};
+
+export default memo(Sidebar);

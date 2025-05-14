@@ -197,7 +197,7 @@ const HeaderContent = ({
           <span className="sr-only">Toggle menu</span>
         </Button>
 
-        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+        {/* <h1 className="text-xl font-semibold tracking-tight">{title}</h1> */}
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-4 md:justify-between">
@@ -321,9 +321,9 @@ const MemoizedHeaderContent = memo(HeaderContent);
 
 const Header = (props: HeaderProps) => {
   return (
-    <AuthProvider>
+    
       <MemoizedHeaderContent {...props} />
-    </AuthProvider>
+   
   );
 };
 

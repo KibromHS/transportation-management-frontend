@@ -17,7 +17,7 @@ const AuthLayout = ({
   subtitle = "Sign in to access your account.",
 }: AuthLayoutProps) => {
   return (
-    <AuthProvider>
+    <>
       <div className="flex min-h-screen w-full bg-background">
         {/* Left side - Branding/Info section */}
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-900 to-blue-950 text-white p-8 flex-col justify-between">
@@ -98,7 +98,7 @@ const AuthLayout = ({
           </Card>
         </div>
       </div>
-    </AuthProvider>
+    </>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ import {
 import {
   Truck,
   MapPin,
-  User,
+  User as U,
   MoreVertical,
   Plus,
   Filter,
@@ -34,10 +34,13 @@ import {
 } from "lucide-react";
 import TruckFilterPanel from "@/components/trucks/TruckFilterPanel";
 import AddTruckForm from "@/components/trucks/AddTruckForm";
-import TruckDetails from "@/components/trucks/TruckDetails";
+// import TruckDetails from "@/components/trucks/TruckDetails";
 import TruckDataTable, {
   TruckDataItem,
 } from "@/components/trucks/TruckDataTable";
+import { useAuthContext } from "@/context/AuthContext";
+import { User } from "@/api";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 export interface TruckData {
   id: string;
@@ -56,10 +59,12 @@ export interface TruckData {
 }
 
 interface TruckManagementProps {
+  user: User;
   onClose?: () => void;
 }
 
 export const TruckManagement: React.FC<TruckManagementProps> = ({
+  user,
   onClose,
 }) => {
   const [activeTab, setActiveTab] = useState("list");
@@ -68,6 +73,8 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
   const [selectedTruck, setSelectedTruck] = useState<TruckData | null>(null);
   const [showTruckDetailsDialog, setShowTruckDetailsDialog] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [trucks, setTrucks] = useState([]);
 
   // Filter groups
   const [statusFilterGroup, setStatusFilterGroup] = useState<any>({
@@ -93,449 +100,395 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
     ],
   });
 
-  // Mock data for trucks
-  const [trucks, setTrucks] = useState<TruckData[]>([
-    {
-      id: "TRK-1001",
-      type: "Box Truck",
-      status: "available",
-      driver: {
-        id: "DRV-101",
-        name: "John Doe",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
-      },
-      location: "Chicago, IL",
-      lastUpdated: "10 minutes ago",
-      fuelLevel: 85,
-      mileage: 45678,
-      nextMaintenance: "2023-08-15",
-    },
-    {
-      id: "TRK-1002",
-      type: "Cargo Van",
-      status: "on_route",
-      driver: {
-        id: "DRV-102",
-        name: "Mike Smith",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike",
-      },
-      location: "Detroit, MI",
-      lastUpdated: "5 minutes ago",
-      fuelLevel: 72,
-      mileage: 32145,
-      nextMaintenance: "2023-07-30",
-    },
-    {
-      id: "TRK-1003",
-      type: "Refrigerated",
-      status: "on_route",
-      driver: {
-        id: "DRV-103",
-        name: "Ryan Johnson",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ryan",
-      },
-      location: "Indianapolis, IN",
-      lastUpdated: "15 minutes ago",
-      fuelLevel: 65,
-      mileage: 28976,
-      nextMaintenance: "2023-08-05",
-    },
-    {
-      id: "TRK-1004",
-      type: "Flatbed",
-      status: "maintenance",
-      driver: {
-        id: "DRV-104",
-        name: "Sarah Williams",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
-      },
-      location: "Columbus, OH",
-      lastUpdated: "1 hour ago",
-      fuelLevel: 45,
-      mileage: 52341,
-      nextMaintenance: "2023-07-20",
-    },
-    {
-      id: "TRK-1005",
-      type: "Tanker",
-      status: "offline",
-      driver: {
-        id: "DRV-105",
-        name: "Dan Brown",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=dan",
-      },
-      location: "St. Louis, MO",
-      lastUpdated: "3 hours ago",
-      fuelLevel: 30,
-      mileage: 67890,
-      nextMaintenance: "2023-07-15",
-    },
-  ]);
-
   // Mock data for Delta Express style truck data
-  const [deltaExpressTrucks, setDeltaExpressTrucks] = useState<TruckDataItem[]>(
-    [
-      {
-        id: "0007",
-        contact: {
-          role: "(crd) ",
-          name: "Scott",
-          phone: "+1 (864) 558-5740",
-        },
-        info: {
-          type: "Cargo van",
-          flags: {
-            language: "EN",
-          },
-        },
-        dimensions: {
-          length: 127,
-          width: 53,
-          height: 72,
-          isLong: true,
-          payload: 2500,
-        },
-        status: "available",
-        availability: {
-          needsUpdate: true,
-        },
-        lastKnown: {
-          city: "Chicago",
-          state: "IL",
-          zip: "60666",
-          country: "US",
-          datetime: "04/22/2025 11:18 EDT",
-        },
-        actions: {
-          canReserve: true,
-        },
-      },
-      {
-        id: "0008",
-        documentStatus: "expired",
-        contact: {
-          role: "(crd) ",
-          name: "Scott",
-          phone: "+1 (864) 558-5740",
-        },
-        info: {
-          type: "Cargo van",
-          flags: {
-            language: "RU",
-          },
-        },
-        dimensions: {
-          length: 96,
-          width: 53,
-          height: 72,
-          isLong: true,
-          payload: 2500,
-        },
-        status: "busy",
-        availability: {
-          needsUpdate: true,
-        },
-        lastKnown: {
-          city: "Chicago",
-          state: "IL",
-          zip: "60666",
-          country: "US",
-          datetime: "03/27/2025 13:55 EDT",
-        },
-        actions: {
-          canReserve: false,
-        },
-      },
-      {
-        id: "0009",
-        contact: {
-          role: "(crd) ",
-          name: "Scott",
-          phone: "+1 (864) 558-5740",
-        },
-        info: {
-          type: "Cargo van",
-          flags: {
-            language: "EN",
-          },
-        },
-        dimensions: {
-          length: 127,
-          width: 53,
-          height: 72,
-          payload: 2500,
-        },
-        status: "available",
-        availability: {
-          needsUpdate: true,
-        },
-        lastKnown: {
-          city: "Chicago",
-          state: "IL",
-          zip: "60666",
-          country: "US",
-          datetime: "04/18/2025 13:12 EDT",
-        },
-        actions: {
-          canReserve: true,
-        },
-      },
-      {
-        id: "0010",
-        contact: {
-          role: "(crd) ",
-          name: "Max",
-          phone: "+1 (864) 558-5740",
-        },
-        info: {
-          type: "Straight truck",
-          features: ["liftgate", "pallet jack"],
-          flags: {
-            language: "EN",
-          },
-        },
-        dimensions: {
-          length: 288,
-          width: 96,
-          height: 96,
-          payload: 7000,
-        },
-        status: "available",
-        availability: {
-          needsUpdate: true,
-        },
-        lastKnown: {
-          city: "Chicago",
-          state: "IL",
-          zip: "60666",
-          country: "US",
-          datetime: "04/03/2025 11:44 EDT",
-        },
-        actions: {
-          canReserve: true,
-        },
-      },
-      {
-        id: "0011",
-        documentStatus: "expired",
-        contact: {
-          role: "(crd) ",
-          name: "Scott",
-          phone: "+1 (864) 558-5740",
-        },
-        info: {
-          type: "Cargo van",
-          flags: {
-            language: "EN",
-          },
-        },
-        dimensions: {
-          length: 145,
-          width: 48,
-          height: 72,
-          payload: 3000,
-        },
-        status: "busy",
-        availability: {
-          needsUpdate: true,
-        },
-        lastKnown: {
-          city: "Chicago",
-          state: "IL",
-          zip: "60666",
-          country: "US",
-          datetime: "02/12/2025 12:50 EDT",
-        },
-        actions: {
-          canReserve: false,
-        },
-      },
-      {
-        id: "0012",
-        documentStatus: "expired",
-        contact: {
-          role: "(crd) ",
-          name: "Max",
-          phone: "+1 (864) 558-5740",
-        },
-        info: {
-          type: "Cargo van",
-          flags: {
-            language: "EN",
-          },
-        },
-        dimensions: {
-          length: 130,
-          width: 52,
-          height: 69,
-          payload: 2500,
-        },
-        status: "busy",
-        availability: {
-          needsUpdate: true,
-        },
-        lastKnown: {
-          city: "Chicago",
-          state: "IL",
-          zip: "60666",
-          country: "US",
-          datetime: "04/10/2025 10:48 EDT",
-        },
-        actions: {
-          canReserve: false,
-        },
-      },
-      {
-        id: "001Ref-012V",
-        contact: {
-          role: "(o/d) ",
-          name: "Dispatchland",
-          company: "COMPANY NAME",
-          phone: "+1 (112) 121-2121",
-        },
-        info: {
-          type: "Cargo van",
-          flags: {
-            language: "RU",
-            rate: 0.07,
-            rateUnit: "mi",
-          },
-        },
-        dimensions: {
-          length: 1,
-          width: 1,
-          height: 1,
-          payload: 2000,
-        },
-        status: "available",
-        availability: {
-          needsUpdate: true,
-        },
-        lastKnown: {
-          city: "unknown",
-          state: "unknown",
-          zip: "unknown",
-          country: "",
-          datetime: "11/18/2024 09:33 EDT",
-        },
-        actions: {
-          canReserve: true,
-        },
-      },
-      {
-        id: "016",
-        contact: {
-          role: "(o/d) ",
-          name: "Uladzimir Biaheza",
-          phone: "+1 (916) 296-0176",
-        },
-        info: {
-          type: "Cargo van",
-          flags: {
-            language: "RU",
-            rate: 1.09,
-            rateUnit: "mi",
-          },
-        },
-        dimensions: {
-          length: 158,
-          width: 54,
-          height: 68,
-          payload: 3000,
-        },
-        status: "available",
-        availability: {
-          needsUpdate: true,
-        },
-        lastKnown: {
-          city: "Penn Valley",
-          state: "CA",
-          zip: "95946",
-          country: "US",
-          datetime: "03/07/2025 10:12 EDT",
-        },
-        actions: {
-          canReserve: true,
-        },
-      },
-      {
-        id: "036",
-        contact: {
-          role: "(o/d) ",
-          name: "Sergey Lutsik",
-          phone: "+1 (916) 837-4577",
-        },
-        info: {
-          type: "Cargo van",
-          flags: {
-            language: "RU",
-            rate: 1.9,
-            rateUnit: "mi",
-          },
-        },
-        dimensions: {
-          length: 147,
-          width: 52,
-          height: 70,
-          isLong: true,
-          payload: 2100,
-        },
-        status: "available",
-        availability: {
-          location: "La Mirada, CA, 90638, US",
-          datetime: "04/24/2025 11:00 EDT",
-        },
-        lastKnown: {
-          city: "La Mirada",
-          state: "CA",
-          zip: "90638",
-          country: "US",
-          datetime: "04/24/2025 10:02 EDT",
-        },
-        actions: {
-          canReserve: true,
-        },
-      },
-      {
-        id: "040",
-        contact: {
-          role: "(o/d) ",
-          name: "Oleg Vyaznevich",
-          company: "Turtle Express LLC",
-          phone: "+1 (864) 345-4704",
-        },
-        info: {
-          type: "Straight truck",
-          features: ["air ride", "curtains"],
-          flags: {
-            language: "RU",
-            rate: 1.8,
-            rateUnit: "mi",
-          },
-        },
-        dimensions: {
-          length: 244,
-          width: 94,
-          height: 96,
-          payload: 6500,
-        },
-        status: "available",
-        availability: {
-          needsUpdate: true,
-        },
-        lastKnown: {
-          city: "Orange",
-          state: "TX",
-          zip: "77630",
-          country: "US",
-          datetime: "04/01/2025 09:23 EDT",
-        },
-        actions: {
-          canReserve: true,
-        },
-      },
-    ],
-  );
+  // const [deltaExpressTrucks, setDeltaExpressTrucks] = useState<TruckDataItem[]>(
+  //   [
+  //     {
+  //       id: "0007",
+  //       contact: {
+  //         role: "(crd) ",
+  //         name: "Scott",
+  //         phone: "+1 (864) 558-5740",
+  //       },
+  //       info: {
+  //         type: "Cargo van",
+  //         flags: {
+  //           language: "EN",
+  //         },
+  //       },
+  //       dimensions: {
+  //         length: 127,
+  //         width: 53,
+  //         height: 72,
+  //         isLong: true,
+  //         payload: 2500,
+  //       },
+  //       status: "available",
+  //       availability: {
+  //         needsUpdate: true,
+  //       },
+  //       lastKnown: {
+  //         city: "Chicago",
+  //         state: "IL",
+  //         zip: "60666",
+  //         country: "US",
+  //         datetime: "04/22/2025 11:18 EDT",
+  //       },
+  //       actions: {
+  //         canReserve: true,
+  //       },
+  //     },
+  //     {
+  //       id: "0008",
+  //       documentStatus: "expired",
+  //       contact: {
+  //         role: "(crd) ",
+  //         name: "Scott",
+  //         phone: "+1 (864) 558-5740",
+  //       },
+  //       info: {
+  //         type: "Cargo van",
+  //         flags: {
+  //           language: "RU",
+  //         },
+  //       },
+  //       dimensions: {
+  //         length: 96,
+  //         width: 53,
+  //         height: 72,
+  //         isLong: true,
+  //         payload: 2500,
+  //       },
+  //       status: "busy",
+  //       availability: {
+  //         needsUpdate: true,
+  //       },
+  //       lastKnown: {
+  //         city: "Chicago",
+  //         state: "IL",
+  //         zip: "60666",
+  //         country: "US",
+  //         datetime: "03/27/2025 13:55 EDT",
+  //       },
+  //       actions: {
+  //         canReserve: false,
+  //       },
+  //     },
+  //     {
+  //       id: "0009",
+  //       contact: {
+  //         role: "(crd) ",
+  //         name: "Scott",
+  //         phone: "+1 (864) 558-5740",
+  //       },
+  //       info: {
+  //         type: "Cargo van",
+  //         flags: {
+  //           language: "EN",
+  //         },
+  //       },
+  //       dimensions: {
+  //         length: 127,
+  //         width: 53,
+  //         height: 72,
+  //         payload: 2500,
+  //       },
+  //       status: "available",
+  //       availability: {
+  //         needsUpdate: true,
+  //       },
+  //       lastKnown: {
+  //         city: "Chicago",
+  //         state: "IL",
+  //         zip: "60666",
+  //         country: "US",
+  //         datetime: "04/18/2025 13:12 EDT",
+  //       },
+  //       actions: {
+  //         canReserve: true,
+  //       },
+  //     },
+  //     {
+  //       id: "0010",
+  //       contact: {
+  //         role: "(crd) ",
+  //         name: "Max",
+  //         phone: "+1 (864) 558-5740",
+  //       },
+  //       info: {
+  //         type: "Straight truck",
+  //         features: ["liftgate", "pallet jack"],
+  //         flags: {
+  //           language: "EN",
+  //         },
+  //       },
+  //       dimensions: {
+  //         length: 288,
+  //         width: 96,
+  //         height: 96,
+  //         payload: 7000,
+  //       },
+  //       status: "available",
+  //       availability: {
+  //         needsUpdate: true,
+  //       },
+  //       lastKnown: {
+  //         city: "Chicago",
+  //         state: "IL",
+  //         zip: "60666",
+  //         country: "US",
+  //         datetime: "04/03/2025 11:44 EDT",
+  //       },
+  //       actions: {
+  //         canReserve: true,
+  //       },
+  //     },
+  //     {
+  //       id: "0011",
+  //       documentStatus: "expired",
+  //       contact: {
+  //         role: "(crd) ",
+  //         name: "Scott",
+  //         phone: "+1 (864) 558-5740",
+  //       },
+  //       info: {
+  //         type: "Cargo van",
+  //         flags: {
+  //           language: "EN",
+  //         },
+  //       },
+  //       dimensions: {
+  //         length: 145,
+  //         width: 48,
+  //         height: 72,
+  //         payload: 3000,
+  //       },
+  //       status: "busy",
+  //       availability: {
+  //         needsUpdate: true,
+  //       },
+  //       lastKnown: {
+  //         city: "Chicago",
+  //         state: "IL",
+  //         zip: "60666",
+  //         country: "US",
+  //         datetime: "02/12/2025 12:50 EDT",
+  //       },
+  //       actions: {
+  //         canReserve: false,
+  //       },
+  //     },
+  //     {
+  //       id: "0012",
+  //       documentStatus: "expired",
+  //       contact: {
+  //         role: "(crd) ",
+  //         name: "Max",
+  //         phone: "+1 (864) 558-5740",
+  //       },
+  //       info: {
+  //         type: "Cargo van",
+  //         flags: {
+  //           language: "EN",
+  //         },
+  //       },
+  //       dimensions: {
+  //         length: 130,
+  //         width: 52,
+  //         height: 69,
+  //         payload: 2500,
+  //       },
+  //       status: "busy",
+  //       availability: {
+  //         needsUpdate: true,
+  //       },
+  //       lastKnown: {
+  //         city: "Chicago",
+  //         state: "IL",
+  //         zip: "60666",
+  //         country: "US",
+  //         datetime: "04/10/2025 10:48 EDT",
+  //       },
+  //       actions: {
+  //         canReserve: false,
+  //       },
+  //     },
+  //     {
+  //       id: "001Ref-012V",
+  //       contact: {
+  //         role: "(o/d) ",
+  //         name: "Dispatchland",
+  //         company: "COMPANY NAME",
+  //         phone: "+1 (112) 121-2121",
+  //       },
+  //       info: {
+  //         type: "Cargo van",
+  //         flags: {
+  //           language: "RU",
+  //           rate: 0.07,
+  //           rateUnit: "mi",
+  //         },
+  //       },
+  //       dimensions: {
+  //         length: 1,
+  //         width: 1,
+  //         height: 1,
+  //         payload: 2000,
+  //       },
+  //       status: "available",
+  //       availability: {
+  //         needsUpdate: true,
+  //       },
+  //       lastKnown: {
+  //         city: "unknown",
+  //         state: "unknown",
+  //         zip: "unknown",
+  //         country: "",
+  //         datetime: "11/18/2024 09:33 EDT",
+  //       },
+  //       actions: {
+  //         canReserve: true,
+  //       },
+  //     },
+  //     {
+  //       id: "016",
+  //       contact: {
+  //         role: "(o/d) ",
+  //         name: "Uladzimir Biaheza",
+  //         phone: "+1 (916) 296-0176",
+  //       },
+  //       info: {
+  //         type: "Cargo van",
+  //         flags: {
+  //           language: "RU",
+  //           rate: 1.09,
+  //           rateUnit: "mi",
+  //         },
+  //       },
+  //       dimensions: {
+  //         length: 158,
+  //         width: 54,
+  //         height: 68,
+  //         payload: 3000,
+  //       },
+  //       status: "available",
+  //       availability: {
+  //         needsUpdate: true,
+  //       },
+  //       lastKnown: {
+  //         city: "Penn Valley",
+  //         state: "CA",
+  //         zip: "95946",
+  //         country: "US",
+  //         datetime: "03/07/2025 10:12 EDT",
+  //       },
+  //       actions: {
+  //         canReserve: true,
+  //       },
+  //     },
+  //     {
+  //       id: "036",
+  //       contact: {
+  //         role: "(o/d) ",
+  //         name: "Sergey Lutsik",
+  //         phone: "+1 (916) 837-4577",
+  //       },
+  //       info: {
+  //         type: "Cargo van",
+  //         flags: {
+  //           language: "RU",
+  //           rate: 1.9,
+  //           rateUnit: "mi",
+  //         },
+  //       },
+  //       dimensions: {
+  //         length: 147,
+  //         width: 52,
+  //         height: 70,
+  //         isLong: true,
+  //         payload: 2100,
+  //       },
+  //       status: "available",
+  //       availability: {
+  //         location: "La Mirada, CA, 90638, US",
+  //         datetime: "04/24/2025 11:00 EDT",
+  //       },
+  //       lastKnown: {
+  //         city: "La Mirada",
+  //         state: "CA",
+  //         zip: "90638",
+  //         country: "US",
+  //         datetime: "04/24/2025 10:02 EDT",
+  //       },
+  //       actions: {
+  //         canReserve: true,
+  //       },
+  //     },
+  //     {
+  //       id: "040",
+  //       contact: {
+  //         role: "(o/d) ",
+  //         name: "Oleg Vyaznevich",
+  //         company: "Turtle Express LLC",
+  //         phone: "+1 (864) 345-4704",
+  //       },
+  //       info: {
+  //         type: "Straight truck",
+  //         features: ["air ride", "curtains"],
+  //         flags: {
+  //           language: "RU",
+  //           rate: 1.8,
+  //           rateUnit: "mi",
+  //         },
+  //       },
+  //       dimensions: {
+  //         length: 244,
+  //         width: 94,
+  //         height: 96,
+  //         payload: 6500,
+  //       },
+  //       status: "available",
+  //       availability: {
+  //         needsUpdate: true,
+  //       },
+  //       lastKnown: {
+  //         city: "Orange",
+  //         state: "TX",
+  //         zip: "77630",
+  //         country: "US",
+  //         datetime: "04/01/2025 09:23 EDT",
+  //       },
+  //       actions: {
+  //         canReserve: true,
+  //       },
+  //     },
+  //   ],
+  // );
+
+  useEffect(() => {
+    const fetchTrucks = async () => {
+      setIsLoading(true);
+      try {
+        const token = localStorage.getItem('auth-token');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/trucks`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        console.log('trucks response data:', data.data);
+        if (response.ok) {
+          setTrucks(data.data);
+        }
+      } catch (e) {
+        console.error('Error fething trucks', e);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchTrucks();
+  }, []);
 
   // Calculate active filter count
   const getActiveFilterCount = () => {
@@ -767,10 +720,14 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
     console.log(`Archive truck ${truckId}`);
   };
 
+  if (isLoading) {
+    return <LoadingSpinner />
+  }
+
   return (
-    <Card className="w-full max-w-4xl bg-background">
+    <Card className="w-full  bg-background">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Trucks Management</CardTitle>
+        {/* <CardTitle>Trucks Management</CardTitle> */}
         {onClose && (
           <Button variant="ghost" size="icon" onClick={onClose}>
             <XCircle className="h-4 w-4" />
@@ -787,16 +744,16 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
         />
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="list" className="flex items-center gap-2">
               <List className="h-4 w-4" /> Trucks List
             </TabsTrigger>
             <TabsTrigger value="map" className="flex items-center gap-2">
               <Map className="h-4 w-4" /> General Map
             </TabsTrigger>
-            <TabsTrigger value="nearby" className="flex items-center gap-2">
+            {/* <TabsTrigger value="nearby" className="flex items-center gap-2">
               <Navigation className="h-4 w-4" /> Trucks Nearby
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="list" className="mt-4">
@@ -811,16 +768,19 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
                   >
                     <RefreshCw className="h-4 w-4 mr-2" /> Refresh
                   </Button>
-                  <Button size="sm" onClick={() => setShowAddTruckDialog(true)}>
-                    <Plus className="h-4 w-4 mr-2" /> Add Truck
-                  </Button>
+                  {
+                    user.role == 'admin' && <Button size="sm" onClick={() => setShowAddTruckDialog(true)}>
+                      <Plus className="h-4 w-4 mr-2" /> Add Truck
+                    </Button>
+                  }
+                  
                 </div>
               </div>
 
               {/* Delta Express Style Truck Data Table */}
               <div className="border rounded-md mb-8">
                 <TruckDataTable
-                  data={deltaExpressTrucks}
+                  data={trucks}
                   onReserve={handleReserveTruck}
                   onViewDetails={handleEditTruckDetails}
                   onEdit={handleEditTruckDetails}
@@ -830,7 +790,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
               </div>
 
               {/* Original Truck Table */}
-              <div className="border rounded-md">
+              {/* <div className="border rounded-md">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -861,7 +821,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
                                     className="h-full w-full object-cover"
                                   />
                                 ) : (
-                                  <User size={14} className="text-gray-600" />
+                                  <U size={14} className="text-gray-600" />
                                 )}
                               </div>
                               {truck.driver.name}
@@ -943,11 +903,11 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
                     )}
                   </TableBody>
                 </Table>
-              </div>
+              </div> */}
             </div>
           </TabsContent>
 
-          <TabsContent value="map" className="mt-4">
+          {/* <TabsContent value="map" className="mt-4">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Truck Locations</h3>
@@ -971,7 +931,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
                 </div>
               </div>
             </div>
-          </TabsContent>
+          </TabsContent> */}
 
           <TabsContent value="nearby" className="mt-4">
             <div className="space-y-4">
@@ -1005,20 +965,23 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
         {/* Add Truck Dialog */}
         {showAddTruckDialog && (
           <AddTruckForm
-            onClose={() => setShowAddTruckDialog(false)}
-            onSubmit={handleAddTruck}
+            open={true}
+            onOpenChange={(value) => setShowAddTruckDialog(value)}
+            onSave={handleAddTruck}
           />
         )}
 
         {/* Truck Details Dialog */}
-        {showTruckDetailsDialog && selectedTruck && (
+        {/* {showTruckDetailsDialog && selectedTruck && (
           <TruckDetails
             truck={selectedTruck}
-            onClose={() => setShowTruckDetailsDialog(false)}
+            open={true}
+            onOpenChange={(value) => setShowTruckDetailsDialog(value)}
+            // onClose={() => setShowTruckDetailsDialog(false)}
             onAssignLoad={handleAssignLoad}
-            onEdit={handleEditTruckDetails}
+            onEditDetails={handleEditTruckDetails}
           />
-        )}
+        )} */}
       </CardContent>
     </Card>
   );

@@ -32,8 +32,6 @@ const DashboardLayout = ({
   const location = useLocation();
   const { user } = useAuthContext();
 
-  console.log('user in dashbaord layout:', user);
-
   // Close mobile sidebar when route changes
   useEffect(() => {
     setMobileSidebarOpen(false);
@@ -52,7 +50,7 @@ const DashboardLayout = ({
   }, []);
 
   return (
-    <AuthProvider>
+    <>
       <div className="flex h-screen w-full overflow-hidden bg-background">
         {/* Mobile sidebar overlay */}
         {mobileSidebarOpen && (
@@ -77,8 +75,8 @@ const DashboardLayout = ({
         {/* Main content */}
         <div
           className={cn(
-            "flex flex-1 flex-col overflow-hidden transition-all duration-300",
-            sidebarCollapsed ? "md:pl-[70px]" : "md:pl-[280px]",
+            "flex flex-1 flex-col overflow-hidden transition-all duration-300 pr-[70px] pl-[50px]",
+            // sidebarCollapsed ? "md:pl-[70px]" : "md:pl-[170px]",
           )}
         >
           {/* Header */}
@@ -111,7 +109,7 @@ const DashboardLayout = ({
           {/* Footer */}
           <footer className="border-t py-4 text-center text-sm text-muted-foreground bg-background/90 backdrop-blur-sm">
             <p>
-              © {new Date().getFullYear()} Dispatch Management System. All
+              © {new Date().getFullYear()} TMS. All
               rights reserved.
             </p>
           </footer>
@@ -122,7 +120,7 @@ const DashboardLayout = ({
           </div>
         </div>
       </div>
-    </AuthProvider>
+    </>
   );
 };
 

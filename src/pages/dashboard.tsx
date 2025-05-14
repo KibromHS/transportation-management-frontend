@@ -20,69 +20,70 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   userAvatar = "",
 }) => {
   // State to track the current role (could be changed via role switcher in a real app)
-  const [currentRole, setCurrentRole] = useState<string>(user?.role);
+  // const [currentRole, setCurrentRole] = useState<string>(user.role);
 
   // Get page title based on role
-  const getPageTitle = () => {
-    switch (currentRole) {
-      case "Admin":
-        return "Admin Dashboard";
-      case "Dispatcher":
-        return "Dispatcher Dashboard";
-      case "Officer":
-        return "Officer Dashboard";
-      case "Reviewer":
-        return "Reviewer Dashboard";
-      case "Connect":
-        return "Connect Dashboard";
-      case "Driver":
-        return "Driver Dashboard";
-      default:
-        return "Dashboard";
-    }
-  };
+  // const getPageTitle = () => {
+  //   switch (currentRole) {
+  //     case "Admin":
+  //       return "Admin Dashboard";
+  //     case "Dispatcher":
+  //       return "Dispatcher Dashboard";
+  //     case "Officer":
+  //       return "Officer Dashboard";
+  //     case "Reviewer":
+  //       return "Reviewer Dashboard";
+  //     case "Connect":
+  //       return "Connect Dashboard";
+  //     case "Driver":
+  //       return "Driver Dashboard";
+  //     default:
+  //       return "Dashboard";
+  //   }
+  // };
 
   // Render the appropriate dashboard based on user role
   const renderDashboard = () => {
-    switch (currentRole) {
-      case "Admin":
-        return <AdminDashboard />;
-      case "Dispatcher":
-        return <DispatcherDashboard user={user} />;
-      case "Officer":
-        return <OfficerDashboard />;
-      case "Reviewer":
-        return <ReviewerDashboard />;
-      case "Connect":
-        return <ConnectDashboard />;
-      case "Driver":
-        return <DriverDashboard />;
-      default:
-        return <DispatcherDashboard user={user} />; // Default to dispatcher dashboard
-    }
+    // switch (currentRole) {
+    //   case "Admin":
+    //     return <AdminDashboard />;
+    //   case "Dispatcher":
+    //     return <DispatcherDashboard user={user} />;
+    //   case "Officer":
+    //     return <OfficerDashboard />;
+    //   case "Reviewer":
+    //     return <ReviewerDashboard />;
+    //   case "Connect":
+    //     return <ConnectDashboard />;
+    //   case "Driver":
+    //     return <DriverDashboard />;
+    //   default:
+    //     return <DispatcherDashboard user={user} />; // Default to dispatcher dashboard
+    // }
+    return <AdminDashboard />
   };
 
   // For demo purposes - role switcher
-  const handleRoleChange = (
-    role:
-      | "Admin"
-      | "Dispatcher"
-      | "Officer"
-      | "Reviewer"
-      | "Connect"
-      | "Driver",
-  ) => {
-    setCurrentRole(role);
-  };
+  // const handleRoleChange = (
+  //   role:
+  //     | "Admin"
+  //     | "Dispatcher"
+  //     | "Officer"
+  //     | "Reviewer"
+  //     | "Connect"
+  //     | "Driver",
+  // ) => {
+  //   setCurrentRole(role);
+  // };
 
   return (
     <DashboardLayout
       userAvatar={userAvatar}
-      pageTitle={getPageTitle()}
+      pageTitle='Dashboard'
     >
       {/* Role switcher for demo purposes */}
       <div className="w-full h-full">
-        <div className="mb-4 bg-muted/30 p-3 rounded-md">
+        {/* <div className="mb-4 bg-muted/30 p-3 rounded-md">
           <p className="text-sm text-muted-foreground mb-2">
             Demo Mode: Switch between different user roles
           </p>
@@ -124,7 +125,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               Driver
             </button>
           </div>
-        </div>
+        </div> */}
 
         {/* Render the appropriate dashboard based on role */}
         {renderDashboard()}

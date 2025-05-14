@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.tsx";
+import App from './App.tsx';
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/ui/theme-provider";
@@ -44,7 +44,6 @@ root.render(
       <PerformanceOptimizer>
         <BrowserRouter basename={basename}>
           <AuthProvider>
-
             <App />
           </AuthProvider>
         </BrowserRouter>

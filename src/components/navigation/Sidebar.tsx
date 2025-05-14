@@ -116,11 +116,11 @@ const SidebarContent = ({
   // Define navigation items based on user role
   const getNavigationItems = () => {
     const commonItems = [
-      {
-        title: "Dashboard",
-        icon: <LayoutDashboard className="h-5 w-5" />,
-        href: "/dashboard",
-      },
+      // {
+      //   title: "Dashboard",
+      //   icon: <LayoutDashboard className="h-5 w-5" />,
+      //   href: "/dashboard",
+      // },
       // {
       //   title: "Notifications",
       //   icon: <Bell className="h-5 w-5" />,
@@ -130,41 +130,124 @@ const SidebarContent = ({
     ];
 
     const roleSpecificItems = {
-      Admin: [
+      admin: [
         {
-          title: "User Management",
-          icon: <Users className="h-5 w-5" />,
-          href: "/admin/users",
+          title: "Dashboard",
+          icon: <LayoutDashboard className="h-5 w-5" />,
+          href: "/dashboard",
         },
+        // {
+        //   title: "User Management",
+        //   icon: <Users className="h-5 w-5" />,
+        //   href: "/admin/users",
+        // },
+        // {
+        //   title: "Fleet & Zones",
+        //   icon: <Truck className="h-5 w-5" />,
+        //   href: "/admin/fleet",
+        // },
+        // {
+        //   title: "Alert Settings",
+        //   icon: <AlertTriangle className="h-5 w-5" />,
+        //   href: "/admin/alerts",
+        // },
+        // {
+        //   title: "Templates",
+        //   icon: <Layers className="h-5 w-5" />,
+        //   href: "/admin/templates",
+        // },
+        // {
+        //   title: "Integrations",
+        //   icon: <Zap className="h-5 w-5" />,
+        //   href: "/admin/integrations",
+        // },
+        // {
+        //   title: "System Settings",
+        //   icon: <Settings className="h-5 w-5" />,
+        //   href: "/admin/settings",
+        // },
+        // {
+        //   title: "Analytics & Reports",
+        //   icon: <BarChart2 className="h-5 w-5" />,
+        //   href: "/admin/analytics",
+        // },
         {
-          title: "Fleet & Zones",
+          title: "Trucks",
           icon: <Truck className="h-5 w-5" />,
-          href: "/admin/fleet",
+          href: "/dispatcher/trucks",
         },
         {
-          title: "Alert Settings",
-          icon: <AlertTriangle className="h-5 w-5" />,
-          href: "/admin/alerts",
+          title: "Auction",
+          icon: <Gauge className="h-5 w-5" />,
+          href: "/dispatcher/auction",
         },
         {
-          title: "Templates",
-          icon: <Layers className="h-5 w-5" />,
-          href: "/admin/templates",
+          title: "Loads",
+          icon: <ClipboardList className="h-5 w-5" />,
+          href: "/dispatcher/loads",
         },
         {
-          title: "Integrations",
-          icon: <Zap className="h-5 w-5" />,
-          href: "/admin/integrations",
+          title: "Trip Monitor",
+          icon: <Activity className="h-5 w-5" />,
+          href: "/dispatcher/trip-monitor",
         },
         {
-          title: "System Settings",
-          icon: <Settings className="h-5 w-5" />,
-          href: "/admin/settings",
+          title: "Owners",
+          icon: <Users className="h-5 w-5" />,
+          href: "/dispatcher/owners",
         },
         {
-          title: "Analytics & Reports",
-          icon: <BarChart2 className="h-5 w-5" />,
-          href: "/admin/analytics",
+          title: "Drivers",
+          icon: <U className="h-5 w-5" />,
+          href: "/dispatcher/drivers",
+        },
+        {
+          title: "Users",
+          icon: <Users className="h-5 w-5" />,
+          href: "/dispatcher/users",
+        },
+        {
+          title: 'Contragents',
+          icon: <Building className="h-5 w-5" />,
+          href: "/dispatcher/contragents",
+        },
+        // {
+        //   title: "Contragents",
+        //   icon: <Building className="h-5 w-5" />,
+        //   href: "/dispatcher/contragents",
+        //   subItems: [
+        //     {
+        //       title: "Carriers",
+        //       href: "/dispatcher/contragents/carriers",
+        //     },
+        //     {
+        //       title: "Customers",
+        //       href: "/dispatcher/contragents/customers",
+        //     },
+        //     {
+        //       title: "Facilities",
+        //       href: "/dispatcher/contragents/facilities",
+        //     },
+        //     {
+        //       title: "Factoring Companies",
+        //       href: "/dispatcher/contragents/factoring",
+        //     },
+        //   ],
+        // },
+        {
+          title: "Reports",
+          icon: <FileText className="h-5 w-5" />,
+          href: "/dispatcher/reports",
+        },
+        {
+          title: "Live Map",
+          icon: <Map className="h-5 w-5" />,
+          href: "/dispatcher/map",
+        },
+        {
+          title: "Task Management",
+          icon: <CheckCircle className="h-5 w-5" />,
+          href: "/dispatcher/tasks",
         },
       ],
       Dispatcher: [
@@ -338,9 +421,10 @@ const SidebarContent = ({
       ],
     };
 
-    // If the role doesn't exist in our mapping, default to Dispatcher
+    console.log('role is', user.role);
     const role = roleSpecificItems[user?.role] ? user.role : "Dispatcher";
-    return [...commonItems, ...roleSpecificItems[role]];
+    console.log('returning this', roleSpecificItems[role]);
+    return roleSpecificItems[role];
   };
 
   const navigationItems = getNavigationItems();
@@ -561,9 +645,7 @@ const MemoizedSidebarContent = memo(SidebarContent);
 
 const Sidebar = (props: SidebarProps) => {
   return (
-    <AuthProvider>
       <MemoizedSidebarContent {...props} />
-    </AuthProvider>
   );
 };
 

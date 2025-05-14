@@ -38,45 +38,20 @@ import {
 export interface TruckDataItem {
   id: string;
   documentStatus?: "expired" | "warning" | "valid";
-  contact: {
-    role: string;
+  truck_type: string;
+  preferred_load: string;
+  payload_capacity: string;
+  driver: {
     name: string;
-    company?: string;
     phone: string;
+    language: string;
+    citizenship: string;
+    is_available: number;
   };
-  info: {
-    type: string;
-    features?: string[];
-    flags?: {
-      language?: "EN" | "RU" | "ES" | "FR";
-      citizenship?: string;
-      rate?: number;
-      rateUnit?: string;
-    };
-  };
-  dimensions: {
-    length: number;
-    width: number;
-    height: number;
-    isLong?: boolean;
-    payload: number;
-  };
-  status: "available" | "busy" | "maintenance" | "offline";
-  availability: {
-    location?: string;
-    datetime?: string;
-    needsUpdate?: boolean;
-  };
-  lastKnown: {
-    city: string;
-    state: string;
-    zip: string;
-    country: string;
-    datetime: string;
-  };
-  actions: {
-    canReserve: boolean;
-  };
+  dimensions: string;
+  status: string;
+  address: string;
+  is_reserved: number;
 }
 
 interface TruckDataTableProps {
@@ -119,10 +94,10 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
         valueA = a.id;
         valueB = b.id;
         break;
-      case "lastKnown":
-        valueA = new Date(a.lastKnown.datetime).getTime();
-        valueB = new Date(b.lastKnown.datetime).getTime();
-        break;
+      // case "lastKnown":
+      //   valueA = new Date(a.lastKnown.datetime).getTime();
+      //   valueB = new Date(b.lastKnown.datetime).getTime();
+      //   break;
       default:
         return 0;
     }
@@ -241,7 +216,7 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
             <TableHead>TRUCK INFO</TableHead>
             <TableHead>DIMS / PAYLOAD</TableHead>
             <TableHead className="text-center">STATUS</TableHead>
-            <TableHead>AVAILABILITY LOCATION</TableHead>
+            {/* <TableHead>AVAILABILITY LOCATION</TableHead> */}
             <TableHead
               className="cursor-pointer hover:bg-muted/80 transition-colors"
               onClick={() => handleSort("lastKnown")}
@@ -263,55 +238,54 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
                 {truck.id}
               </TableCell>
               <TableCell>
-                <div className="text-gray-500">{truck.contact.role}</div>
-                <div className="font-medium">{truck.contact.name}</div>
-                {truck.contact.company && (
+                <div className="text-gray-500">driver</div>
+                <div className="font-medium">{truck.driver.name}</div>
+                {/* {truck.contact.company && (
                   <div className="text-xs text-gray-500">
                     {truck.contact.company}
                   </div>
-                )}
+                )} */}
                 <a
-                  href={`tel:${truck.contact.phone}`}
+                  href={`tel:${truck.driver.phone}`}
                   className="text-blue-600 hover:underline text-sm flex items-center"
                 >
-                  {truck.contact.phone}
+                  {truck.driver.phone}
                 </a>
               </TableCell>
               <TableCell>
                 <div className="flex items-center mb-1">
-                  {renderLanguageFlag(truck.info.flags?.language)}
-                  {truck.info.type}
+                  {renderLanguageFlag(truck.driver.language)}
+                  {truck.truck_type}
                 </div>
-                {truck.info.features && truck.info.features.length > 0 && (
+                {/* {truck.info.features && truck.info.features.length > 0 && (
                   <div className="text-xs text-gray-500">
                     {truck.info.features.join(", ")}
                   </div>
-                )}
-                {renderRateInfo(
+                )} */}
+                {/* {renderRateInfo(
                   truck.info.flags?.rate,
                   truck.info.flags?.rateUnit,
-                )}
+                )} */}
               </TableCell>
               <TableCell>
                 <div className="flex items-center">
-                  {truck.dimensions.isLong && (
+                  {truck.preferred_load == 'long' && (
                     <Badge className="bg-blue-100 text-blue-800 mr-2 text-xs border-0">
                       LONG
                     </Badge>
                   )}
                   <span>
-                    {truck.dimensions.length}" x {truck.dimensions.width}" x{" "}
-                    {truck.dimensions.height}"
+                    {truck.dimensions}
                   </span>
                 </div>
                 <div className="text-gray-600">
-                  {truck.dimensions.payload.toLocaleString()} lbs
+                  {truck.payload_capacity} lbs
                 </div>
               </TableCell>
               <TableCell className="text-center">
                 {renderStatusIcon(truck.status)}
               </TableCell>
-              <TableCell>
+              {/* <TableCell>
                 {truck.availability.needsUpdate ? (
                   <div className="text-gray-400 italic">need to update</div>
                 ) : (
@@ -322,22 +296,21 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
                     </div>
                   </>
                 )}
-              </TableCell>
+              </TableCell>  */}
               <TableCell>
                 <div className="flex items-center">
                   <MapPin className="h-4 w-4 text-gray-400 mr-1 flex-shrink-0" />
                   <span>
-                    {truck.lastKnown.city}, {truck.lastKnown.state},{" "}
-                    {truck.lastKnown.zip}, {truck.lastKnown.country}
+                    {truck.address}
                   </span>
                 </div>
-                <div className="text-xs text-gray-500">
+                {/* <div className="text-xs text-gray-500">
                   {truck.lastKnown.datetime}
-                </div>
+                </div> */}
               </TableCell>
               <TableCell>
                 <div className="flex items-center justify-center space-x-2">
-                  {truck.actions.canReserve ? (
+                  {truck.is_reserved == 0 ? (
                     <Button
                       className="bg-green-500 hover:bg-green-600 text-white text-xs py-1 h-8"
                       onClick={() => onReserve && onReserve(truck.id)}

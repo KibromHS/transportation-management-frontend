@@ -77,19 +77,19 @@ const Dashboard = lazy(() => {
 
 // Lazy load pages with chunk naming for better debugging
 const MapPage = lazy(
-  () => import("./pages/map" /* webpackChunkName: "map-page" */),
+  () => import("./pages/map" /* webpackChunkName: "map-page" */)
 );
 const AnalyticsPage = lazy(
-  () => import("./pages/analytics" /* webpackChunkName: "analytics-page" */),
+  () => import("./pages/analytics" /* webpackChunkName: "analytics-page" */)
 );
 const LoadsPage = lazy(
-  () => import("./pages/loads" /* webpackChunkName: "loads-page" */),
+  () => import("./pages/loads" /* webpackChunkName: "loads-page" */)
 );
 const ReportsPage = lazy(
-  () => import("./pages/reports" /* webpackChunkName: "reports-page" */),
+  () => import("./pages/reports" /* webpackChunkName: "reports-page" */)
 );
 const MessagesPage = lazy(
-  () => import("./pages/messages" /* webpackChunkName: "messages-page" */),
+  () => import("./pages/messages" /* webpackChunkName: "messages-page" */)
 );
 
 // Group related dispatcher pages for better code splitting
@@ -97,56 +97,54 @@ const TrucksPage = lazy(
   () =>
     import(
       "./pages/dispatcher/trucks" /* webpackChunkName: "dispatcher-trucks" */
-    ),
+    )
 );
 const AuctionPage = lazy(
   () =>
     import(
       "./pages/dispatcher/auction" /* webpackChunkName: "dispatcher-auction" */
-    ),
+    )
 );
 const TripMonitorPage = lazy(
   () =>
     import(
       "./pages/dispatcher/trip-monitor" /* webpackChunkName: "dispatcher-trip" */
-    ),
+    )
 );
 const DispatcherLoadsPage = lazy(
   () =>
     import(
       "./pages/dispatcher/loads" /* webpackChunkName: "dispatcher-loads" */
-    ),
+    )
 );
-const OwnersPage = lazy(
-  () => import('./pages/dispatcher/owners'),
-);
+const OwnersPage = lazy(() => import("./pages/dispatcher/owners/owners"));
 const DriversPage = lazy(
   () =>
     import(
-      "./pages/dispatcher/drivers" /* webpackChunkName: "dispatcher-drivers" */
-    ),
+      "./pages/dispatcher/drivers/drivers" /* webpackChunkName: "dispatcher-drivers" */
+    )
 );
 const UsersPage = lazy(
   () =>
     import(
       "./pages/dispatcher/users" /* webpackChunkName: "dispatcher-users" */
-    ),
+    )
 );
 const ContragentsPage = lazy(
   () =>
     import(
       "./pages/dispatcher/contragents" /* webpackChunkName: "dispatcher-contragents" */
-    ),
+    )
 );
 const TasksPage = lazy(
   () =>
     import(
       "./pages/dispatcher/tasks" /* webpackChunkName: "dispatcher-tasks" */
-    ),
+    )
 );
 const DispatcherMapPage = lazy(
   () =>
-    import("./pages/dispatcher/map" /* webpackChunkName: "dispatcher-map" */),
+    import("./pages/dispatcher/map" /* webpackChunkName: "dispatcher-map" */)
 );
 
 // Memoized auth check for performance
@@ -193,7 +191,7 @@ const GlobalErrorHandler = ({ children }: { children: React.ReactNode }) => {
           ? event.reason
           : new Error(String(event.reason)),
         undefined,
-        "high",
+        "high"
       );
 
       toast({
@@ -220,30 +218,29 @@ function App() {
   const { user, isLoading } = useAuthContext();
   // const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isOnline, setIsOnline] = useState(true);
-  
-  
+
   // Monitor online status
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-    
+
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
-    
+
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
-  
+
   if (isLoading) {
     return <LoadingFallback />;
   }
 
   const isAuthenticated = !!user;
 
-  console.log('authenticated:', isAuthenticated);
-  console.log('user', user);
+  console.log("authenticated:", isAuthenticated);
+  console.log("user", user);
 
   // Show offline message when not connected
   if (!isOnline) {
@@ -289,16 +286,23 @@ function App() {
             {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
 
             <Routes>
-              <Route path="/" element={
-                <ErrorBoundary>
-                  {isAuthenticated ? <Dashboard user={user} /> : <Home />}
-                </ErrorBoundary>
-              } />
+              <Route
+                path="/"
+                element={
+                  <ErrorBoundary>
+                    {isAuthenticated ? <Dashboard user={user} /> : <Home />}
+                  </ErrorBoundary>
+                }
+              />
               <Route
                 path="/dashboard"
                 element={
                   <ErrorBoundary>
-                    {isAuthenticated ? <Dashboard user={user} /> : <Navigate to="/" />}
+                    {isAuthenticated ? (
+                      <Dashboard user={user} />
+                    ) : (
+                      <Navigate to="/" />
+                    )}
                   </ErrorBoundary>
                 }
               />
@@ -376,11 +380,11 @@ function App() {
                   </ErrorBoundary>
                 }
               />
-              <Route 
-                path='/dispatcher/owners'
+              <Route
+                path="/dispatcher/owners"
                 element={
                   <ErrorBoundary>
-                    {isAuthenticated ? <OwnersPage /> : <Navigate to='/' />}
+                    {isAuthenticated ? <OwnersPage /> : <Navigate to="/" />}
                   </ErrorBoundary>
                 }
               />
@@ -412,7 +416,7 @@ function App() {
                   </ErrorBoundary>
                 }
               />
-              
+
               <Route
                 path="/dispatcher/tasks"
                 element={

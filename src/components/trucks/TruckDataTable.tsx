@@ -34,6 +34,7 @@ import {
   Edit,
   MapPin,
 } from "lucide-react";
+import { useAuthContext } from "@/context/AuthContext";
 
 export interface TruckDataItem {
   id: string;
@@ -79,6 +80,7 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
 }) => {
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const { user } = useAuthContext();
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -345,33 +347,38 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => onViewDetails && onViewDetails(truck.id)}
-                      >
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        View Details
-                      </DropdownMenuItem>
-                      {/* <DropdownMenuItem
-                        onClick={() => onViewLogs && onViewLogs(truck.id)}
-                      >
-                        <FileText className="mr-2 h-4 w-4" />
-                        View Logs
-                      </DropdownMenuItem> */}
-                      <DropdownMenuItem
-                        onClick={() => onEdit && onEdit(truck.id)}
-                      >
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => onArchive && onArchive(truck.id)}
-                        className="text-red-600"
-                      >
-                        <Archive className="mr-2 h-4 w-4" />
-                        Delete Truck
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
+                    {
+                      user.role == 'admin' && (
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => onViewDetails && onViewDetails(truck.id)}
+                          >
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            View Details
+                          </DropdownMenuItem>
+                          {/* <DropdownMenuItem
+                            onClick={() => onViewLogs && onViewLogs(truck.id)}
+                          >
+                            <FileText className="mr-2 h-4 w-4" />
+                            View Logs
+                          </DropdownMenuItem> */}
+                          <DropdownMenuItem
+                            onClick={() => onEdit && onEdit(truck.id)}
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => onArchive && onArchive(truck.id)}
+                            className="text-red-600"
+                          >
+                            <Archive className="mr-2 h-4 w-4" />
+                            Delete Truck
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      )
+                    }
+                    
                   </DropdownMenu>
                 </div>
               </TableCell>

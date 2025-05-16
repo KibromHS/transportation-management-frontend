@@ -52,3 +52,18 @@ export async function patchRequest(url: string, body: Object) {
         return null;
     }
 }
+
+export async function deleteRequest(url: string) {
+    try {
+        const response = await fetch(url, {
+            'method': 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+        });
+
+        return response;
+    } catch (e) {
+        console.error(e);
+    }
+}

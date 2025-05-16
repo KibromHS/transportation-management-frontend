@@ -41,7 +41,7 @@ import TruckDataTable, {
 import { useAuthContext } from "@/context/AuthContext";
 import { User } from "@/api";
 import LoadingSpinner from "../common/LoadingSpinner";
-import { patchRequest, postRequest } from "@/api/request";
+import { deleteRequest, patchRequest, postRequest } from "@/api/request";
 
 export interface TruckData {
   owner_id: string;
@@ -60,6 +60,7 @@ export interface TruckData {
   mexico: boolean;
   signs: 'with_signs' | 'without_signs';
   is_reserved: boolean;
+  truck_type_id: number;
 }
 
 interface TruckManagementProps {
@@ -646,6 +647,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
       canada: data.canada,
       mexico: data.mexico,
       signs: data.signs,
+      truck_type_id: data.truck_type_id,
     };
 
     try {
@@ -658,6 +660,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
 
         const truck = data.truck;
         const driverResponse = await patchRequest(`${import.meta.env.VITE_API_URL}/drivers/${driverId}`, {truck_id: truck.id});
+        window.location.reload();
         if (driverResponse.status == 200) {
           console.log('driver assigned to truck');
         } else {
@@ -719,8 +722,15 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
     console.log(`View logs for truck ${truckId}`);
   };
 
-  const handleArchiveTruck = (truckId: string) => {
-    console.log(`Archive truck ${truckId}`);
+  const handleArchiveTruck = async (truckId: string) => {
+
+    const response = await deleteRequest(`${import.meta.env.VITE_API_URL}/trucks/${truckId}`);
+    if (response.ok) {
+      window.location.reload();
+      console.log(`Truck #${truckId} deleted`);
+    } else {
+      console.log(`Failed to delete Truck #${truckId}`);
+    }
   };
 
   if (isLoading) {
@@ -762,15 +772,15 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
           <TabsContent value="list" className="mt-4">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Available Trucks</h3>
+                <h3 className="text-lg font-medium"></h3>
                 <div className="flex gap-2">
-                  <Button
+                  {/* <Button
                     variant="outline"
                     size="sm"
                     onClick={() => console.log("Refreshing truck data")}
                   >
                     <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-                  </Button>
+                  </Button> */}
                   {
                     user.role == 'admin' && <Button size="sm" onClick={() => setShowAddTruckDialog(true)}>
                       <Plus className="h-4 w-4 mr-2" /> Add Truck

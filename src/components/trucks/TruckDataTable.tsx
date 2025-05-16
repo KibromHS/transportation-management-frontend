@@ -51,7 +51,8 @@ export interface TruckDataItem {
   owner?: {
     name: string;
     phone: string;
-    
+    language: string;
+    citizenship: string;
   },
   dimensions: string;
   status: string;
@@ -243,23 +244,23 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
                 {truck.id}
               </TableCell>
               <TableCell>
-                <div className="text-gray-500">dr</div>
-                <div className="font-medium">{truck.driver?.name}</div>
+                <div className="text-gray-500">ow</div>
+                <div className="font-medium">{truck.owner?.name}</div>
                 {/* {truck.contact.company && (
                   <div className="text-xs text-gray-500">
                     {truck.contact.company}
                   </div>
                 )} */}
                 <a
-                  href={`tel:${truck.driver?.phone}`}
+                  href={`tel:${truck.owner?.phone}`}
                   className="text-blue-600 hover:underline text-sm flex items-center"
                 >
-                  {truck.driver?.phone}
+                  {truck.owner?.phone}
                 </a>
               </TableCell>
               <TableCell>
                 <div className="flex items-center mb-1">
-                  {renderLanguageFlag(truck.driver?.language)}
+                  {renderLanguageFlag(truck.owner?.language)}
                   {truck.truck_type_name}
                 </div>
                 {/* {truck.info.features && truck.info.features.length > 0 && (
@@ -351,12 +352,12 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
                         <ExternalLink className="mr-2 h-4 w-4" />
                         View Details
                       </DropdownMenuItem>
-                      <DropdownMenuItem
+                      {/* <DropdownMenuItem
                         onClick={() => onViewLogs && onViewLogs(truck.id)}
                       >
                         <FileText className="mr-2 h-4 w-4" />
                         View Logs
-                      </DropdownMenuItem>
+                      </DropdownMenuItem> */}
                       <DropdownMenuItem
                         onClick={() => onEdit && onEdit(truck.id)}
                       >
@@ -368,7 +369,7 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
                         className="text-red-600"
                       >
                         <Archive className="mr-2 h-4 w-4" />
-                        Archive
+                        Delete Truck
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

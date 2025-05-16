@@ -41,21 +41,25 @@ import TruckDataTable, {
 import { useAuthContext } from "@/context/AuthContext";
 import { User } from "@/api";
 import LoadingSpinner from "../common/LoadingSpinner";
+import { patchRequest, postRequest } from "@/api/request";
 
 export interface TruckData {
-  id: string;
-  type: string;
-  status: "available" | "on_route" | "maintenance" | "offline";
-  driver: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  location: string;
-  lastUpdated: string;
-  fuelLevel: number;
-  mileage: number;
-  nextMaintenance: string;
+  owner_id: string;
+  license_plate: string;
+  model: string;
+  color: string;
+  year: number;
+  dimensions: string;
+  payload_capacity: string;
+  door_type: string;
+  team: string;
+  address: string;
+  status: 'available' | 'not_available' | 'busy';
+  preferred_load: string;
+  canada: boolean;
+  mexico: boolean;
+  signs: 'with_signs' | 'without_signs';
+  is_reserved: boolean;
 }
 
 interface TruckManagementProps {
@@ -476,9 +480,9 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
           }
         });
         const data = await response.json();
-        console.log('trucks response data:', data.data);
+        console.log('trucks response data:', data);
         if (response.ok) {
-          setTrucks(data.data);
+          setTrucks(data);
         }
       } catch (e) {
         console.error('Error fething trucks', e);
@@ -622,55 +626,54 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
   });
 
   // Handle adding a new truck
-  const handleAddTruck = (data: any) => {
-    // In a real app, this would send the data to an API
+  const handleAddTruck = async (data: any, driverId: number) => {
     console.log("Adding new truck:", data);
 
-    // Create a new truck object from the form data
     const newTruck: TruckData = {
-      id: data.truckId || `TRK-${Math.floor(1000 + Math.random() * 9000)}`,
-      type:
-        data.type === "box_truck"
-          ? "Box Truck"
-          : data.type === "cargo_van"
-            ? "Cargo Van"
-            : data.type === "refrigerated"
-              ? "Refrigerated"
-              : data.type === "flatbed"
-                ? "Flatbed"
-                : data.type === "tanker"
-                  ? "Tanker"
-                  : "Box Truck",
-      status: "available",
-      driver: {
-        id: `DRV-${Math.floor(100 + Math.random() * 900)}`,
-        name:
-          data.driver === "john"
-            ? "John Doe"
-            : data.driver === "mike"
-              ? "Mike Smith"
-              : data.driver === "ryan"
-                ? "Ryan Johnson"
-                : data.driver === "sarah"
-                  ? "Sarah Williams"
-                  : data.driver === "dan"
-                    ? "Dan Brown"
-                    : "Unassigned",
-        avatar: data.driver
-          ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.driver}`
-          : undefined,
-      },
-      location: data.location || "Unknown",
-      lastUpdated: "Just now",
-      fuelLevel: parseInt(data.fuelLevel) || 100,
-      mileage: parseInt(data.mileage) || 0,
-      nextMaintenance:
-        data.nextMaintenance || new Date().toISOString().split("T")[0],
+      owner_id: data.owner_id,
+      license_plate: data.license_plate,
+      model: data.model,
+      color: data.color,
+      year: data.year,
+      dimensions: data.dimensions,
+      payload_capacity: data.payload_capacity,
+      door_type: data.door_type,
+      team: data.team,
+      address: data.address,
+      status: 'available',
+      preferred_load: data.preferred_load,
+      is_reserved: false,
+      canada: data.canada,
+      mexico: data.mexico,
+      signs: data.signs,
     };
 
-    // Add the new truck to the list
-    setTrucks([...trucks, newTruck]);
-    setShowAddTruckDialog(false);
+    try {
+      setIsLoading(true);
+      const response = await postRequest(`${import.meta.env.VITE_API_URL}/trucks`, newTruck);
+      
+      if (response.status == 201) {
+        console.log('truck added successfully');
+        const data = await response.json();
+
+        const truck = data.truck;
+        const driverResponse = await patchRequest(`${import.meta.env.VITE_API_URL}/drivers/${driverId}`, {truck_id: truck.id});
+        if (driverResponse.status == 200) {
+          console.log('driver assigned to truck');
+        } else {
+          console.log('failed to assign driver:', driverResponse);
+        }
+
+        setTrucks([...trucks, newTruck]);
+        setShowAddTruckDialog(false);
+      } else {
+        console.log(await response.json());
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle viewing truck details
@@ -696,11 +699,11 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
     switch (status) {
       case "available":
         return <Badge className="bg-green-500">Available</Badge>;
-      case "on_route":
+      case "busy":
         return <Badge className="bg-blue-500">On Route</Badge>;
-      case "maintenance":
-        return <Badge variant="secondary">Maintenance</Badge>;
-      case "offline":
+      // case "maintenance":
+      //   return <Badge variant="secondary">Maintenance</Badge>;
+      case "not_available":
         return <Badge variant="outline">Offline</Badge>;
       default:
         return null;

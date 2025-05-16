@@ -38,16 +38,21 @@ import {
 export interface TruckDataItem {
   id: string;
   documentStatus?: "expired" | "warning" | "valid";
-  truck_type: string;
+  truck_type_name: string;
   preferred_load: string;
   payload_capacity: string;
-  driver: {
+  driver?: {
     name: string;
     phone: string;
     language: string;
     citizenship: string;
     is_available: number;
   };
+  owner?: {
+    name: string;
+    phone: string;
+    
+  },
   dimensions: string;
   status: string;
   address: string;
@@ -146,20 +151,20 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
             </Tooltip>
           </TooltipProvider>
         );
-      case "maintenance":
-        return (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex justify-center">
-                  <RefreshCw className="h-5 w-5 text-blue-500" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>In Maintenance</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        );
-      case "offline":
+      // case "maintenance":
+      //   return (
+      //     <TooltipProvider>
+      //       <Tooltip>
+      //         <TooltipTrigger asChild>
+      //           <div className="flex justify-center">
+      //             <RefreshCw className="h-5 w-5 text-blue-500" />
+      //           </div>
+      //         </TooltipTrigger>
+      //         <TooltipContent>In Maintenance</TooltipContent>
+      //       </Tooltip>
+      //     </TooltipProvider>
+      //   );
+      case "not_available":
         return (
           <TooltipProvider>
             <Tooltip>
@@ -238,24 +243,24 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
                 {truck.id}
               </TableCell>
               <TableCell>
-                <div className="text-gray-500">driver</div>
-                <div className="font-medium">{truck.driver.name}</div>
+                <div className="text-gray-500">dr</div>
+                <div className="font-medium">{truck.driver?.name}</div>
                 {/* {truck.contact.company && (
                   <div className="text-xs text-gray-500">
                     {truck.contact.company}
                   </div>
                 )} */}
                 <a
-                  href={`tel:${truck.driver.phone}`}
+                  href={`tel:${truck.driver?.phone}`}
                   className="text-blue-600 hover:underline text-sm flex items-center"
                 >
-                  {truck.driver.phone}
+                  {truck.driver?.phone}
                 </a>
               </TableCell>
               <TableCell>
                 <div className="flex items-center mb-1">
-                  {renderLanguageFlag(truck.driver.language)}
-                  {truck.truck_type}
+                  {renderLanguageFlag(truck.driver?.language)}
+                  {truck.truck_type_name}
                 </div>
                 {/* {truck.info.features && truck.info.features.length > 0 && (
                   <div className="text-xs text-gray-500">
@@ -274,6 +279,13 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
                       LONG
                     </Badge>
                   )}
+                  {
+                    truck.preferred_load == 'local' && (
+                      <Badge className="bg-blue-100 text-blue-800 mr-2 text-xs border-0">
+                        LOCAL
+                      </Badge>
+                    )
+                  }
                   <span>
                     {truck.dimensions}
                   </span>

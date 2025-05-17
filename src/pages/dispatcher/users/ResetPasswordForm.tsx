@@ -97,7 +97,7 @@ const ResetPasswordForm: React.FC<AddTruckFormProps> = ({
 
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">New Password</Label>
             <Input
               id="password"
               value={formData.password}

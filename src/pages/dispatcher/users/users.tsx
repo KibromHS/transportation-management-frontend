@@ -129,14 +129,14 @@ const UsersPage = () => {
   const handleResetPassword = async (data: any, userId: number) => {
     setLoading(true);
     const response = await patchRequest(
-      `${import.meta.env.API_BASE_URL}/users/${userId}`,
+      `${import.meta.env.VITE_API_URL}/users/${userId}`,
       { password: data.password }
     );
     if (response.ok) {
       setLoading(true);
       window.location.reload();
     } else {
-      console.error("Failed to reset password", await response.json());
+      console.error("Failed to reset password", response);
     }
     setLoading(false);
   };

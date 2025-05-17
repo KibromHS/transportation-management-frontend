@@ -133,7 +133,7 @@ const UsersPage = lazy(
 const ContragentsPage = lazy(
   () =>
     import(
-      "./pages/dispatcher/contragents" /* webpackChunkName: "dispatcher-contragents" */
+      "./pages/dispatcher/contragents/contragents" /* webpackChunkName: "dispatcher-contragents" */
     )
 );
 const TasksPage = lazy(

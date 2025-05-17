@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ThemeAwareDashboardLayout from "@/components/layout/ThemeAwareDashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,132 +38,246 @@ import {
   Landmark,
   Users,
 } from "lucide-react";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { deleteRequest, getRequest, postRequest } from "@/api/request";
+import AddCarrierForm from "./AddCarrierForm";
+import AddFacilityForm from "./AddFacilityForm";
+
+interface CarrierModel {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  state: string;
+  address_line1: string;
+}
+
+interface FacilityModel {
+  id: number;
+  name: string;
+  location: string;
+  address_line1: string;
+}
 
 const ContragentsPage = () => {
+  const [facilities, setFacilities] = useState<FacilityModel[]>([]);
+  const [carriers, setCarriers] = useState<CarrierModel[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showAddFacility, setShowAddFacility] = useState(false);
+  const [showAddCarrier, setShowAddCarrier] = useState(false);
+
+  useEffect(() => {
+    const fetchCarriers = async () => {
+      const response = await getRequest(
+        `${import.meta.env.VITE_API_URL}/companies`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setCarriers(data.data);
+      } else {
+        console.error("Failed to fetch carriers:", data);
+      }
+    };
+
+    const fetchFacilities = async () => {
+      const response = await getRequest(
+        `${import.meta.env.VITE_API_URL}/facilities`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setFacilities(data.data);
+      } else {
+        console.error("Failed to fetch facilities:", data);
+      }
+    };
+
+    fetchCarriers();
+    fetchFacilities();
+  }, []);
+
+  const handleAddCarrier = async (data: any) => {
+    setLoading(true);
+    const response = await postRequest(
+      `${import.meta.env.VITE_API_URL}/companies`,
+      data
+    );
+    if (response.ok) {
+      window.location.reload();
+    } else {
+      console.error("Failed to add carrier:", response);
+    }
+    setLoading(false);
+  };
+
+  const handleAddFacility = async (data: any) => {
+    setLoading(true);
+    const response = await postRequest(
+      `${import.meta.env.VITE_API_URL}/facilities`,
+      data
+    );
+    if (response.ok) {
+      window.location.reload();
+    } else {
+      console.error("Failed to add facility:", response);
+    }
+    setLoading(false);
+  };
+
+  const handleCarrierDelete = async (carrierId: number) => {
+    setLoading(true);
+    const response = await deleteRequest(
+      `${import.meta.env.VITE_API_URL}/companies/${carrierId}`
+    );
+    if (response.ok) {
+      window.location.reload();
+    } else {
+      console.error("Failed to delete company:", response);
+    }
+    setLoading(false);
+  };
+
+  const handleFacilityDelete = async (facilityId: number) => {
+    setLoading(true);
+    const response = await deleteRequest(
+      `${import.meta.env.VITE_API_URL}/facilities/${facilityId}`
+    );
+    if (response.ok) {
+      window.location.reload();
+    } else {
+      console.error("Failed to delete facility:", response);
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
   // Mock data for different contragent types
-  const carriers = [
-    {
-      id: "CAR-101",
-      name: "FastTrack Logistics",
-      type: "carrier",
-      logo: "https://api.dicebear.com/7.x/initials/svg?seed=FL",
-      contact: "Robert Johnson",
-      phone: "(555) 123-4567",
-      email: "robert@fasttracklogistics.com",
-      location: "Chicago, IL",
-      status: "active",
-      fleetSize: 25,
-      rating: 4.8,
-      lastDelivery: "Yesterday",
-    },
-    {
-      id: "CAR-102",
-      name: "Midwest Express",
-      type: "carrier",
-      logo: "https://api.dicebear.com/7.x/initials/svg?seed=ME",
-      contact: "Sarah Davis",
-      phone: "(555) 234-5678",
-      email: "sarah@midwestexpress.com",
-      location: "Detroit, MI",
-      status: "active",
-      fleetSize: 18,
-      rating: 4.6,
-      lastDelivery: "Today",
-    },
-  ];
+  // const carriers = [
+  //   {
+  //     id: "CAR-101",
+  //     name: "FastTrack Logistics",
+  //     type: "carrier",
+  //     logo: "https://api.dicebear.com/7.x/initials/svg?seed=FL",
+  //     contact: "Robert Johnson",
+  //     phone: "(555) 123-4567",
+  //     email: "robert@fasttracklogistics.com",
+  //     location: "Chicago, IL",
+  //     status: "active",
+  //     fleetSize: 25,
+  //     rating: 4.8,
+  //     lastDelivery: "Yesterday",
+  //   },
+  //   {
+  //     id: "CAR-102",
+  //     name: "Midwest Express",
+  //     type: "carrier",
+  //     logo: "https://api.dicebear.com/7.x/initials/svg?seed=ME",
+  //     contact: "Sarah Davis",
+  //     phone: "(555) 234-5678",
+  //     email: "sarah@midwestexpress.com",
+  //     location: "Detroit, MI",
+  //     status: "active",
+  //     fleetSize: 18,
+  //     rating: 4.6,
+  //     lastDelivery: "Today",
+  //   },
+  // ];
 
-  const customers = [
-    {
-      id: "CUS-101",
-      name: "TechGlobal Industries",
-      type: "customer",
-      logo: "https://api.dicebear.com/7.x/initials/svg?seed=TG",
-      contact: "Michael Brown",
-      phone: "(555) 345-6789",
-      email: "michael@techglobal.com",
-      location: "San Francisco, CA",
-      status: "active",
-      totalOrders: 42,
-      lastOrder: "2 days ago",
-      accountValue: "$125,000",
-    },
-    {
-      id: "CUS-102",
-      name: "Retail Solutions Inc",
-      type: "customer",
-      logo: "https://api.dicebear.com/7.x/initials/svg?seed=RS",
-      contact: "Jennifer Smith",
-      phone: "(555) 456-7890",
-      email: "jennifer@retailsolutions.com",
-      location: "New York, NY",
-      status: "active",
-      totalOrders: 28,
-      lastOrder: "Yesterday",
-      accountValue: "$87,500",
-    },
-  ];
+  // const customers = [
+  //   {
+  //     id: "CUS-101",
+  //     name: "TechGlobal Industries",
+  //     type: "customer",
+  //     logo: "https://api.dicebear.com/7.x/initials/svg?seed=TG",
+  //     contact: "Michael Brown",
+  //     phone: "(555) 345-6789",
+  //     email: "michael@techglobal.com",
+  //     location: "San Francisco, CA",
+  //     status: "active",
+  //     totalOrders: 42,
+  //     lastOrder: "2 days ago",
+  //     accountValue: "$125,000",
+  //   },
+  //   {
+  //     id: "CUS-102",
+  //     name: "Retail Solutions Inc",
+  //     type: "customer",
+  //     logo: "https://api.dicebear.com/7.x/initials/svg?seed=RS",
+  //     contact: "Jennifer Smith",
+  //     phone: "(555) 456-7890",
+  //     email: "jennifer@retailsolutions.com",
+  //     location: "New York, NY",
+  //     status: "active",
+  //     totalOrders: 28,
+  //     lastOrder: "Yesterday",
+  //     accountValue: "$87,500",
+  //   },
+  // ];
 
-  const facilities = [
-    {
-      id: "FAC-101",
-      name: "Central Distribution Center",
-      type: "facility",
-      logo: "https://api.dicebear.com/7.x/initials/svg?seed=CD",
-      contact: "David Wilson",
-      phone: "(555) 567-8901",
-      email: "david@centraldistribution.com",
-      location: "Indianapolis, IN",
-      status: "active",
-      facilityType: "Warehouse",
-      capacity: "50,000 sq ft",
-      dockDoors: 12,
-    },
-    {
-      id: "FAC-102",
-      name: "Midwest Fulfillment Hub",
-      type: "facility",
-      logo: "https://api.dicebear.com/7.x/initials/svg?seed=MF",
-      contact: "Emily Taylor",
-      phone: "(555) 678-9012",
-      email: "emily@midwestfulfillment.com",
-      location: "Columbus, OH",
-      status: "active",
-      facilityType: "Fulfillment Center",
-      capacity: "75,000 sq ft",
-      dockDoors: 18,
-    },
-  ];
+  // const facilities = [
+  //   {
+  //     id: "FAC-101",
+  //     name: "Central Distribution Center",
+  //     type: "facility",
+  //     logo: "https://api.dicebear.com/7.x/initials/svg?seed=CD",
+  //     contact: "David Wilson",
+  //     phone: "(555) 567-8901",
+  //     email: "david@centraldistribution.com",
+  //     location: "Indianapolis, IN",
+  //     status: "active",
+  //     facilityType: "Warehouse",
+  //     capacity: "50,000 sq ft",
+  //     dockDoors: 12,
+  //   },
+  //   {
+  //     id: "FAC-102",
+  //     name: "Midwest Fulfillment Hub",
+  //     type: "facility",
+  //     logo: "https://api.dicebear.com/7.x/initials/svg?seed=MF",
+  //     contact: "Emily Taylor",
+  //     phone: "(555) 678-9012",
+  //     email: "emily@midwestfulfillment.com",
+  //     location: "Columbus, OH",
+  //     status: "active",
+  //     facilityType: "Fulfillment Center",
+  //     capacity: "75,000 sq ft",
+  //     dockDoors: 18,
+  //   },
+  // ];
 
-  const factoringCompanies = [
-    {
-      id: "FCT-101",
-      name: "Capital Factoring Solutions",
-      type: "factoring",
-      logo: "https://api.dicebear.com/7.x/initials/svg?seed=CF",
-      contact: "Alex Turner",
-      phone: "(555) 789-0123",
-      email: "alex@capitalfactoring.com",
-      location: "Chicago, IL",
-      status: "active",
-      clientCount: 45,
-      averageRate: "2.5%",
-      paymentTerms: "Net-30",
-    },
-    {
-      id: "FCT-102",
-      name: "Express Financial Services",
-      type: "factoring",
-      logo: "https://api.dicebear.com/7.x/initials/svg?seed=EF",
-      contact: "Jessica Brown",
-      phone: "(555) 890-1234",
-      email: "jessica@expressfinancial.com",
-      location: "Atlanta, GA",
-      status: "active",
-      clientCount: 32,
-      averageRate: "2.8%",
-      paymentTerms: "Net-45",
-    },
-  ];
+  // const factoringCompanies = [
+  //   {
+  //     id: "FCT-101",
+  //     name: "Capital Factoring Solutions",
+  //     type: "factoring",
+  //     logo: "https://api.dicebear.com/7.x/initials/svg?seed=CF",
+  //     contact: "Alex Turner",
+  //     phone: "(555) 789-0123",
+  //     email: "alex@capitalfactoring.com",
+  //     location: "Chicago, IL",
+  //     status: "active",
+  //     clientCount: 45,
+  //     averageRate: "2.5%",
+  //     paymentTerms: "Net-30",
+  //   },
+  //   {
+  //     id: "FCT-102",
+  //     name: "Express Financial Services",
+  //     type: "factoring",
+  //     logo: "https://api.dicebear.com/7.x/initials/svg?seed=EF",
+  //     contact: "Jessica Brown",
+  //     phone: "(555) 890-1234",
+  //     email: "jessica@expressfinancial.com",
+  //     location: "Atlanta, GA",
+  //     status: "active",
+  //     clientCount: 32,
+  //     averageRate: "2.8%",
+  //     paymentTerms: "Net-45",
+  //   },
+  // ];
 
   // Get status badge
   const getStatusBadge = (status: string) => {
@@ -200,10 +314,10 @@ const ContragentsPage = () => {
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Contragents</h1>
-          <Button>
+          {/* <Button>
             <Plus className="mr-2 h-4 w-4" />
             Add Contragent
-          </Button>
+          </Button> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -218,7 +332,7 @@ const ContragentsPage = () => {
               </p>
             </CardContent>
           </Card>
-          <Card>
+          {/* <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Customers</CardTitle>
             </CardHeader>
@@ -228,7 +342,7 @@ const ContragentsPage = () => {
                 Active shipping clients
               </p>
             </CardContent>
-          </Card>
+          </Card> */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Facilities</CardTitle>
@@ -240,7 +354,7 @@ const ContragentsPage = () => {
               </p>
             </CardContent>
           </Card>
-          <Card>
+          {/* <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Factoring</CardTitle>
             </CardHeader>
@@ -252,7 +366,7 @@ const ContragentsPage = () => {
                 Financial service partners
               </p>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         <div className="mb-6 flex items-center gap-4">
@@ -270,14 +384,21 @@ const ContragentsPage = () => {
         </div>
 
         <Tabs defaultValue="carriers" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="carriers">Carriers</TabsTrigger>
-            <TabsTrigger value="customers">Customers</TabsTrigger>
+            {/* <TabsTrigger value="customers">Customers</TabsTrigger> */}
             <TabsTrigger value="facilities">Facilities</TabsTrigger>
-            <TabsTrigger value="factoring">Factoring</TabsTrigger>
+            {/* <TabsTrigger value="factoring">Factoring</TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="carriers" className="mt-4">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-3xl font-bold"></h1>
+              <Button onClick={() => setShowAddCarrier(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Carrier
+              </Button>
+            </div>
             <Card>
               <CardContent className="p-0">
                 <Table>
@@ -285,9 +406,10 @@ const ContragentsPage = () => {
                     <TableRow>
                       <TableHead>Company</TableHead>
                       <TableHead>Contact</TableHead>
-                      <TableHead>Fleet Size</TableHead>
-                      <TableHead>Rating</TableHead>
-                      <TableHead>Status</TableHead>
+                      {/* <TableHead>Fleet Size</TableHead> */}
+                      <TableHead>Location</TableHead>
+                      {/* <TableHead>Rating</TableHead>
+                      <TableHead>Status</TableHead> */}
                       <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -297,26 +419,26 @@ const ContragentsPage = () => {
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                              {getTypeIcon(carrier.type)}
+                              {getTypeIcon("carrier")}
                             </div>
                             <div>
                               <div className="font-medium">{carrier.name}</div>
                               <div className="text-sm text-muted-foreground">
-                                {carrier.id}
+                                CMP-{carrier.id}
                               </div>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium">{carrier.contact}</div>
+                          <div className="font-medium">{carrier.email}</div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Phone className="h-3 w-3" />
                             {carrier.phone}
                           </div>
                         </TableCell>
-                        <TableCell>{carrier.fleetSize} trucks</TableCell>
-                        <TableCell>{carrier.rating}/5.0</TableCell>
-                        <TableCell>{getStatusBadge(carrier.status)}</TableCell>
+                        <TableCell>{carrier.address_line1}</TableCell>
+                        {/* <TableCell>{carrier.rating}/5.0</TableCell>
+                        <TableCell>{getStatusBadge(carrier.status)}</TableCell> */}
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -325,9 +447,13 @@ const ContragentsPage = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>View Details</DropdownMenuItem>
-                              <DropdownMenuItem>Edit</DropdownMenuItem>
-                              <DropdownMenuItem>Delete</DropdownMenuItem>
+                              {/* <DropdownMenuItem>View Details</DropdownMenuItem>
+                              <DropdownMenuItem>Edit</DropdownMenuItem> */}
+                              <DropdownMenuItem
+                                onClick={() => handleCarrierDelete(carrier.id)}
+                              >
+                                Delete
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -339,7 +465,7 @@ const ContragentsPage = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="customers" className="mt-4">
+          {/* <TabsContent value="customers" className="mt-4">
             <Card>
               <CardContent className="p-0">
                 <Table>
@@ -399,9 +525,16 @@ const ContragentsPage = () => {
                 </Table>
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent> */}
 
           <TabsContent value="facilities" className="mt-4">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-3xl font-bold"></h1>
+              <Button onClick={() => setShowAddFacility(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Facility
+              </Button>
+            </div>
             <Card>
               <CardContent className="p-0">
                 <Table>
@@ -410,8 +543,8 @@ const ContragentsPage = () => {
                       <TableHead>Facility</TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead>Type</TableHead>
-                      <TableHead>Capacity</TableHead>
-                      <TableHead>Status</TableHead>
+                      {/* <TableHead>Capacity</TableHead>
+                      <TableHead>Status</TableHead> */}
                       <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -421,26 +554,28 @@ const ContragentsPage = () => {
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                              {getTypeIcon(facility.type)}
+                              {getTypeIcon("facility")}
                             </div>
                             <div>
                               <div className="font-medium">{facility.name}</div>
                               <div className="text-sm text-muted-foreground">
-                                {facility.id}
+                                FAC-{facility.id}
                               </div>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium">{facility.contact}</div>
+                          <div className="font-medium">
+                            {facility.address_line1}
+                          </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <MapPin className="h-3 w-3" />
                             {facility.location}
                           </div>
                         </TableCell>
-                        <TableCell>{facility.facilityType}</TableCell>
-                        <TableCell>{facility.capacity}</TableCell>
-                        <TableCell>{getStatusBadge(facility.status)}</TableCell>
+                        <TableCell>Facility</TableCell>
+                        {/* <TableCell>{facility.capacity}</TableCell>
+                        <TableCell>{getStatusBadge(facility.status)}</TableCell> */}
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -449,9 +584,15 @@ const ContragentsPage = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>View Details</DropdownMenuItem>
-                              <DropdownMenuItem>Edit</DropdownMenuItem>
-                              <DropdownMenuItem>Delete</DropdownMenuItem>
+                              {/* <DropdownMenuItem>View Details</DropdownMenuItem>
+                              <DropdownMenuItem>Edit</DropdownMenuItem> */}
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleFacilityDelete(facility.id)
+                                }
+                              >
+                                Delete
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -463,7 +604,7 @@ const ContragentsPage = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="factoring" className="mt-4">
+          {/* <TabsContent value="factoring" className="mt-4">
             <Card>
               <CardContent className="p-0">
                 <Table>
@@ -523,8 +664,23 @@ const ContragentsPage = () => {
                 </Table>
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
+
+        {showAddCarrier && (
+          <AddCarrierForm
+            onOpenChange={(value) => setShowAddCarrier(value)}
+            onSave={handleAddCarrier}
+            open={true}
+          />
+        )}
+        {showAddFacility && (
+          <AddFacilityForm
+            onOpenChange={(value) => setShowAddFacility(value)}
+            onSave={handleAddFacility}
+            open={true}
+          />
+        )}
       </div>
     </ThemeAwareDashboardLayout>
   );

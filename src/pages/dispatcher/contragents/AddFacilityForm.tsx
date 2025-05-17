@@ -24,7 +24,7 @@ interface AddTruckFormProps {
   onSave: (data: any) => void;
 }
 
-const AddUserForm: React.FC<AddTruckFormProps> = ({
+const AddFacilityForm: React.FC<AddTruckFormProps> = ({
   open,
   onOpenChange,
   onSave,
@@ -33,7 +33,9 @@ const AddUserForm: React.FC<AddTruckFormProps> = ({
     name: "",
     email: "",
     phone: "",
-    role: "dispatcher",
+    address: "",
+    citizenship: "",
+    language: "",
     password: "",
   });
 
@@ -47,7 +49,9 @@ const AddUserForm: React.FC<AddTruckFormProps> = ({
       name: "",
       email: "",
       phone: "",
-      role: "",
+      address: "",
+      citizenship: "",
+      language: "",
       password: "",
     });
   };
@@ -70,10 +74,10 @@ const AddUserForm: React.FC<AddTruckFormProps> = ({
   //           setOwners(ownerData['data']);
   //         }
 
-  //         const userResponse = await getRequest(`${import.meta.env.VITE_API_URL}/users`);
-  //         const userData = await userResponse.json();
-  //         if (userResponse.ok) {
-  //           setusers(userData['data']);
+  //         const facilityResponse = await getRequest(`${import.meta.env.VITE_API_URL}/facilitys`);
+  //         const facilityData = await facilityResponse.json();
+  //         if (facilityResponse.ok) {
+  //           setFacilitys(facilityData['data']);
   //         }
 
   //       } catch (e) {
@@ -94,9 +98,9 @@ const AddUserForm: React.FC<AddTruckFormProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New User</DialogTitle>
+          <DialogTitle>Add New Facility</DialogTitle>
           <DialogDescription>
-            Enter the details for the new user. Click save when you're done.
+            Enter the details for the new facility. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
 
@@ -105,7 +109,7 @@ const AddUserForm: React.FC<AddTruckFormProps> = ({
             <Label htmlFor="name">Name</Label>
             <Input
               id="name"
-              placeholder="user full name"
+              placeholder="Facility name"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
             />
@@ -115,7 +119,7 @@ const AddUserForm: React.FC<AddTruckFormProps> = ({
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
-              placeholder="user email"
+              placeholder="Facility email"
               type="email"
               value={formData.email}
               onChange={(e) => handleChange("email", e.target.value)}
@@ -127,26 +131,20 @@ const AddUserForm: React.FC<AddTruckFormProps> = ({
             <Input
               id="phone"
               type="tel"
-              placeholder="user phone number"
+              placeholder="Facility phone number"
               value={formData.phone}
               onChange={(e) => handleChange("phone", e.target.value)}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select
-              value={formData.role}
-              onValueChange={(value) => handleChange("role", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="dispatcher">Dispatcher</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              placeholder="City, State"
+              value={formData.address}
+              onChange={(e) => handleChange("address", e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">
@@ -156,6 +154,40 @@ const AddUserForm: React.FC<AddTruckFormProps> = ({
               value={formData.password}
               onChange={(e) => handleChange("password", e.target.value)}
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="citizenship">Citizenship</Label>
+              <Select
+                value={formData.citizenship}
+                onValueChange={(value) => handleChange("citizenship", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="citizen">Citizen</SelectItem>
+                  <SelectItem value="resident">Resident</SelectItem>
+                  <SelectItem value="NL">NL</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="language">Language</Label>
+              <Select
+                value={formData.language}
+                onValueChange={(value) => handleChange("language", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="EN">EN</SelectItem>
+                  <SelectItem value="RU">RU</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* <div className="space-y-2">
@@ -173,11 +205,11 @@ const AddUserForm: React.FC<AddTruckFormProps> = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>Save User</Button>
+          <Button onClick={handleSubmit}>Save Facility</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
 
-export default memo(AddUserForm);
+export default memo(AddFacilityForm);

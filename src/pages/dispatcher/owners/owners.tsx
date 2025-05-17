@@ -404,15 +404,15 @@ const OwnersPage = () => {
                               <div className="font-medium">
                                 {owner.company.name ?? "Not Registered"}
                               </div>
-                              {/* <div className="text-sm text-muted-foreground">
-                                {owner.id}
-                              </div> */}
                             </div>
                           </div>
                         </TableCell>
                         {/* <TableCell>{getStatusBadge(owner.status)}</TableCell> */}
                         <TableCell>
                           <div className="flex items-center">{owner.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            OWN-{owner.id}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
@@ -453,18 +453,19 @@ const OwnersPage = () => {
                             {owner.joinDate}
                           </div>
                         </TableCell> */}
-                        {user.role == "admin" && (
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              {/* <Button variant="outline" size="sm">
+
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {/* <Button variant="outline" size="sm">
                                   Details
                                 </Button> */}
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon">
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              {user.role == "admin" && (
                                 <DropdownMenuContent align="end">
                                   {/* <DropdownMenuItem>
                                       <Truck className="h-4 w-4 mr-2" /> View
@@ -486,21 +487,19 @@ const OwnersPage = () => {
                                       <AlertTriangle className="h-4 w-4 mr-2" />{" "}
                                       Suspend
                                     </DropdownMenuItem> */}
-                                  {user.role == "admin" && (
-                                    <DropdownMenuItem
-                                      onClick={() => handleDelete(owner.id)}
-                                    >
-                                      <AlertTriangle className="h-4 w-4 mr-2" />{" "}
-                                      <span className="text-red">
-                                        Delete Owner
-                                      </span>
-                                    </DropdownMenuItem>
-                                  )}
+                                  <DropdownMenuItem
+                                    onClick={() => handleDelete(owner.id)}
+                                  >
+                                    <AlertTriangle className="h-4 w-4 mr-2" />{" "}
+                                    <span className="text-red">
+                                      Delete Owner
+                                    </span>
+                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </TableCell>
-                        )}
+                              )}
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

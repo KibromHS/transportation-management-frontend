@@ -61,6 +61,7 @@ import {
 } from "lucide-react";
 import { useAuthContext, AuthProvider } from "@/context/AuthContext";
 import { User } from "@/api";
+import { title } from "process";
 
 interface SidebarProps {
   user: User;
@@ -90,7 +91,7 @@ const SidebarContent = ({
     navigationItems.forEach((item) => {
       if (item.subItems) {
         const hasActiveChild = item.subItems.some((subItem) =>
-          path.startsWith(subItem.href),
+          path.startsWith(subItem.href)
         );
         if (hasActiveChild) {
           setOpenItems((prev) => ({ ...prev, [item.title]: true }));
@@ -207,7 +208,7 @@ const SidebarContent = ({
           href: "/dispatcher/users",
         },
         {
-          title: 'Contragents',
+          title: "Contragents",
           icon: <Building className="h-5 w-5" />,
           href: "/dispatcher/contragents",
         },
@@ -290,25 +291,30 @@ const SidebarContent = ({
           title: "Contragents",
           icon: <Building className="h-5 w-5" />,
           href: "/dispatcher/contragents",
-          subItems: [
-            {
-              title: "Carriers",
-              href: "/dispatcher/contragents/carriers",
-            },
-            {
-              title: "Customers",
-              href: "/dispatcher/contragents/customers",
-            },
-            {
-              title: "Facilities",
-              href: "/dispatcher/contragents/facilities",
-            },
-            {
-              title: "Factoring Companies",
-              href: "/dispatcher/contragents/factoring",
-            },
-          ],
         },
+        // {
+        //   title: "Contragents",
+        //   icon: <Building className="h-5 w-5" />,
+        //   href: "/dispatcher/contragents",
+        //   subItems: [
+        //     {
+        //       title: "Carriers",
+        //       href: "/dispatcher/contragents/carriers",
+        //     },
+        //     {
+        //       title: "Customers",
+        //       href: "/dispatcher/contragents/customers",
+        //     },
+        //     {
+        //       title: "Facilities",
+        //       href: "/dispatcher/contragents/facilities",
+        //     },
+        //     {
+        //       title: "Factoring Companies",
+        //       href: "/dispatcher/contragents/factoring",
+        //     },
+        //   ],
+        // },
         {
           title: "Reports",
           icon: <FileText className="h-5 w-5" />,
@@ -421,9 +427,9 @@ const SidebarContent = ({
       ],
     };
 
-    console.log('role is', user.role);
+    console.log("role is", user.role);
     const role = roleSpecificItems[user?.role] ? user.role : "Dispatcher";
-    console.log('returning this', roleSpecificItems[role]);
+    console.log("returning this", roleSpecificItems[role]);
     return roleSpecificItems[role];
   };
 
@@ -433,7 +439,7 @@ const SidebarContent = ({
     <div
       className={cn(
         "flex h-full flex-col bg-gradient-to-b from-slate-900 to-slate-950 dark:from-slate-950 dark:to-slate-900 text-white transition-all duration-300",
-        isCollapsed ? "w-[70px]" : "w-[280px]",
+        isCollapsed ? "w-[70px]" : "w-[280px]"
       )}
     >
       {/* Logo and collapse toggle */}
@@ -483,17 +489,17 @@ const SidebarContent = ({
                               "flex h-10 w-full items-center justify-start gap-3 rounded-md px-3 text-slate-300 hover:bg-slate-800/70 hover:text-white transition-all duration-200",
                               isCollapsed && "justify-center px-2",
                               item.subItems.some((subItem) =>
-                                activeItem.startsWith(subItem.href),
+                                activeItem.startsWith(subItem.href)
                               ) &&
-                                "bg-slate-800/50 text-white font-medium border-l-2 border-teal-500",
+                                "bg-slate-800/50 text-white font-medium border-l-2 border-teal-500"
                             )}
                           >
                             <div
                               className={cn(
                                 "flex items-center justify-center transition-transform duration-200",
                                 item.subItems.some((subItem) =>
-                                  activeItem.startsWith(subItem.href),
-                                ) && "text-teal-400",
+                                  activeItem.startsWith(subItem.href)
+                                ) && "text-teal-400"
                               )}
                             >
                               {item.icon}
@@ -505,7 +511,7 @@ const SidebarContent = ({
                               <ChevronRight
                                 className={cn(
                                   "h-4 w-4 transition-transform duration-200",
-                                  openItems[item.title] && "rotate-90",
+                                  openItems[item.title] && "rotate-90"
                                 )}
                               />
                             )}
@@ -529,7 +535,7 @@ const SidebarContent = ({
                             className={cn(
                               "flex h-8 w-full items-center justify-start gap-2 rounded-md px-2 text-sm text-slate-300 hover:bg-slate-800/70 hover:text-white transition-all duration-200",
                               activeItem.startsWith(subItem.href) &&
-                                "bg-slate-800/50 text-white font-medium border-l-2 border-teal-500",
+                                "bg-slate-800/50 text-white font-medium border-l-2 border-teal-500"
                             )}
                             asChild
                           >
@@ -552,7 +558,7 @@ const SidebarContent = ({
                           "flex h-10 w-full items-center justify-start gap-3 rounded-md px-3 text-slate-300 hover:bg-slate-800/70 hover:text-white transition-all duration-200",
                           isCollapsed && "justify-center px-2",
                           activeItem.startsWith(item.href) &&
-                            "bg-slate-800/50 text-white font-medium border-l-2 border-teal-500",
+                            "bg-slate-800/50 text-white font-medium border-l-2 border-teal-500"
                         )}
                         asChild
                       >
@@ -561,7 +567,7 @@ const SidebarContent = ({
                             className={cn(
                               "flex items-center justify-center transition-transform duration-200",
                               activeItem.startsWith(item.href) &&
-                                "text-teal-400",
+                                "text-teal-400"
                             )}
                           >
                             {item.icon}
@@ -620,7 +626,7 @@ const SidebarContent = ({
                     variant="ghost"
                     className={cn(
                       "flex h-10 w-full items-center justify-start gap-3 rounded-md px-3 text-slate-300 hover:bg-slate-800/70 hover:text-white transition-all duration-200",
-                      isCollapsed && "justify-center px-2",
+                      isCollapsed && "justify-center px-2"
                     )}
                   >
                     <LogOut className="h-5 w-5 text-red-400" />
@@ -644,9 +650,7 @@ const SidebarContent = ({
 const MemoizedSidebarContent = memo(SidebarContent);
 
 const Sidebar = (props: SidebarProps) => {
-  return (
-      <MemoizedSidebarContent {...props} />
-  );
+  return <MemoizedSidebarContent {...props} />;
 };
 
 export default memo(Sidebar);

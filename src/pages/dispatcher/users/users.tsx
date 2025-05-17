@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ThemeAwareDashboardLayout from "@/components/layout/ThemeAwareDashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,102 +39,206 @@ import {
   Settings,
   Lock,
 } from "lucide-react";
+import {
+  deleteRequest,
+  getRequest,
+  patchRequest,
+  postRequest,
+} from "@/api/request";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { useAuthContext } from "@/context/AuthContext";
+import AddUserForm from "./AddUserForm";
+import ResetPasswordForm from "./ResetPasswordForm";
+
+interface UserModel {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+}
 
 const UsersPage = () => {
-  // Mock users data
-  const activeUsers = [
-    {
-      id: "USR-101",
-      name: "John Doe",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
-      phone: "(555) 123-4567",
-      email: "john.doe@example.com",
-      role: "Admin",
-      status: "active",
-      lastActive: "10 minutes ago",
-      joinDate: "Jan 15, 2022",
-    },
-    {
-      id: "USR-102",
-      name: "Sarah Williams",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
-      phone: "(555) 234-5678",
-      email: "sarah.williams@example.com",
-      role: "Dispatcher",
-      status: "active",
-      lastActive: "5 minutes ago",
-      joinDate: "Mar 22, 2022",
-    },
-    {
-      id: "USR-103",
-      name: "Mike Smith",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike",
-      phone: "(555) 345-6789",
-      email: "mike.smith@example.com",
-      role: "Dispatcher",
-      status: "active",
-      lastActive: "1 hour ago",
-      joinDate: "Jun 10, 2022",
-    },
-    {
-      id: "USR-104",
-      name: "Emily Davis",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=emily",
-      phone: "(555) 456-7890",
-      email: "emily.davis@example.com",
-      role: "Reviewer",
-      status: "active",
-      lastActive: "3 hours ago",
-      joinDate: "Nov 5, 2022",
-    },
-    {
-      id: "USR-105",
-      name: "Ryan Johnson",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ryan",
-      phone: "(555) 567-8901",
-      email: "ryan.johnson@example.com",
-      role: "Officer",
-      status: "inactive",
-      lastActive: "2 days ago",
-      joinDate: "Feb 15, 2023",
-    },
-  ];
+  const [activeUsers, setActiveUsers] = useState<UserModel[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuthContext();
+  const currentUser = user;
 
-  const inactiveUsers = [
-    {
-      id: "USR-106",
-      name: "Alex Turner",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=alex",
-      phone: "(555) 678-9012",
-      email: "alex.turner@example.com",
-      role: "Dispatcher",
-      status: "suspended",
-      lastActive: "1 month ago",
-      joinDate: "Aug 20, 2022",
-      deactivationDate: "Jun 15, 2023",
-      deactivationReason: "Security violation",
-    },
-    {
-      id: "USR-107",
-      name: "Jessica Brown",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=jessica",
-      phone: "(555) 789-0123",
-      email: "jessica.brown@example.com",
-      role: "Officer",
-      status: "terminated",
-      lastActive: "2 months ago",
-      joinDate: "Apr 10, 2022",
-      deactivationDate: "May 30, 2023",
-      deactivationReason: "No longer with company",
-    },
-  ];
+  const [showResetPassword, setShowResetPassword] = React.useState(false);
+  const [showAddUser, setShowAddUser] = React.useState(false);
+  const [selectedUserId, setSelectedUserId] = React.useState<number | null>(
+    null
+  );
+
+  useEffect(() => {
+    setLoading(true);
+    const fetchUsers = async () => {
+      const response = await getRequest(
+        `${import.meta.env.VITE_API_URL}/users`
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        setActiveUsers(data.data);
+      } else {
+        console.error("Failed to fetch users:", data);
+      }
+
+      setLoading(false);
+    };
+
+    fetchUsers();
+  }, []);
+
+  const handleDeleteUser = async (userId: number) => {
+    setLoading(true);
+    const response = await deleteRequest(
+      `${import.meta.env.VITE_API_URL}/users/${userId}`
+    );
+    if (response.ok) {
+      setLoading(false);
+      window.location.reload();
+    } else {
+      console.error(`Failed to delete user #${userId}:`, await response.json());
+    }
+    setLoading(false);
+  };
+
+  const handleAddUser = async (data: any) => {
+    setLoading(true);
+    const newUser = {
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      role: data.role,
+      password: data.password,
+    };
+
+    const response = await postRequest(
+      `${import.meta.env.VITE_API_URL}/users`,
+      newUser
+    );
+    if (response.ok) {
+      setLoading(false);
+      window.location.reload();
+    } else {
+      console.error("Failed to add user:", await response.json());
+    }
+  };
+
+  const handleResetPassword = async (data: any, userId: number) => {
+    setLoading(true);
+    const response = await patchRequest(
+      `${import.meta.env.API_BASE_URL}/users/${userId}`,
+      { password: data.password }
+    );
+    if (response.ok) {
+      setLoading(true);
+      window.location.reload();
+    } else {
+      console.error("Failed to reset password", await response.json());
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  // Mock users data
+  // const activeUsers = [
+  //   {
+  //     id: "USR-101",
+  //     name: "John Doe",
+  //     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
+  //     phone: "(555) 123-4567",
+  //     email: "john.doe@example.com",
+  //     role: "Admin",
+  //     status: "active",
+  //     lastActive: "10 minutes ago",
+  //     joinDate: "Jan 15, 2022",
+  //   },
+  //   {
+  //     id: "USR-102",
+  //     name: "Sarah Williams",
+  //     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
+  //     phone: "(555) 234-5678",
+  //     email: "sarah.williams@example.com",
+  //     role: "Dispatcher",
+  //     status: "active",
+  //     lastActive: "5 minutes ago",
+  //     joinDate: "Mar 22, 2022",
+  //   },
+  //   {
+  //     id: "USR-103",
+  //     name: "Mike Smith",
+  //     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike",
+  //     phone: "(555) 345-6789",
+  //     email: "mike.smith@example.com",
+  //     role: "Dispatcher",
+  //     status: "active",
+  //     lastActive: "1 hour ago",
+  //     joinDate: "Jun 10, 2022",
+  //   },
+  //   {
+  //     id: "USR-104",
+  //     name: "Emily Davis",
+  //     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=emily",
+  //     phone: "(555) 456-7890",
+  //     email: "emily.davis@example.com",
+  //     role: "Reviewer",
+  //     status: "active",
+  //     lastActive: "3 hours ago",
+  //     joinDate: "Nov 5, 2022",
+  //   },
+  //   {
+  //     id: "USR-105",
+  //     name: "Ryan Johnson",
+  //     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ryan",
+  //     phone: "(555) 567-8901",
+  //     email: "ryan.johnson@example.com",
+  //     role: "Officer",
+  //     status: "inactive",
+  //     lastActive: "2 days ago",
+  //     joinDate: "Feb 15, 2023",
+  //   },
+  // ];
+
+  // const inactiveUsers = [
+  //   {
+  //     id: "USR-106",
+  //     name: "Alex Turner",
+  //     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=alex",
+  //     phone: "(555) 678-9012",
+  //     email: "alex.turner@example.com",
+  //     role: "Dispatcher",
+  //     status: "suspended",
+  //     lastActive: "1 month ago",
+  //     joinDate: "Aug 20, 2022",
+  //     deactivationDate: "Jun 15, 2023",
+  //     deactivationReason: "Security violation",
+  //   },
+  //   {
+  //     id: "USR-107",
+  //     name: "Jessica Brown",
+  //     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=jessica",
+  //     phone: "(555) 789-0123",
+  //     email: "jessica.brown@example.com",
+  //     role: "Officer",
+  //     status: "terminated",
+  //     lastActive: "2 months ago",
+  //     joinDate: "Apr 10, 2022",
+  //     deactivationDate: "May 30, 2023",
+  //     deactivationReason: "No longer with company",
+  //   },
+  // ];
 
   // Get role badge
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case "Admin":
+      case "admin":
         return <Badge className="bg-purple-500">Admin</Badge>;
-      case "Dispatcher":
+      case "dispatcher":
         return <Badge className="bg-blue-500">Dispatcher</Badge>;
       case "Officer":
         return <Badge className="bg-green-500">Officer</Badge>;
@@ -166,10 +270,12 @@ const UsersPage = () => {
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">User Management</h1>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add User
-          </Button>
+          {currentUser.role == "admin" && (
+            <Button onClick={() => setShowAddUser(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -182,14 +288,12 @@ const UsersPage = () => {
             <CardContent>
               <div className="flex items-center">
                 <Users className="h-5 w-5 text-blue-500 mr-2" />
-                <span className="text-2xl font-bold">
-                  {activeUsers.length + inactiveUsers.length}
-                </span>
+                <span className="text-2xl font-bold">{activeUsers.length}</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          {/* <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Active Users
@@ -206,7 +310,7 @@ const UsersPage = () => {
                 </span>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
 
           <Card>
             <CardHeader className="pb-2">
@@ -218,7 +322,7 @@ const UsersPage = () => {
               <div className="flex items-center">
                 <Shield className="h-5 w-5 text-purple-500 mr-2" />
                 <span className="text-2xl font-bold">
-                  {activeUsers.filter((user) => user.role === "Admin").length}
+                  {activeUsers.filter((user) => user.role === "admin").length}
                 </span>
               </div>
             </CardContent>
@@ -235,7 +339,7 @@ const UsersPage = () => {
                 <Users className="h-5 w-5 text-blue-500 mr-2" />
                 <span className="text-2xl font-bold">
                   {
-                    activeUsers.filter((user) => user.role === "Dispatcher")
+                    activeUsers.filter((user) => user.role === "dispatcher")
                       .length
                   }
                 </span>
@@ -262,10 +366,10 @@ const UsersPage = () => {
         </div>
 
         <Tabs defaultValue="active" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6 max-w-md">
+          {/* <TabsList className="grid w-full grid-cols-2 mb-6 max-w-md">
             <TabsTrigger value="active">Active Users</TabsTrigger>
             <TabsTrigger value="inactive">Inactive Users</TabsTrigger>
-          </TabsList>
+          </TabsList> */}
 
           <TabsContent value="active">
             <Card>
@@ -275,10 +379,10 @@ const UsersPage = () => {
                     <TableRow>
                       <TableHead>User</TableHead>
                       <TableHead>Role</TableHead>
-                      <TableHead>Status</TableHead>
+                      {/* <TableHead>Status</TableHead> */}
                       <TableHead>Contact</TableHead>
-                      <TableHead>Last Active</TableHead>
-                      <TableHead>Join Date</TableHead>
+                      {/* <TableHead>Last Active</TableHead>
+                      <TableHead>Join Date</TableHead> */}
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -301,13 +405,13 @@ const UsersPage = () => {
                             <div>
                               <div className="font-medium">{user.name}</div>
                               <div className="text-sm text-muted-foreground">
-                                {user.id}
+                                USR-{user.id}
                               </div>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>{getRoleBadge(user.role)}</TableCell>
-                        <TableCell>{getStatusBadge(user.status)}</TableCell>
+                        {/* <TableCell>{getStatusBadge(user.status)}</TableCell> */}
                         <TableCell>
                           <div className="space-y-1">
                             <div className="flex items-center text-sm">
@@ -320,7 +424,7 @@ const UsersPage = () => {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        {/* <TableCell>
                           <div className="flex items-center">
                             <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
                             {user.lastActive}
@@ -331,39 +435,55 @@ const UsersPage = () => {
                             <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
                             {user.joinDate}
                           </div>
-                        </TableCell>
+                        </TableCell> */}
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button variant="outline" size="sm">
+                            {/* <Button variant="outline" size="sm">
                               Details
-                            </Button>
+                            </Button> */}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon">
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                  <Settings className="h-4 w-4 mr-2" /> Edit
-                                  Profile
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Shield className="h-4 w-4 mr-2" /> Change
-                                  Role
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Key className="h-4 w-4 mr-2" /> Reset
-                                  Password
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Lock className="h-4 w-4 mr-2" /> Permissions
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <AlertTriangle className="h-4 w-4 mr-2 text-red-500" />{" "}
-                                  Suspend
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
+                              {currentUser.role == "admin" && (
+                                <DropdownMenuContent align="end">
+                                  {/* <DropdownMenuItem>
+                                    <Settings className="h-4 w-4 mr-2" /> Edit
+                                    Profile
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <Shield className="h-4 w-4 mr-2" /> Change
+                                    Role
+                                  </DropdownMenuItem> */}
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedUserId(user.id);
+                                      setShowResetPassword(true);
+                                    }}
+                                  >
+                                    <Key className="h-4 w-4 mr-2" /> Reset
+                                    Password
+                                  </DropdownMenuItem>
+                                  {/* <DropdownMenuItem>
+                                    <Lock className="h-4 w-4 mr-2" />{" "}
+                                    Permissions
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <AlertTriangle className="h-4 w-4 mr-2 text-red-500" />{" "}
+                                    Suspend
+                                  </DropdownMenuItem> */}
+                                  {user.role != "admin" && (
+                                    <DropdownMenuItem
+                                      onClick={() => handleDeleteUser(user.id)}
+                                    >
+                                      <AlertTriangle className="h-4 w-4 mr-2 text-red-500" />{" "}
+                                      Delete User
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              )}
                             </DropdownMenu>
                           </div>
                         </TableCell>
@@ -375,7 +495,24 @@ const UsersPage = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="inactive">
+          {showAddUser && (
+            <AddUserForm
+              open={true}
+              onOpenChange={(value) => setShowAddUser(value)}
+              onSave={handleAddUser}
+            />
+          )}
+
+          {showResetPassword && (
+            <ResetPasswordForm
+              userId={selectedUserId}
+              open={true}
+              onOpenChange={(value) => setShowResetPassword(value)}
+              onSave={handleResetPassword}
+            />
+          )}
+
+          {/* <TabsContent value="inactive">
             <Card>
               <CardContent className="p-0">
                 <Table>
@@ -469,7 +606,7 @@ const UsersPage = () => {
                 </Table>
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </div>
     </ThemeAwareDashboardLayout>

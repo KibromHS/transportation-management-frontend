@@ -54,7 +54,7 @@ export interface TruckDataItem {
     phone: string;
     language: string;
     citizenship: string;
-  },
+  };
   dimensions: string;
   status: string;
   address: string;
@@ -243,7 +243,7 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
             <TableRow key={truck.id} className="border-b hover:bg-muted/30">
               <TableCell className="font-medium">
                 {renderDocumentStatus(truck.documentStatus)}
-                {truck.id}
+                TRK-{truck.id}
               </TableCell>
               <TableCell>
                 <div className="text-gray-500">ow</div>
@@ -277,21 +277,17 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
               </TableCell>
               <TableCell>
                 <div className="flex items-center">
-                  {truck.preferred_load == 'long' && (
+                  {truck.preferred_load == "long" && (
                     <Badge className="bg-blue-100 text-blue-800 mr-2 text-xs border-0">
                       LONG
                     </Badge>
                   )}
-                  {
-                    truck.preferred_load == 'local' && (
-                      <Badge className="bg-blue-100 text-blue-800 mr-2 text-xs border-0">
-                        LOCAL
-                      </Badge>
-                    )
-                  }
-                  <span>
-                    {truck.dimensions}
-                  </span>
+                  {truck.preferred_load == "local" && (
+                    <Badge className="bg-blue-100 text-blue-800 mr-2 text-xs border-0">
+                      LOCAL
+                    </Badge>
+                  )}
+                  <span>{truck.dimensions}</span>
                 </div>
                 <div className="text-gray-600">
                   {truck.payload_capacity} lbs
@@ -315,9 +311,7 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
               <TableCell>
                 <div className="flex items-center">
                   <MapPin className="h-4 w-4 text-gray-400 mr-1 flex-shrink-0" />
-                  <span>
-                    {truck.address}
-                  </span>
+                  <span>{truck.address}</span>
                 </div>
                 {/* <div className="text-xs text-gray-500">
                   {truck.lastKnown.datetime}
@@ -347,38 +341,37 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    {
-                      user.role == 'admin' && (
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => onViewDetails && onViewDetails(truck.id)}
-                          >
-                            <ExternalLink className="mr-2 h-4 w-4" />
-                            View Details
-                          </DropdownMenuItem>
-                          {/* <DropdownMenuItem
+                    {user.role == "admin" && (
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() =>
+                            onViewDetails && onViewDetails(truck.id)
+                          }
+                        >
+                          <ExternalLink className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        {/* <DropdownMenuItem
                             onClick={() => onViewLogs && onViewLogs(truck.id)}
                           >
                             <FileText className="mr-2 h-4 w-4" />
                             View Logs
                           </DropdownMenuItem> */}
-                          <DropdownMenuItem
-                            onClick={() => onEdit && onEdit(truck.id)}
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => onArchive && onArchive(truck.id)}
-                            className="text-red-600"
-                          >
-                            <Archive className="mr-2 h-4 w-4" />
-                            Delete Truck
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      )
-                    }
-                    
+                        <DropdownMenuItem
+                          onClick={() => onEdit && onEdit(truck.id)}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => onArchive && onArchive(truck.id)}
+                          className="text-red-600"
+                        >
+                          <Archive className="mr-2 h-4 w-4" />
+                          Delete Truck
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    )}
                   </DropdownMenu>
                 </div>
               </TableCell>

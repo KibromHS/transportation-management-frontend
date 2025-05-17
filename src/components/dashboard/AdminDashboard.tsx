@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Users,
   BarChart3,
@@ -20,61 +20,92 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DataCard } from "@/components/ui/data-card";
+import { getRequest } from "@/api/request";
+import LoadingSpinner from "../common/LoadingSpinner";
 
-interface AdminDashboardProps {
-  analytics?: {
-    totalUsers: number;
-    activeDispatches: number;
-    completedTasks: number;
-    systemUptime: string;
-  };
-  recentActivity?: Array<{
-    id: string;
-    type: string;
-    user: string;
-    time: string;
-    description: string;
-  }>;
+interface AdminDashboardType {
+  // analytics?: {
+  totalUsers: number;
+  activeLoads: number;
+  registeredTrucks: number;
+  // };
+  // recentActivity?: Array<{
+  //   id: string;
+  //   type: string;
+  //   user: string;
+  //   time: string;
+  //   description: string;
+  // }>;
 }
 
-const AdminDashboard = ({
-  analytics = {
-    totalUsers: 124,
-    activeDispatches: 18,
-    completedTasks: 432,
-    systemUptime: "99.8%",
-  },
-  recentActivity = [
-    {
-      id: "1",
-      type: "user",
-      user: "John Smith",
-      time: "10 minutes ago",
-      description: "Added new dispatcher account",
-    },
-    {
-      id: "2",
-      type: "dispatch",
-      user: "Sarah Johnson",
-      time: "25 minutes ago",
-      description: "Created high priority dispatch #4392",
-    },
-    {
-      id: "3",
-      type: "system",
-      user: "System",
-      time: "1 hour ago",
-      description: "Automatic backup completed",
-    },
-    {
-      id: "4",
-      type: "alert",
-      user: "Michael Chen",
-      time: "2 hours ago",
-      description: "Updated emergency response protocol",
-    },
-  ],
-}: AdminDashboardProps) => {
+//   {
+//   analytics = {
+//     totalUsers: 124,
+//     activeDispatches: 18,
+//     completedTasks: 432,
+//     systemUptime: "99.8%",
+//   },
+//   recentActivity = [
+//     {
+//       id: "1",
+//       type: "user",
+//       user: "John Smith",
+//       time: "10 minutes ago",
+//       description: "Added new dispatcher account",
+//     },
+//     {
+//       id: "2",
+//       type: "dispatch",
+//       user: "Sarah Johnson",
+//       time: "25 minutes ago",
+//       description: "Created high priority dispatch #4392",
+//     },
+//     {
+//       id: "3",
+//       type: "system",
+//       user: "System",
+//       time: "1 hour ago",
+//       description: "Automatic backup completed",
+//     },
+//     {
+//       id: "4",
+//       type: "alert",
+//       user: "Michael Chen",
+//       time: "2 hours ago",
+//       description: "Updated emergency response protocol",
+//     },
+//   ],
+// }: AdminDashboardProps
+const AdminDashboard = () => {
+  const [analytics, setAnalytics] = useState<AdminDashboardType | null>({
+    totalUsers: 0,
+    activeLoads: 0,
+    registeredTrucks: 0,
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    const fetchStats = async () => {
+      const response = await getRequest(
+        `${import.meta.env.VITE_API_URL}/stats`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setAnalytics(data.analytics);
+        console.log("status", data);
+      }
+
+      setLoading(false);
+    };
+
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
   return (
     <div className="w-full h-full bg-background overflow-auto">
       <div className="mb-8">
@@ -97,8 +128,8 @@ const AdminDashboard = ({
         />
 
         <DataCard
-          title="Active Dispatches"
-          value={analytics.activeDispatches}
+          title="Active Loads"
+          value={analytics.activeLoads}
           icon={<Activity className="h-5 w-5" />}
           description="Currently in progress"
           animation="fade"
@@ -107,8 +138,8 @@ const AdminDashboard = ({
         />
 
         <DataCard
-          title="Completed Tasks"
-          value={analytics.completedTasks}
+          title="Registered Trucks"
+          value={analytics.registeredTrucks}
           icon={<Clock className="h-5 w-5" />}
           description="Last 30 days"
           animation="fade"
@@ -116,7 +147,7 @@ const AdminDashboard = ({
           iconClassName="text-green-500"
         />
 
-        <DataCard
+        {/* <DataCard
           title="System Uptime"
           value={analytics.systemUptime}
           icon={<Shield className="h-5 w-5" />}
@@ -124,7 +155,7 @@ const AdminDashboard = ({
           animation="fade"
           delay={0.4}
           iconClassName="text-blue-500"
-        />
+        /> */}
       </div>
 
       {/* Main Content Area */}
@@ -150,7 +181,7 @@ const AdminDashboard = ({
         </Card>
 
         {/* Recent Activity */}
-        <Card>
+        {/* <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Recent Activity</CardTitle>
@@ -196,7 +227,7 @@ const AdminDashboard = ({
               View All Activity
             </button>
           </CardFooter>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Quick Access Cards */}

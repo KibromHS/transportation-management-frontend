@@ -60,7 +60,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     //   default:
     //     return <DispatcherDashboard user={user} />; // Default to dispatcher dashboard
     // }
-    return <AdminDashboard />
+    return <AdminDashboard />;
   };
 
   // For demo purposes - role switcher
@@ -77,10 +77,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   // };
 
   return (
-    <DashboardLayout
-      userAvatar={userAvatar}
-      pageTitle='Dashboard'
-    >
+    <DashboardLayout userAvatar={userAvatar} pageTitle="Dashboard">
       {/* Role switcher for demo purposes */}
       <div className="w-full h-full">
         {/* <div className="mb-4 bg-muted/30 p-3 rounded-md">

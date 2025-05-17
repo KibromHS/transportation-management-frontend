@@ -339,10 +339,12 @@ const DriversPage = () => {
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Drivers</h1>
-          <Button onClick={() => setShowAddDriver(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Driver
-          </Button>
+          {user.role == "admin" && (
+            <Button onClick={() => setShowAddDriver(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Driver
+            </Button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -472,7 +474,7 @@ const DriversPage = () => {
                             <div>
                               <div className="font-medium">{driver.name}</div>
                               <div className="text-sm text-muted-foreground">
-                                {driver.id}
+                                DRV-{driver.id}
                               </div>
                             </div>
                           </div>
@@ -522,38 +524,42 @@ const DriversPage = () => {
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setShowAssignVehicle(true);
-                                    setSelectedDriver(driver.id);
-                                  }}
-                                >
-                                  <Truck className="h-4 w-4 mr-2" /> Assign
-                                  Vehicle
-                                </DropdownMenuItem>
-                                {/* <DropdownMenuItem>
+                              {user.role == "admin" && (
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setShowAssignVehicle(true);
+                                      setSelectedDriver(driver.id);
+                                    }}
+                                  >
+                                    <Truck className="h-4 w-4 mr-2" /> Assign
+                                    Vehicle
+                                  </DropdownMenuItem>
+                                  {/* <DropdownMenuItem>
                                   <Calendar className="h-4 w-4 mr-2" /> Schedule
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
                                   <FileText className="h-4 w-4 mr-2" /> View
                                   Documents
                                 </DropdownMenuItem> */}
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleDeactivateDriver(driver.id)
-                                  }
-                                >
-                                  <AlertTriangle className="h-4 w-4 mr-2" />{" "}
-                                  Mark Inactive
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleDeleteDriver(driver.id)}
-                                >
-                                  <Delete className="h-4 w-4 mr-2" /> Delete
-                                  Driver
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleDeactivateDriver(driver.id)
+                                    }
+                                  >
+                                    <AlertTriangle className="h-4 w-4 mr-2" />{" "}
+                                    Mark Inactive
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleDeleteDriver(driver.id)
+                                    }
+                                  >
+                                    <Delete className="h-4 w-4 mr-2" /> Delete
+                                    Driver
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              )}
                             </DropdownMenu>
                           </div>
                         </TableCell>

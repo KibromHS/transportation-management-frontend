@@ -127,7 +127,7 @@ const DriversPage = lazy(
 const UsersPage = lazy(
   () =>
     import(
-      "./pages/dispatcher/users" /* webpackChunkName: "dispatcher-users" */
+      "./pages/dispatcher/users/users" /* webpackChunkName: "dispatcher-users" */
     )
 );
 const ContragentsPage = lazy(

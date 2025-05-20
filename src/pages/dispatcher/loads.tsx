@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ThemeAwareDashboardLayout from "@/components/layout/ThemeAwareDashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,113 +21,184 @@ import {
   FileText,
 } from "lucide-react";
 import CreateDispatchModal from "@/components/dispatch/CreateDispatchModal";
+import { getRequest } from "@/api/request";
+
+interface Facility {
+  name: string;
+  address_line1: string;
+  location: string;
+}
+
+interface Load {
+  id: number;
+  reference_number: string;
+  status: string;
+  total_charges: string;
+  pickups: {
+    date_from: string;
+    date_to: string;
+    time_from: string;
+    time_to: string;
+    freight: {
+      pieces: number;
+      weight: number;
+      weight_unit_of_measurement: string;
+      length_unit_of_measurement: string;
+    }[];
+    facility: Facility;
+  }[];
+  deliveries: {
+    date_from: string;
+    date_to: string;
+    time_from: string;
+    time_to: string;
+    facility: Facility;
+  }[];
+  driver: {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    truck: {
+      id: number;
+      company?: {
+        id: number;
+        name: string;
+      };
+      truck_types: {
+        name: string;
+      }[];
+    };
+  };
+}
 
 const LoadsPage = () => {
   // State for modal
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [activeLoads, setActiveLoads] = useState<Load[]>([]);
+  const [completedLoads, setCompletedLoads] = useState<Load[]>([]);
+
+  useEffect(() => {
+    const fetchLoads = async () => {
+      const response = await getRequest(
+        `${import.meta.env.VITE_API_URL}/loads`
+      );
+      const data = await response.json();
+      const loads: Load[] = data.data;
+
+      if (response.ok) {
+        setActiveLoads(loads.filter((d) => d.status != "completed"));
+        setCompletedLoads(loads.filter((d) => d.status == "completed"));
+      } else {
+        console.error("");
+      }
+    };
+
+    fetchLoads();
+  }, []);
 
   // Mock loads data
-  const activeLoads = [
-    {
-      id: "LD-1001",
-      title: "Electronics Shipment",
-      origin: "Chicago, IL",
-      destination: "Detroit, MI",
-      distance: "281 miles",
-      weight: "5,200 lbs",
-      pickupTime: "Today, 2:00 PM",
-      deliveryTime: "Tomorrow, 10:00 AM",
-      status: "assigned",
-      driver: "John Doe",
-      truck: "TRK-1001",
-    },
-    {
-      id: "LD-1002",
-      title: "Furniture Delivery",
-      origin: "Detroit, MI",
-      destination: "Cleveland, OH",
-      distance: "169 miles",
-      weight: "3,800 lbs",
-      pickupTime: "Tomorrow, 9:00 AM",
-      deliveryTime: "Tomorrow, 3:00 PM",
-      status: "in_transit",
-      driver: "Mike Smith",
-      truck: "TRK-1002",
-    },
-    {
-      id: "LD-1003",
-      title: "Medical Supplies",
-      origin: "Indianapolis, IN",
-      destination: "Columbus, OH",
-      distance: "175 miles",
-      weight: "2,100 lbs",
-      pickupTime: "Jul 18, 8:00 AM",
-      deliveryTime: "Jul 18, 2:00 PM",
-      status: "pending",
-      driver: "Unassigned",
-      truck: "Unassigned",
-    },
-  ];
+  //   const activeLoads = [
+  //     {
+  //       id: "LD-1001",
+  //       title: "Electronics Shipment",
+  //       origin: "Chicago, IL",
+  //       destination: "Detroit, MI",
+  //       distance: "281 miles",
+  //       weight: "5,200 lbs",
+  //       pickupTime: "Today, 2:00 PM",
+  //       deliveryTime: "Tomorrow, 10:00 AM",
+  //       status: "assigned",
+  //       driver: "John Doe",
+  //       truck: "TRK-1001",
+  //     },
+  //     {
+  //       id: "LD-1002",
+  //       title: "Furniture Delivery",
+  //       origin: "Detroit, MI",
+  //       destination: "Cleveland, OH",
+  //       distance: "169 miles",
+  //       weight: "3,800 lbs",
+  //       pickupTime: "Tomorrow, 9:00 AM",
+  //       deliveryTime: "Tomorrow, 3:00 PM",
+  //       status: "in_transit",
+  //       driver: "Mike Smith",
+  //       truck: "TRK-1002",
+  //     },
+  //     {
+  //       id: "LD-1003",
+  //       title: "Medical Supplies",
+  //       origin: "Indianapolis, IN",
+  //       destination: "Columbus, OH",
+  //       distance: "175 miles",
+  //       weight: "2,100 lbs",
+  //       pickupTime: "Jul 18, 8:00 AM",
+  //       deliveryTime: "Jul 18, 2:00 PM",
+  //       status: "pending",
+  //       driver: "Unassigned",
+  //       truck: "Unassigned",
+  //     },
+  //   ];
 
-  const pendingLoads = [
-    {
-      id: "LD-1004",
-      title: "Auto Parts",
-      origin: "Columbus, OH",
-      destination: "Cincinnati, OH",
-      distance: "107 miles",
-      weight: "4,500 lbs",
-      pickupTime: "Jul 19, 10:00 AM",
-      deliveryTime: "Jul 19, 2:00 PM",
-      status: "pending",
-      driver: "Unassigned",
-      truck: "Unassigned",
-    },
-    {
-      id: "LD-1005",
-      title: "Retail Goods",
-      origin: "Chicago, IL",
-      destination: "Milwaukee, WI",
-      distance: "92 miles",
-      weight: "6,200 lbs",
-      pickupTime: "Jul 20, 9:00 AM",
-      deliveryTime: "Jul 20, 1:00 PM",
-      status: "pending",
-      driver: "Unassigned",
-      truck: "Unassigned",
-    },
-  ];
+  //   const pendingLoads = [
+  //     {
+  //       id: "LD-1004",
+  //       title: "Auto Parts",
+  //       origin: "Columbus, OH",
+  //       destination: "Cincinnati, OH",
+  //       distance: "107 miles",
+  //       weight: "4,500 lbs",
+  //       pickupTime: "Jul 19, 10:00 AM",
+  //       deliveryTime: "Jul 19, 2:00 PM",
+  //       status: "pending",
+  //       driver: "Unassigned",
+  //       truck: "Unassigned",
+  //     },
+  //     {
+  //       id: "LD-1005",
+  //       title: "Retail Goods",
+  //       origin: "Chicago, IL",
+  //       destination: "Milwaukee, WI",
+  //       distance: "92 miles",
+  //       weight: "6,200 lbs",
+  //       pickupTime: "Jul 20, 9:00 AM",
+  //       deliveryTime: "Jul 20, 1:00 PM",
+  //       status: "pending",
+  //       driver: "Unassigned",
+  //       truck: "Unassigned",
+  //     },
+  //   ];
 
-  const completedLoads = [
-    {
-      id: "LD-0998",
-      title: "Construction Materials",
-      origin: "St. Louis, MO",
-      destination: "Indianapolis, IN",
-      distance: "243 miles",
-      weight: "8,500 lbs",
-      pickupTime: "Jul 12, 8:00 AM",
-      deliveryTime: "Jul 12, 5:00 PM",
-      status: "completed",
-      driver: "Sarah Williams",
-      truck: "TRK-1004",
-      completedAt: "Jul 12, 4:45 PM",
-    },
-    {
-      id: "LD-0999",
-      title: "Food Products",
-      origin: "Minneapolis, MN",
-      destination: "Milwaukee, WI",
-      distance: "337 miles",
-      weight: "7,200 lbs",
-      pickupTime: "Jul 10, 7:00 AM",
-      deliveryTime: "Jul 10, 6:00 PM",
-      status: "completed",
-      driver: "Ryan Johnson",
-      truck: "TRK-1003",
-      completedAt: "Jul 10, 5:30 PM",
-    },
-  ];
+  //   const completedLoads = [
+  //     {
+  //       id: "LD-0998",
+  //       title: "Construction Materials",
+  //       origin: "St. Louis, MO",
+  //       destination: "Indianapolis, IN",
+  //       distance: "243 miles",
+  //       weight: "8,500 lbs",
+  //       pickupTime: "Jul 12, 8:00 AM",
+  //       deliveryTime: "Jul 12, 5:00 PM",
+  //       status: "completed",
+  //       driver: "Sarah Williams",
+  //       truck: "TRK-1004",
+  //       completedAt: "Jul 12, 4:45 PM",
+  //     },
+  //     {
+  //       id: "LD-0999",
+  //       title: "Food Products",
+  //       origin: "Minneapolis, MN",
+  //       destination: "Milwaukee, WI",
+  //       distance: "337 miles",
+  //       weight: "7,200 lbs",
+  //       pickupTime: "Jul 10, 7:00 AM",
+  //       deliveryTime: "Jul 10, 6:00 PM",
+  //       status: "completed",
+  //       driver: "Ryan Johnson",
+  //       truck: "TRK-1003",
+  //       completedAt: "Jul 10, 5:30 PM",
+  //     },
+  //   ];
 
   // Get status badge
   const getStatusBadge = (status: string) => {
@@ -156,14 +227,14 @@ const LoadsPage = () => {
     <ThemeAwareDashboardLayout pageTitle="Load Management">
       <div className="w-full h-full">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Load Management</h1>
+          <h1 className="text-3xl font-bold">Loads</h1>
           <Button onClick={() => setIsCreateModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Create New Load
           </Button>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+        {/* <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Input placeholder="Search loads..." className="w-full pl-10" />
             <div className="absolute left-3 top-2.5">
@@ -181,12 +252,12 @@ const LoadsPage = () => {
               <FileText className="h-4 w-4 mr-2" /> Export
             </Button>
           </div>
-        </div>
+        </div> */}
 
         <Tabs defaultValue="active" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 max-w-md">
+          <TabsList className="grid w-full grid-cols-2 mb-6 max-w-md">
             <TabsTrigger value="active">Active Loads</TabsTrigger>
-            <TabsTrigger value="pending">Pending Loads</TabsTrigger>
+            {/* <TabsTrigger value="pending">Pending Loads</TabsTrigger> */}
             <TabsTrigger value="completed">Completed</TabsTrigger>
           </TabsList>
 
@@ -208,27 +279,35 @@ const LoadsPage = () => {
                             <Badge variant="outline">{load.id}</Badge>
                             {getStatusBadge(load.status)}
                           </div>
-                          <h3 className="font-medium mt-2">{load.title}</h3>
+                          {/* <h3 className="font-medium mt-2">{load.title}</h3> */}
                           <div className="mt-2 flex items-center text-sm">
                             <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
-                            <span className="font-medium">{load.origin}</span>
+                            <span className="font-medium">
+                              {load.pickups[0].facility.address_line1},
+                              {load.pickups[0].facility.location}
+                            </span>
                             <ArrowRight className="h-4 w-4 mx-2" />
                             <span className="font-medium">
-                              {load.destination}
+                              {load.deliveries[0].facility.address_line1},
+                              {load.deliveries[0].facility.location}
                             </span>
                           </div>
                           <div className="mt-1 text-sm text-muted-foreground">
-                            {load.distance} • {load.weight}
+                            {load.pickups[0].freight[0].weight}{" "}
+                            {
+                              load.pickups[0].freight[0]
+                                .weight_unit_of_measurement
+                            }
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="flex items-center text-sm">
                             <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
-                            <span>Pickup: {load.pickupTime}</span>
+                            <span>Pickup: {load.pickups[0].date_to}</span>
                           </div>
                           <div className="flex items-center text-sm mt-1">
                             <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
-                            <span>Delivery: {load.deliveryTime}</span>
+                            <span>Delivery: {load.deliveries[0].date_to}</span>
                           </div>
                         </div>
                       </div>
@@ -237,11 +316,13 @@ const LoadsPage = () => {
                         <div className="flex items-center gap-4">
                           <div className="flex items-center gap-1">
                             <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{load.driver}</span>
+                            <span className="text-sm">{load.driver.name}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Truck className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{load.truck}</span>
+                            <span className="text-sm">
+                              TRK-{load.driver.truck.id}
+                            </span>
                           </div>
                         </div>
                         <div className="flex gap-2">
@@ -260,7 +341,7 @@ const LoadsPage = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="pending">
+          {/* <TabsContent value="pending">
             <Card>
               <CardHeader>
                 <CardTitle>Pending Loads</CardTitle>
@@ -313,7 +394,7 @@ const LoadsPage = () => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent> */}
 
           <TabsContent value="completed">
             <Card>
@@ -333,28 +414,36 @@ const LoadsPage = () => {
                             <Badge variant="outline">{load.id}</Badge>
                             {getStatusBadge(load.status)}
                           </div>
-                          <h3 className="font-medium mt-2">{load.title}</h3>
+                          {/* <h3 className="font-medium mt-2">{load.title}</h3> */}
                           <div className="mt-2 flex items-center text-sm">
                             <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
-                            <span className="font-medium">{load.origin}</span>
+                            <span className="font-medium">
+                              {load.pickups[0].facility.address_line1},
+                              {load.pickups[0].facility.location}
+                            </span>
                             <ArrowRight className="h-4 w-4 mx-2" />
                             <span className="font-medium">
-                              {load.destination}
+                              {load.deliveries[0].facility.address_line1},
+                              {load.deliveries[0].facility.location}
                             </span>
                           </div>
                           <div className="mt-1 text-sm text-muted-foreground">
-                            {load.distance} • {load.weight}
+                            {load.pickups[0].freight[0].weight}{" "}
+                            {
+                              load.pickups[0].freight[0]
+                                .weight_unit_of_measurement
+                            }
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="flex items-center text-sm">
                             <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
-                            <span>Completed: {load.completedAt}</span>
+                            <span>Completed: {load.deliveries[0].date_to}</span>
                           </div>
                           <div className="flex items-center text-sm mt-1">
                             <Truck className="h-4 w-4 mr-1 text-muted-foreground" />
                             <span>
-                              {load.truck} • {load.driver}
+                              TRK-{load.driver.truck.id} • {load.driver.name}
                             </span>
                           </div>
                         </div>

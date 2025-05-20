@@ -1,25 +1,46 @@
-import * as React from "react"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
-import { cn } from "@/lib/utils"
+// Union type based on `multiline` value
+type InputProps =
+  | ({
+      multiline?: false;
+    } & React.InputHTMLAttributes<HTMLInputElement>)
+  | ({
+      multiline: true;
+    } & React.TextareaHTMLAttributes<HTMLTextAreaElement>);
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {}
+const Input = React.forwardRef<
+  HTMLInputElement | HTMLTextAreaElement,
+  InputProps
+>((props, ref) => {
+  const { multiline, className, ...rest } = props;
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
+  const baseClassName = cn(
+    "flex w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+    className
+  );
+
+  if (multiline) {
+    // This cast is safe because props.multiline === true
     return (
-      <input
-        type={type}
-        className={cn(
-          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-          className
-        )}
-        ref={ref}
-        {...props}
+      <textarea
+        ref={ref as React.Ref<HTMLTextAreaElement>}
+        className={baseClassName}
+        {...(rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
       />
-    )
+    );
   }
-)
-Input.displayName = "Input"
 
-export { Input }
+  return (
+    <input
+      ref={ref as React.Ref<HTMLInputElement>}
+      className={baseClassName}
+      {...(rest as React.InputHTMLAttributes<HTMLInputElement>)}
+    />
+  );
+});
+
+Input.displayName = "Input";
+
+export { Input };

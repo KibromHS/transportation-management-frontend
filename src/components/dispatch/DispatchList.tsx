@@ -210,13 +210,13 @@ const DispatchList = ({
   // Calculate active filter count
   const getActiveFilterCount = () => {
     const statusCount = statusFilterGroup.options.filter(
-      (o) => o.checked,
+      (o) => o.checked
     ).length;
     const priorityCount = priorityFilterGroup.options.filter(
-      (o) => o.checked,
+      (o) => o.checked
     ).length;
     const vehicleCount = vehicleFilterGroup.options.filter(
-      (o) => o.checked,
+      (o) => o.checked
     ).length;
     const dateCount = dateRange.startDate && dateRange.endDate ? 1 : 0;
 
@@ -227,27 +227,27 @@ const DispatchList = ({
   const handleFilterChange = (
     groupId: string,
     optionId: string,
-    checked: boolean,
+    checked: boolean
   ) => {
     if (groupId === "status") {
       setStatusFilterGroup({
         ...statusFilterGroup,
         options: statusFilterGroup.options.map((option) =>
-          option.id === optionId ? { ...option, checked } : option,
+          option.id === optionId ? { ...option, checked } : option
         ),
       });
     } else if (groupId === "priority") {
       setPriorityFilterGroup({
         ...priorityFilterGroup,
         options: priorityFilterGroup.options.map((option) =>
-          option.id === optionId ? { ...option, checked } : option,
+          option.id === optionId ? { ...option, checked } : option
         ),
       });
     } else if (groupId === "vehicle") {
       setVehicleFilterGroup({
         ...vehicleFilterGroup,
         options: vehicleFilterGroup.options.map((option) =>
-          option.id === optionId ? { ...option, checked } : option,
+          option.id === optionId ? { ...option, checked } : option
         ),
       });
     }
@@ -324,7 +324,7 @@ const DispatchList = ({
       selectedVehicles.length === 0 ||
       (dispatch.vehicleType &&
         selectedVehicles.includes(
-          dispatch.vehicleType.toLowerCase().replace(" ", "-"),
+          dispatch.vehicleType.toLowerCase().replace(" ", "-")
         ));
 
     // Date range filter
@@ -471,7 +471,7 @@ const DispatchList = ({
                               day: "numeric",
                               hour: "2-digit",
                               minute: "2-digit",
-                            },
+                            }
                           )
                         : ""}
                     </span>
@@ -491,7 +491,7 @@ const DispatchList = ({
                               day: "numeric",
                               hour: "2-digit",
                               minute: "2-digit",
-                            },
+                            }
                           )
                         : ""}
                     </span>
@@ -525,7 +525,7 @@ const DispatchList = ({
                         dispatch.priority === "medium" &&
                           "bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20",
                         dispatch.priority === "low" &&
-                          "bg-green-500/10 text-green-600 hover:bg-green-500/20",
+                          "bg-green-500/10 text-green-600 hover:bg-green-500/20"
                       )}
                     />
                   </div>

@@ -512,7 +512,10 @@ const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
       {/* Trucks Management Panel */}
       {showTrucksPanel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <TruckManagement onClose={() => setShowTrucksPanel(false)} />
+          <TruckManagement
+            onClose={() => setShowTrucksPanel(false)}
+            user={user}
+          />
         </div>
       )}
 

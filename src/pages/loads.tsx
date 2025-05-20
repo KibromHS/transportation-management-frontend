@@ -33,95 +33,158 @@ import FilterPanel, {
   FilterGroup,
   DateRangeFilter,
 } from "@/components/common/FilterPanel";
+import { getRequest } from "@/api/request";
+
+// interface Load {
+//   id: string;
+//   reference: string;
+//   customer: string;
+//   origin: string;
+//   destination: string;
+//   pickupDate: string;
+//   deliveryDate: string;
+//   status: "active" | "pending" | "completed" | "cancelled";
+//   rate: string;
+//   weight: number;
+//   distance: number;
+//   driver?: string;
+//   notes?: string;
+// }
 
 interface Load {
-  id: string;
-  reference: string;
-  customer: string;
-  origin: string;
-  destination: string;
-  pickupDate: string;
-  deliveryDate: string;
-  status: "active" | "pending" | "completed" | "cancelled";
-  rate: string;
-  weight: number;
-  distance: number;
-  driver?: string;
-  notes?: string;
+  id: number;
+  reference_number: string;
+  status: string;
+  total_charges: string;
+  pickups: {
+    date_from: string;
+    date_to: string;
+    time_from: string;
+    time_to: string;
+    name: string;
+    freight: {
+      pieces: number;
+      weight: number;
+      weight_unit_of_measurement: string;
+      length_unit_of_measurement: string;
+    }[];
+  }[];
+  deliveries: {
+    date_from: string;
+    date_to: string;
+    time_from: string;
+    time_to: string;
+    name: string;
+  }[];
+  driver: {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    truck: {
+      id: number;
+      company?: {
+        id: number;
+        name: string;
+      };
+      truck_types: {
+        name: string;
+      }[];
+    };
+  };
 }
 
 const LoadsPage = () => {
-  const [loads, setLoads] = useState<Load[]>([
-    {
-      id: "L-1001",
-      reference: "REF-2023-001",
-      customer: "ABC Logistics",
-      origin: "Chicago, IL",
-      destination: "Detroit, MI",
-      pickupDate: "2023-06-15T08:00:00",
-      deliveryDate: "2023-06-15T16:00:00",
-      status: "active",
-      rate: "$1,250.00",
-      weight: 2500,
-      distance: 280,
-      driver: "John Smith",
-    },
-    {
-      id: "L-1002",
-      reference: "REF-2023-002",
-      customer: "XYZ Transport",
-      origin: "Dallas, TX",
-      destination: "Houston, TX",
-      pickupDate: "2023-06-16T09:00:00",
-      deliveryDate: "2023-06-16T15:00:00",
-      status: "pending",
-      rate: "$850.00",
-      weight: 1800,
-      distance: 240,
-    },
-    {
-      id: "L-1003",
-      reference: "REF-2023-003",
-      customer: "Global Shipping Co",
-      origin: "Miami, FL",
-      destination: "Atlanta, GA",
-      pickupDate: "2023-06-14T07:30:00",
-      deliveryDate: "2023-06-14T19:00:00",
-      status: "completed",
-      rate: "$1,450.00",
-      weight: 3200,
-      distance: 660,
-      driver: "Sarah Johnson",
-      notes: "Delivered ahead of schedule",
-    },
-    {
-      id: "L-1004",
-      reference: "REF-2023-004",
-      customer: "Fast Freight Inc",
-      origin: "Seattle, WA",
-      destination: "Portland, OR",
-      pickupDate: "2023-06-17T10:00:00",
-      deliveryDate: "2023-06-17T14:00:00",
-      status: "pending",
-      rate: "$750.00",
-      weight: 1500,
-      distance: 170,
-    },
-    {
-      id: "L-1005",
-      reference: "REF-2023-005",
-      customer: "Midwest Carriers",
-      origin: "Indianapolis, IN",
-      destination: "Columbus, OH",
-      pickupDate: "2023-06-15T11:00:00",
-      deliveryDate: "2023-06-15T16:00:00",
-      status: "active",
-      rate: "$650.00",
-      weight: 1200,
-      distance: 175,
-      driver: "Mike Wilson",
-    },
-  ]);
+  const [loads, setLoads] = useState<Load[]>([]);
+
+  useEffect(() => {
+    const fetchLoads = async () => {
+      const response = await getRequest(
+        `${import.meta.env.VITE_API_URL}/loads`
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        setLoads(data.data);
+      } else {
+        console.error("");
+      }
+    };
+
+    fetchLoads();
+  }, []);
+
+  // const [loads, setLoads] = useState<Load[]>([
+  //   {
+  //     id: "L-1001",
+  //     reference: "REF-2023-001",
+  //     customer: "ABC Logistics",
+  //     origin: "Chicago, IL",
+  //     destination: "Detroit, MI",
+  //     pickupDate: "2023-06-15T08:00:00",
+  //     deliveryDate: "2023-06-15T16:00:00",
+  //     status: "active",
+  //     rate: "$1,250.00",
+  //     weight: 2500,
+  //     distance: 280,
+  //     driver: "John Smith",
+  //   },
+  //   {
+  //     id: "L-1002",
+  //     reference: "REF-2023-002",
+  //     customer: "XYZ Transport",
+  //     origin: "Dallas, TX",
+  //     destination: "Houston, TX",
+  //     pickupDate: "2023-06-16T09:00:00",
+  //     deliveryDate: "2023-06-16T15:00:00",
+  //     status: "pending",
+  //     rate: "$850.00",
+  //     weight: 1800,
+  //     distance: 240,
+  //   },
+  //   {
+  //     id: "L-1003",
+  //     reference: "REF-2023-003",
+  //     customer: "Global Shipping Co",
+  //     origin: "Miami, FL",
+  //     destination: "Atlanta, GA",
+  //     pickupDate: "2023-06-14T07:30:00",
+  //     deliveryDate: "2023-06-14T19:00:00",
+  //     status: "completed",
+  //     rate: "$1,450.00",
+  //     weight: 3200,
+  //     distance: 660,
+  //     driver: "Sarah Johnson",
+  //     notes: "Delivered ahead of schedule",
+  //   },
+  //   {
+  //     id: "L-1004",
+  //     reference: "REF-2023-004",
+  //     customer: "Fast Freight Inc",
+  //     origin: "Seattle, WA",
+  //     destination: "Portland, OR",
+  //     pickupDate: "2023-06-17T10:00:00",
+  //     deliveryDate: "2023-06-17T14:00:00",
+  //     status: "pending",
+  //     rate: "$750.00",
+  //     weight: 1500,
+  //     distance: 170,
+  //   },
+  //   {
+  //     id: "L-1005",
+  //     reference: "REF-2023-005",
+  //     customer: "Midwest Carriers",
+  //     origin: "Indianapolis, IN",
+  //     destination: "Columbus, OH",
+  //     pickupDate: "2023-06-15T11:00:00",
+  //     deliveryDate: "2023-06-15T16:00:00",
+  //     status: "active",
+  //     rate: "$650.00",
+  //     weight: 1200,
+  //     distance: 175,
+  //     driver: "Mike Wilson",
+  //   },
+  // ]);
 
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -157,10 +220,10 @@ const LoadsPage = () => {
   // Calculate active filter count
   const getActiveFilterCount = () => {
     const statusCount = statusFilterGroup.options.filter(
-      (o) => o.checked,
+      (o) => o.checked
     ).length;
     const customerCount = customerFilterGroup.options.filter(
-      (o) => o.checked,
+      (o) => o.checked
     ).length;
     const dateCount = dateRange.startDate && dateRange.endDate ? 1 : 0;
 
@@ -171,20 +234,20 @@ const LoadsPage = () => {
   const handleFilterChange = (
     groupId: string,
     optionId: string,
-    checked: boolean,
+    checked: boolean
   ) => {
     if (groupId === "status") {
       setStatusFilterGroup({
         ...statusFilterGroup,
         options: statusFilterGroup.options.map((option) =>
-          option.id === optionId ? { ...option, checked } : option,
+          option.id === optionId ? { ...option, checked } : option
         ),
       });
     } else if (groupId === "customer") {
       setCustomerFilterGroup({
         ...customerFilterGroup,
         options: customerFilterGroup.options.map((option) =>
-          option.id === optionId ? { ...option, checked } : option,
+          option.id === optionId ? { ...option, checked } : option
         ),
       });
     }
@@ -220,11 +283,13 @@ const LoadsPage = () => {
     // Search query filter
     const matchesSearch =
       searchQuery === "" ||
-      load.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      load.reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      load.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      load.origin.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      load.destination.toLowerCase().includes(searchQuery.toLowerCase());
+      load.id == Number(searchQuery) ||
+      load.reference_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      load.driver.truck.company?.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      load.pickups[0].name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      load.deliveries[0].name.toLowerCase().includes(searchQuery.toLowerCase());
 
     // Status filter
     const selectedStatuses = statusFilterGroup.options
@@ -240,13 +305,15 @@ const LoadsPage = () => {
     const matchesCustomer =
       selectedCustomers.length === 0 ||
       selectedCustomers.some((c) =>
-        load.customer.toLowerCase().includes(c.replace("-", " ")),
+        load.driver.truck.company?.name
+          .toLowerCase()
+          .includes(c.replace("-", " "))
       );
 
     // Date range filter
     let matchesDateRange = true;
     if (dateRange.startDate && dateRange.endDate) {
-      const pickupDate = new Date(load.pickupDate);
+      const pickupDate = new Date(load.pickups[0].date_from);
       const startDate = new Date(dateRange.startDate);
       const endDate = new Date(dateRange.endDate);
       endDate.setHours(23, 59, 59, 999); // Set to end of day
@@ -414,13 +481,17 @@ const LoadsPage = () => {
                             <TableCell className="font-medium">
                               {load.id}
                             </TableCell>
-                            <TableCell>{load.reference}</TableCell>
-                            <TableCell>{load.customer}</TableCell>
-                            <TableCell>{load.origin}</TableCell>
-                            <TableCell>{load.destination}</TableCell>
-                            <TableCell>{formatDate(load.pickupDate)}</TableCell>
+                            <TableCell>{load.reference_number}</TableCell>
+                            <TableCell>
+                              {load.driver.truck.company?.name}
+                            </TableCell>
+                            <TableCell>{load.pickups[0].name}</TableCell>
+                            <TableCell>{load.deliveries[0].name}</TableCell>
+                            <TableCell>
+                              {formatDate(load.pickups[0].date_to)}
+                            </TableCell>
                             <TableCell>{getStatusBadge(load.status)}</TableCell>
-                            <TableCell>{load.rate}</TableCell>
+                            <TableCell>{load.total_charges}</TableCell>
                             <TableCell className="text-right">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -446,7 +517,7 @@ const LoadsPage = () => {
                                   <DropdownMenuItem
                                     onClick={() =>
                                       console.log(
-                                        `Assign driver to load ${load.id}`,
+                                        `Assign driver to load ${load.id}`
                                       )
                                     }
                                   >

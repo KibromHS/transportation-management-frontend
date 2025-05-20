@@ -17,15 +17,20 @@ import {
   ChevronUp,
   Users,
 } from "lucide-react";
-import { getRequest } from "@/api/request";
-
+import { getRequest, postRequest } from "@/api/request";
+import AddAuctionForm from "./AddAuctionForm";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface OfferModel {
-  amount: number;
+  rate: number;
   driver: {
     id: number;
     name: string;
-  }
+    phone: string;
+    email: string;
+    language: string;
+    citizenship: string;
+  };
 }
 
 interface AuctionModel {
@@ -36,24 +41,39 @@ interface AuctionModel {
   weight: number;
   dispatcher_note: string;
   expires_at: string;
-  offers: OfferModel[],
+  offers: OfferModel[];
 }
 
 const AuctionPage = () => {
-  // State to track which auction's bidders dropdown is open
-  const [openBiddersDropdown, setOpenBiddersDropdown] = useState<number | null>(null);
+  const [openBiddersDropdown, setOpenBiddersDropdown] = useState<number | null>(
+    null
+  );
   const [auctionItems, setAuctionItems] = useState<AuctionModel[]>([]);
+  const [completedAuctions, setCompletedAuctions] = useState<AuctionModel[]>(
+    []
+  );
+  const [showAddAuctionForm, setShowAddAuctionForm] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchAuctions = async () => {
-      const response = await getRequest(`${import.meta.env.VITE_API_URL}/auctions`);
+      const response = await getRequest(
+        `${import.meta.env.VITE_API_URL}/auctions`
+      );
       const data = await response.json();
       if (response.ok) {
-        setAuctionItems(data.data);
+        const auctions: AuctionModel[] = data.data;
+        // setCompletedAuctions(
+        //   auctions.filter((a) => new Date(a.expires_at).getTime() < Date.now())
+        // );
+        // setAuctionItems(
+        //   auctions.filter((a) => new Date(a.expires_at).getTime() > Date.now())
+        // );
+        setAuctionItems(auctions);
       } else {
-        console.log('failed to fetch auctions:', data);
+        console.log("failed to fetch auctions:", data);
       }
-    }
+    };
 
     fetchAuctions();
   }, []);
@@ -61,9 +81,27 @@ const AuctionPage = () => {
   // Toggle bidders dropdown
   const toggleBiddersDropdown = (auctionId: number) => {
     setOpenBiddersDropdown(
-      openBiddersDropdown === auctionId ? null : auctionId,
+      openBiddersDropdown === auctionId ? null : auctionId
     );
   };
+
+  const handleAddAuction = async (data: any) => {
+    setLoading(true);
+    const response = await postRequest(
+      `${import.meta.env.VITE_API_URL}/auctions`,
+      data
+    );
+    if (response.ok) {
+      window.location.reload();
+    } else {
+      console.error("Failed to add auction:", response);
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   // Mock auction data with bidders information
   // const auctionItems = [
@@ -303,7 +341,7 @@ const AuctionPage = () => {
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Load Auctions</h1>
-          <Button>
+          <Button onClick={() => setShowAddAuctionForm(true)}>
             <Package className="mr-2 h-4 w-4" />
             Create New Auction
           </Button>
@@ -403,7 +441,9 @@ const AuctionPage = () => {
                             <Badge variant="outline">#{item.id}</Badge>
                             <Badge className="bg-green-500">Active</Badge>
                           </div>
-                          <h3 className="font-medium mt-2">{item.origin} to {item.destination}</h3>
+                          <h3 className="font-medium mt-2">
+                            {item.origin} to {item.destination}
+                          </h3>
                         </div>
                         <div className="text-right">
                           {/* <div className="text-lg font-bold">
@@ -475,7 +515,7 @@ const AuctionPage = () => {
                                   </div>
                                   <div className="text-right">
                                     <p className="font-bold text-green-600">
-                                      {offer.amount}
+                                      ${offer.rate}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
                                       {/* {bidder.time} */}
@@ -485,15 +525,15 @@ const AuctionPage = () => {
                                 <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                                   <div className="flex items-center gap-4">
                                     <span>
-                                      Rating:{" "}
+                                      Email:{" "}
                                       <span className="font-medium text-foreground">
-                                        {/* {bidder.rating}/5 */}
+                                        {offer.driver.email}
                                       </span>
                                     </span>
                                     <span>
-                                      Completed Jobs:{" "}
+                                      Phone:{" "}
                                       <span className="font-medium text-foreground">
-                                        {/* {bidder.completedJobs} */}
+                                        {offer.driver.phone}
                                       </span>
                                     </span>
                                   </div>
@@ -542,24 +582,26 @@ const AuctionPage = () => {
                       <div className="flex justify-between items-start">
                         <div>
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline">{item.id}</Badge>
+                            <Badge variant="outline">#{item.id}</Badge>
                             <Badge variant="secondary">Completed</Badge>
                           </div>
-                          <h3 className="font-medium mt-2">{item.title}</h3>
+                          <h3 className="font-medium mt-2">
+                            {item.origin} to {item.destination}
+                          </h3>
                         </div>
                         <div className="text-right">
                           <div className="text-lg font-bold">
                             {item.finalBid}
-                          </div>
+                          </div> 
                           <div className="text-sm text-muted-foreground">
-                            {item.bidCount} bids
+                            {item.offers.length} bids
                           </div>
                         </div>
                       </div>
                       <div className="flex justify-between items-center mt-4">
                         <div className="flex flex-col text-sm">
                           <span className="text-muted-foreground">
-                            Completed: {item.completedAt}
+                            Completed: {item.expires_at}
                           </span>
                           <span>
                             Winner:{" "}
@@ -577,6 +619,14 @@ const AuctionPage = () => {
             </Card>
           </TabsContent> */}
         </Tabs>
+
+        {showAddAuctionForm && (
+          <AddAuctionForm
+            open={true}
+            onOpenChange={(value) => setShowAddAuctionForm(value)}
+            onSave={handleAddAuction}
+          />
+        )}
       </div>
     </ThemeAwareDashboardLayout>
   );

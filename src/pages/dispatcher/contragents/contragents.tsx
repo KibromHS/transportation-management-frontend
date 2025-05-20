@@ -51,6 +51,7 @@ interface CarrierModel {
   city: string;
   state: string;
   address_line1: string;
+  customer_type: string;
 }
 
 interface FacilityModel {
@@ -408,6 +409,7 @@ const ContragentsPage = () => {
                       <TableHead>Contact</TableHead>
                       {/* <TableHead>Fleet Size</TableHead> */}
                       <TableHead>Location</TableHead>
+                      <TableHead>Type</TableHead>
                       {/* <TableHead>Rating</TableHead>
                       <TableHead>Status</TableHead> */}
                       <TableHead></TableHead>
@@ -437,6 +439,7 @@ const ContragentsPage = () => {
                           </div>
                         </TableCell>
                         <TableCell>{carrier.address_line1}</TableCell>
+                        <TableCell>{carrier.customer_type}</TableCell>
                         {/* <TableCell>{carrier.rating}/5.0</TableCell>
                         <TableCell>{getStatusBadge(carrier.status)}</TableCell> */}
                         <TableCell>
@@ -542,7 +545,7 @@ const ContragentsPage = () => {
                     <TableRow>
                       <TableHead>Facility</TableHead>
                       <TableHead>Contact</TableHead>
-                      <TableHead>Type</TableHead>
+                      {/* <TableHead>Type</TableHead> */}
                       {/* <TableHead>Capacity</TableHead>
                       <TableHead>Status</TableHead> */}
                       <TableHead></TableHead>
@@ -573,7 +576,7 @@ const ContragentsPage = () => {
                             {facility.location}
                           </div>
                         </TableCell>
-                        <TableCell>Facility</TableCell>
+                        {/* <TableCell>Facility</TableCell> */}
                         {/* <TableCell>{facility.capacity}</TableCell>
                         <TableCell>{getStatusBadge(facility.status)}</TableCell> */}
                         <TableCell>

@@ -68,19 +68,19 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface CreateDispatchModalProps {
+interface CreateLoadModalProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSubmit?: (data: FormValues | any) => void;
 }
 
-const CreateDispatchModal: React.FC<CreateDispatchModalProps> = ({
+const CreateLoadModal: React.FC<CreateLoadModalProps> = ({
   open = true,
   onOpenChange = () => {},
   onSubmit = () => {},
 }) => {
   const [selectedOfficers, setSelectedOfficers] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<"simple" | "advanced">("simple");
+  const [activeTab, setActiveTab] = useState<"simple" | "advanced">("advanced");
 
   // Mock data for officers
   const availableOfficers = [
@@ -124,11 +124,11 @@ const CreateDispatchModal: React.FC<CreateDispatchModalProps> = ({
     onSubmit(data);
     onOpenChange(false);
     // In a real app, this would send the data to the server
-    console.log("Dispatch created:", data);
+    console.log("Load created:", data);
   };
 
   const handleLoadFormSubmit = (loadData: any) => {
-    // Transform load data to dispatch data format if needed
+    // Transform load data to load data format if needed
     const dispatchData = {
       ...loadData,
       title: loadData.commodity || "New Load",
@@ -141,9 +141,9 @@ const CreateDispatchModal: React.FC<CreateDispatchModalProps> = ({
       status: "pending",
     };
 
-    onSubmit(dispatchData);
+    onSubmit(loadData);
     onOpenChange(false);
-    console.log("Load created as dispatch:", dispatchData);
+    console.log("Load created as load:", loadData);
   };
 
   const toggleOfficerSelection = (officerId: string) => {
@@ -160,7 +160,7 @@ const CreateDispatchModal: React.FC<CreateDispatchModalProps> = ({
     if (currentOfficers.includes(officerId)) {
       form.setValue(
         "assignedOfficers",
-        currentOfficers.filter((id) => id !== officerId),
+        currentOfficers.filter((id) => id !== officerId)
       );
     } else {
       form.setValue("assignedOfficers", [...currentOfficers, officerId]);
@@ -173,18 +173,18 @@ const CreateDispatchModal: React.FC<CreateDispatchModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
+      {/* <DialogTrigger asChild>
         <Button className="bg-primary hover:bg-primary/90">
-          Create New Dispatch
+          Create New Load
         </Button>
-      </DialogTrigger>
+      </DialogTrigger> */}
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto bg-background">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            Create New Dispatch
+            Create New Load
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Fill in the details to create a new dispatch task.
+            Fill in the details to create a new load task.
           </DialogDescription>
         </DialogHeader>
 
@@ -195,12 +195,12 @@ const CreateDispatchModal: React.FC<CreateDispatchModalProps> = ({
           }
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          {/* <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="simple">Simple Form</TabsTrigger>
-            <TabsTrigger value="advanced">Advanced Load Form</TabsTrigger>
-          </TabsList>
+            <TabsTrigger value="advanced">Add Load Form</TabsTrigger>
+          </TabsList> */}
 
-          <TabsContent value="simple">
+          {/* <TabsContent value="simple">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(handleSubmit)}
@@ -219,12 +219,9 @@ const CreateDispatchModal: React.FC<CreateDispatchModalProps> = ({
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Dispatch Title</FormLabel>
+                        <FormLabel>Load Title</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="Enter dispatch title"
-                            {...field}
-                          />
+                          <Input placeholder="Enter load title" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -305,12 +302,12 @@ const CreateDispatchModal: React.FC<CreateDispatchModalProps> = ({
                     type="submit"
                     className="bg-primary hover:bg-primary/90"
                   >
-                    Create Dispatch
+                    Create Load
                   </Button>
                 </DialogFooter>
               </form>
             </Form>
-          </TabsContent>
+          </TabsContent> */}
 
           <TabsContent value="advanced">
             <LoadCreationForm
@@ -324,4 +321,4 @@ const CreateDispatchModal: React.FC<CreateDispatchModalProps> = ({
   );
 };
 
-export default CreateDispatchModal;
+export default CreateLoadModal;

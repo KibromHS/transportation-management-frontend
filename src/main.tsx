@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from './App.tsx';
+import App from "./App.tsx";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/ui/theme-provider";
@@ -15,13 +15,11 @@ const basename = import.meta.env.BASE_URL;
 // Preload critical assets
 const preloadAssets = () => {
   // Add preload hints for critical resources
-  const preloadLinks = [
-    { href: '/favicon.ico', as: 'image' },
-  ];
+  const preloadLinks = [{ href: "/favicon.ico", as: "image" }];
 
   preloadLinks.forEach(({ href, as }) => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
+    const link = document.createElement("link");
+    link.rel = "preload";
     link.href = href;
     link.as = as;
     document.head.appendChild(link);
@@ -49,5 +47,5 @@ root.render(
         </BrowserRouter>
       </PerformanceOptimizer>
     </ThemeProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

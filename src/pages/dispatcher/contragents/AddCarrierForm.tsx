@@ -75,7 +75,6 @@ const AddCarrierForm: React.FC<AddTruckFormProps> = ({
   };
 
   useEffect(() => {
-    setLoading(true);
     const fetchTruckTypes = async () => {
       try {
         const ownerResponse = await getRequest(
@@ -88,7 +87,7 @@ const AddCarrierForm: React.FC<AddTruckFormProps> = ({
       } catch (e) {
         console.error(e);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,70 +27,180 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { getRequest } from "@/api/request";
 
 export interface TruckFilterPanelProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  onApplyFilters: (filters: any) => void;
+  onApplyFiltersAndSearch: (filters: any) => void;
   onResetFilters: () => void;
+}
+
+interface FilterType {
+  // General Information
+  id: number;
+  // trailerNumber: "";
+  city: string;
+  state: string;
+  zip: string;
+
+  // Availability Info
+  // availabilityFrom: null;
+  // availabilityTo: null;
+  status: string;
+  is_reserved: boolean;
+  // assignedUser: "";
+
+  // Truck Details
+  length: number;
+  width: number;
+  height: number;
+  weightUnit: "";
+  payload_capacity: number;
+  gross: number;
+  truck_type_id: number;
+  trailer_type_id: number;
+  // yearFrom: "";
+
+  // Owner and Driver
+  owner_id: number;
+  driver_id: number;
+  // company_id: "";
+  // homeState: "";
+  citizenship: string;
+  phone: string;
+  // certificates: "";
+
+  // More Details
+  // tempRangeFrom: "";
+  // tempRangeTo: "";
+  equipment_id: number;
+  door_type: string;
+  // crossBorder: "";
+  signs: string;
+  preferred_load: string;
+  team: boolean;
+
+  // Registration and Expiration
+  // crmId: "";
+  // expirationDocuments: "";
 }
 
 const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
   searchQuery,
   onSearchChange,
-  onApplyFilters,
+  onApplyFiltersAndSearch,
   onResetFilters,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [filters, setFilters] = useState<any>({
+  const [filters, setFilters] = useState<FilterType>({
     // General Information
-    truckNumber: "",
-    trailerNumber: "",
-    locationCity: "",
-    locationState: "",
+    id: null,
+    // trailerNumber: "",
+    city: "",
+    state: "",
     zip: "",
 
-    // Availability Info
-    availabilityFrom: null,
-    availabilityTo: null,
+    // // Availability Info
+    // availabilityFrom: null,
+    // availabilityTo: null,
     status: "",
-    reservation: "",
-    assignedUser: "",
+    is_reserved: null,
+    // assignedUser: "",
 
     // Truck Details
-    length: "",
-    width: "",
-    height: "",
-    weightUnit: "lbs",
-    payload: "",
-    gross: "",
-    truckType: "",
-    trailerType: "",
-    yearFrom: "",
+    length: null,
+    width: null,
+    height: null,
+    weightUnit: "",
+    payload_capacity: null,
+    gross: null,
+    truck_type_id: null,
+    trailer_type_id: null,
+    // yearFrom: "",
 
     // Owner and Driver
-    owner: "",
-    driver: "",
-    ownerCompany: "",
-    homeState: "",
+    owner_id: null,
+    driver_id: null,
+    // company_id: "",
+    // homeState: "",
     citizenship: "",
     phone: "",
-    certificates: "",
+    // certificates: "",
 
     // More Details
-    tempRangeFrom: "",
-    tempRangeTo: "",
-    equipment: "",
-    doorType: "",
-    crossBorder: "",
+    // tempRangeFrom: "",
+    // tempRangeTo: "",
+    equipment_id: null,
+    door_type: "",
+    // crossBorder: "",
     signs: "",
-    preferredLoad: false,
-    team: false,
+    preferred_load: null,
+    team: null,
 
     // Registration and Expiration
-    crmId: "",
-    expirationDocuments: "",
+    // crmId: "",
+    // expirationDocuments: "",
   });
+  const [drivers, setDrivers] = useState([]);
+  const [owners, setOwners] = useState([]);
+  // const [companies, setCompanies] = useState([]);
+  const [truckTypes, setTruckTypes] = useState([]);
+  const [trailerTypes, setTrailerTypes] = useState([]);
+  const [equipments, setEquipments] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [
+          driversResponse,
+          ownersResponse,
+          truckTypesResponse,
+          trailerTypesResponse,
+          equipmentsResponse,
+        ] = await Promise.all([
+          getRequest(`${import.meta.env.VITE_API_URL}/drivers`),
+          getRequest(`${import.meta.env.VITE_API_URL}/owners`),
+          // getRequest(`${import.meta.env.VITE_API_URL}/companies`),
+          getRequest(`${import.meta.env.VITE_API_URL}/truck-types`),
+          getRequest(`${import.meta.env.VITE_API_URL}/trailer-types`),
+          getRequest(`${import.meta.env.VITE_API_URL}/equipments`),
+        ]);
+
+        if (driversResponse.ok) {
+          const driversData = await driversResponse.json();
+          setDrivers(driversData.data);
+        }
+
+        if (ownersResponse.ok) {
+          const ownersData = await ownersResponse.json();
+          setOwners(ownersData.data);
+        }
+
+        // if (companiesResponse.ok) {
+        //   const companiesData = await companiesResponse.json();
+        //   setCompanies(companiesData.data);
+        // }
+
+        if (truckTypesResponse.ok) {
+          const truckTypesData = await truckTypesResponse.json();
+          setTruckTypes(truckTypesData);
+        }
+        if (trailerTypesResponse.ok) {
+          const trailerTypeData = await trailerTypesResponse.json();
+          setTrailerTypes(trailerTypeData);
+        }
+        if (equipmentsResponse.ok) {
+          const equipmentsData = await equipmentsResponse.json();
+          setEquipments(equipmentsData);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Count active filters
   const getActiveFilterCount = () => {
@@ -108,48 +218,35 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
     }));
   };
 
-  const handleApplyFilters = () => {
-    onApplyFilters(filters);
+  const handleApplyFiltersAndSearch = () => {
+    onApplyFiltersAndSearch(filters);
   };
 
   const handleResetFilters = () => {
     setFilters({
-      truckNumber: "",
-      trailerNumber: "",
-      locationCity: "",
-      locationState: "",
+      id: null,
+      city: "",
+      state: "",
       zip: "",
-      availabilityFrom: null,
-      availabilityTo: null,
       status: "",
-      reservation: "",
-      assignedUser: "",
-      length: "",
-      width: "",
-      height: "",
-      weightUnit: "lbs",
-      payload: "",
-      gross: "",
-      truckType: "",
-      trailerType: "",
-      yearFrom: "",
-      owner: "",
-      driver: "",
-      ownerCompany: "",
-      homeState: "",
+      is_reserved: null,
+      length: null,
+      width: null,
+      height: null,
+      weightUnit: "",
+      payload_capacity: null,
+      gross: null,
+      truck_type_id: null,
+      trailer_type_id: null,
+      owner_id: null,
+      driver_id: null,
       citizenship: "",
       phone: "",
-      certificates: "",
-      tempRangeFrom: "",
-      tempRangeTo: "",
-      equipment: "",
-      doorType: "",
-      crossBorder: "",
+      equipment_id: null,
+      door_type: "",
       signs: "",
-      preferredLoad: false,
-      team: false,
-      crmId: "",
-      expirationDocuments: "",
+      preferred_load: null,
+      team: null,
     });
     onResetFilters();
   };
@@ -170,7 +267,9 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
           )}
         </div>
         <ChevronDown
-          className={`h-5 w-5 text-muted-foreground transition-transform ${isExpanded ? "rotate-180" : ""}`}
+          className={`h-5 w-5 text-muted-foreground transition-transform ${
+            isExpanded ? "rotate-180" : ""
+          }`}
         />
       </div>
 
@@ -193,20 +292,18 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                     <Input
                       id="truckNumber"
                       placeholder="Enter truck number"
-                      value={filters.truckNumber}
-                      onChange={(e) =>
-                        handleFilterChange("truckNumber", e.target.value)
-                      }
+                      value={filters.id}
+                      onChange={(e) => handleFilterChange("id", e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="trailerNumber">Trailer #</Label>
+                    <Label htmlFor="trailer_type_id">Trailer #</Label>
                     <Input
-                      id="trailerNumber"
+                      id="trailer_type_id"
                       placeholder="Enter trailer number"
-                      value={filters.trailerNumber}
+                      value={filters.trailer_type_id}
                       onChange={(e) =>
-                        handleFilterChange("trailerNumber", e.target.value)
+                        handleFilterChange("trailer_type_id", e.target.value)
                       }
                     />
                   </div>
@@ -215,18 +312,18 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                     <Input
                       id="locationCity"
                       placeholder="Enter city"
-                      value={filters.locationCity}
+                      value={filters.city}
                       onChange={(e) =>
-                        handleFilterChange("locationCity", e.target.value)
+                        handleFilterChange("city", e.target.value)
                       }
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="locationState">Location State</Label>
                     <Select
-                      value={filters.locationState}
+                      value={filters.state}
                       onValueChange={(value) =>
-                        handleFilterChange("locationState", value)
+                        handleFilterChange("state", value)
                       }
                     >
                       <SelectTrigger id="locationState">
@@ -268,7 +365,7 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
               </AccordionTrigger>
               <AccordionContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label>From</Label>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -276,8 +373,7 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                           variant={"outline"}
                           className={cn(
                             "w-full justify-start text-left font-normal",
-                            !filters.availabilityFrom &&
-                              "text-muted-foreground",
+                            !filters.availabilityFrom && "text-muted-foreground"
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -299,8 +395,8 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                         />
                       </PopoverContent>
                     </Popover>
-                  </div>
-                  <div className="space-y-2">
+                  </div> */}
+                  {/* <div className="space-y-2">
                     <Label>To</Label>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -308,7 +404,7 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                           variant={"outline"}
                           className={cn(
                             "w-full justify-start text-left font-normal",
-                            !filters.availabilityTo && "text-muted-foreground",
+                            !filters.availabilityTo && "text-muted-foreground"
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -330,7 +426,7 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                         />
                       </PopoverContent>
                     </Popover>
-                  </div>
+                  </div> */}
                   <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>
                     <Select
@@ -350,7 +446,7 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="assignedUser">Assigned User</Label>
                     <Select
                       value={filters.assignedUser}
@@ -368,7 +464,7 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                         <SelectItem value="user4">Emily Williams</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                  </div> */}
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -416,7 +512,7 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                       }
                     />
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="weightUnit">Weight In</Label>
                     <Select
                       value={filters.weightUnit}
@@ -432,16 +528,16 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                         <SelectItem value="kg">kg</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                  </div> */}
                   <div className="space-y-2">
-                    <Label htmlFor="payload">Payload</Label>
+                    <Label htmlFor="payload_capacity">Payload</Label>
                     <Input
-                      id="payload"
+                      id="payload_capacity"
                       type="number"
                       placeholder="Payload"
-                      value={filters.payload}
+                      value={filters.payload_capacity}
                       onChange={(e) =>
-                        handleFilterChange("payload", e.target.value)
+                        handleFilterChange("payload_capacity", e.target.value)
                       }
                     />
                   </div>
@@ -457,7 +553,7 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                       }
                     />
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="yearFrom">Year From</Label>
                     <Select
                       value={filters.yearFrom}
@@ -479,46 +575,44 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                         })}
                       </SelectContent>
                     </Select>
-                  </div>
+                  </div> */}
                   <div className="space-y-2 lg:col-span-3">
                     <Label htmlFor="truckType">Truck Type</Label>
                     <Select
-                      value={filters.truckType}
+                      value={filters.truck_type_id?.toString()}
                       onValueChange={(value) =>
-                        handleFilterChange("truckType", value)
+                        handleFilterChange("truckType", Number(value))
                       }
                     >
                       <SelectTrigger id="truckType">
                         <SelectValue placeholder="Select truck type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="box">Box Truck</SelectItem>
-                        <SelectItem value="flatbed">Flatbed</SelectItem>
-                        <SelectItem value="refrigerated">
-                          Refrigerated
-                        </SelectItem>
-                        <SelectItem value="tanker">Tanker</SelectItem>
-                        <SelectItem value="van">Van</SelectItem>
+                        {truckTypes.map((type) => (
+                          <SelectItem value={type.id.toString()}>
+                            {type.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2 lg:col-span-3">
-                    <Label htmlFor="trailerType">Trailer Type</Label>
+                    <Label htmlFor="trailer_type_id">Trailer Type</Label>
                     <Select
-                      value={filters.trailerType}
+                      value={filters.trailer_type_id?.toString()}
                       onValueChange={(value) =>
-                        handleFilterChange("trailerType", value)
+                        handleFilterChange("trailer_type_id", Number(value))
                       }
                     >
-                      <SelectTrigger id="trailerType">
+                      <SelectTrigger id="trailer_type_id">
                         <SelectValue placeholder="Select trailer type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="dry-van">Dry Van</SelectItem>
-                        <SelectItem value="flatbed">Flatbed</SelectItem>
-                        <SelectItem value="reefer">Reefer</SelectItem>
-                        <SelectItem value="step-deck">Step Deck</SelectItem>
-                        <SelectItem value="lowboy">Lowboy</SelectItem>
+                        {trailerTypes.map((type) => (
+                          <SelectItem value={type.id.toString()}>
+                            {type.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -534,55 +628,91 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
               <AccordionContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                   <div className="space-y-2">
-                    <Label htmlFor="owner">Owner</Label>
+                    <Label htmlFor="owner_id">Owner</Label>
                     <Select
-                      value={filters.owner}
+                      value={filters.owner_id?.toString()}
                       onValueChange={(value) =>
-                        handleFilterChange("owner", value)
+                        handleFilterChange("owner_id", Number(value))
                       }
                     >
-                      <SelectTrigger id="owner">
+                      <SelectTrigger id="owner_id">
                         <SelectValue placeholder="Select owner" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="owner1">John Smith</SelectItem>
-                        <SelectItem value="owner2">Jane Doe</SelectItem>
-                        <SelectItem value="owner3">ABC Logistics</SelectItem>
-                        <SelectItem value="owner4">XYZ Transport</SelectItem>
+                        {owners.length == 0 ? (
+                          <SelectItem disabled value="">
+                            No owners found
+                          </SelectItem>
+                        ) : (
+                          owners.map((o) => (
+                            <SelectItem value={o.id.toString()}>
+                              {o.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="driver">Driver</Label>
                     <Select
-                      value={filters.driver}
+                      value={filters.driver_id?.toString()}
                       onValueChange={(value) =>
-                        handleFilterChange("driver", value)
+                        handleFilterChange("driver_id", Number(value))
                       }
                     >
                       <SelectTrigger id="driver">
                         <SelectValue placeholder="Select driver" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="driver1">Michael Johnson</SelectItem>
-                        <SelectItem value="driver2">Sarah Williams</SelectItem>
-                        <SelectItem value="driver3">Robert Brown</SelectItem>
-                        <SelectItem value="driver4">Emily Davis</SelectItem>
+                        {drivers.length == 0 ? (
+                          <SelectItem disabled value="">
+                            No drivers found
+                          </SelectItem>
+                        ) : (
+                          drivers.map((d) => (
+                            <SelectItem value={d.id.toString()}>
+                              {d.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
+                    <Label htmlFor="company_id">Owner's Company Name</Label>
+                    <Select
+                      value={filters.company_id}
+                      onValueChange={(value) =>
+                        handleFilterChange("company_id", value)
+                      }
+                    >
+                      <SelectTrigger id="company_id">
+                        <SelectValue placeholder="Select company" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {companies.length == 0 ? (
+                          <p>No companies found</p>
+                        ) : (
+                          companies.map((c) => (
+                            <SelectItem value={c.id}>{c.name}</SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div> */}
+                  {/* <div className="space-y-2">
                     <Label htmlFor="ownerCompany">Owner's Company Name</Label>
                     <Input
                       id="ownerCompany"
                       placeholder="Enter company name"
-                      value={filters.ownerCompany}
+                      value={filters.company_id}
                       onChange={(e) =>
-                        handleFilterChange("ownerCompany", e.target.value)
+                        handleFilterChange("company_id", e.target.value)
                       }
                     />
-                  </div>
-                  <div className="space-y-2">
+                  </div> */}
+                  {/* <div className="space-y-2">
                     <Label htmlFor="homeState">Home State</Label>
                     <Select
                       value={filters.homeState}
@@ -602,7 +732,7 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                         <SelectItem value="NY">New York</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                  </div> */}
                   <div className="space-y-2">
                     <Label htmlFor="citizenship">Citizenship</Label>
                     <Select
@@ -615,10 +745,9 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                         <SelectValue placeholder="Select citizenship" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="us">United States</SelectItem>
-                        <SelectItem value="ca">Canada</SelectItem>
-                        <SelectItem value="mx">Mexico</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="citizen">Citizen</SelectItem>
+                        <SelectItem value="resident">Resident</SelectItem>
+                        <SelectItem value="NL">NL</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -633,7 +762,7 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                       }
                     />
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="certificates">Certificates</Label>
                     <Select
                       value={filters.certificates}
@@ -651,7 +780,7 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                         <SelectItem value="doubles">Doubles/Triples</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                  </div> */}
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -663,7 +792,7 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
               </AccordionTrigger>
               <AccordionContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-                  <div className="space-y-2 lg:col-span-2">
+                  {/* <div className="space-y-2 lg:col-span-2">
                     <Label>Temperature Range</Label>
                     <div className="flex items-center space-x-2">
                       <Input
@@ -685,45 +814,49 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                       />
                       <span>°F</span>
                     </div>
-                  </div>
+                  </div> */}
                   <div className="space-y-2">
-                    <Label htmlFor="equipment">Equipment</Label>
+                    <Label htmlFor="equipment_id">Equipment</Label>
                     <Select
-                      value={filters.equipment}
+                      value={filters.equipment_id?.toString()}
                       onValueChange={(value) =>
-                        handleFilterChange("equipment", value)
+                        handleFilterChange("equipment_id", Number(value))
                       }
                     >
-                      <SelectTrigger id="equipment">
+                      <SelectTrigger id="equipment_id">
                         <SelectValue placeholder="Select equipment" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="liftgate">Liftgate</SelectItem>
+                        {equipments.map((e) => (
+                          <SelectItem value={e.id.toString()}>
+                            {e.name}
+                          </SelectItem>
+                        ))}
+                        {/* <SelectItem value="liftgate">Liftgate</SelectItem>
                         <SelectItem value="pallet-jack">Pallet Jack</SelectItem>
                         <SelectItem value="straps">Straps</SelectItem>
-                        <SelectItem value="blankets">Blankets</SelectItem>
+                        <SelectItem value="blankets">Blankets</SelectItem> */}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="doorType">Door Type</Label>
                     <Select
-                      value={filters.doorType}
+                      value={filters.door_type}
                       onValueChange={(value) =>
-                        handleFilterChange("doorType", value)
+                        handleFilterChange("door_type", value)
                       }
                     >
                       <SelectTrigger id="doorType">
                         <SelectValue placeholder="Select door type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="roll-up">Roll-up</SelectItem>
+                        <SelectItem value="roll">Roll</SelectItem>
                         <SelectItem value="swing">Swing</SelectItem>
-                        <SelectItem value="side">Side</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="crossBorder">Cross Border</Label>
                     <Select
                       value={filters.crossBorder}
@@ -741,7 +874,7 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                         <SelectItem value="mexico-only">Mexico Only</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                  </div> */}
                   <div className="space-y-2">
                     <Label htmlFor="signs">Signs</Label>
                     <Select
@@ -754,23 +887,32 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                         <SelectValue placeholder="Select signs" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="hazmat">HAZMAT</SelectItem>
-                        <SelectItem value="oversize">Oversize Load</SelectItem>
-                        <SelectItem value="wide-load">Wide Load</SelectItem>
+                        <SelectItem value="with_signs">With Signs</SelectItem>
+                        <SelectItem value="without_signs">
+                          Without Signs
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="preferred_load">Preferred Load</Label>
+                    <Select
+                      value={filters.preferred_load}
+                      onValueChange={(value) =>
+                        handleFilterChange("preferred_load", value)
+                      }
+                    >
+                      <SelectTrigger id="preferred_load">
+                        <SelectValue placeholder="Select preferred load" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="local">Local</SelectItem>
+                        <SelectItem value="long">Long</SelectItem>
+                        <SelectItem value="any">Any</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="flex items-center space-x-8 pt-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="preferredLoad"
-                        checked={filters.preferredLoad}
-                        onCheckedChange={(checked) =>
-                          handleFilterChange("preferredLoad", checked)
-                        }
-                      />
-                      <Label htmlFor="preferredLoad">Preferred Load</Label>
-                    </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="team"
@@ -787,13 +929,13 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
             </AccordionItem>
 
             {/* Registration and Expiration */}
-            <AccordionItem value="registration">
+            {/* <AccordionItem value="registration">
               <AccordionTrigger className="text-sm font-medium">
                 Registration and Expiration
               </AccordionTrigger>
               <AccordionContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                  <div className="space-y-2">
+                   <div className="space-y-2">
                     <Label htmlFor="crmId">CRM ID</Label>
                     <Input
                       id="crmId"
@@ -803,8 +945,8 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                         handleFilterChange("crmId", e.target.value)
                       }
                     />
-                  </div>
-                  <div className="space-y-2">
+                  </div> */}
+            {/* <div className="space-y-2">
                     <Label htmlFor="expirationDocuments">
                       Expiration Documents
                     </Label>
@@ -826,10 +968,10 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                         <SelectItem value="license">License</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                  </div> 
                 </div>
               </AccordionContent>
-            </AccordionItem>
+            </AccordionItem> */}
           </Accordion>
 
           <div className="flex justify-end space-x-2 mt-4">
@@ -840,8 +982,11 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
             >
               <X className="mr-1 h-4 w-4" /> Reset
             </Button>
-            <Button onClick={handleApplyFilters} className="flex items-center">
-              <Filter className="mr-1 h-4 w-4" /> Apply Filters
+            <Button
+              onClick={handleApplyFiltersAndSearch}
+              className="flex items-center"
+            >
+              <Filter className="mr-1 h-4 w-4" /> Apply and Search
             </Button>
           </div>
         </div>

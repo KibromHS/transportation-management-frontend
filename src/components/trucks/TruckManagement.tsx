@@ -41,7 +41,12 @@ import TruckDataTable, {
 import { useAuthContext } from "@/context/AuthContext";
 import { User } from "@/api";
 import LoadingSpinner from "../common/LoadingSpinner";
-import { deleteRequest, patchRequest, postRequest } from "@/api/request";
+import {
+  deleteRequest,
+  getRequest,
+  patchRequest,
+  postRequest,
+} from "@/api/request";
 
 export interface TruckData {
   owner_id: string;
@@ -49,16 +54,21 @@ export interface TruckData {
   model: string;
   color: string;
   year: number;
-  dimensions: string;
+  length: number;
+  width: number;
+  height: number;
+  gross: number;
+  city: string;
+  state: string;
+  zip: string;
   payload_capacity: string;
   door_type: string;
   team: string;
-  address: string;
-  status: 'available' | 'not_available' | 'busy';
+  status: "available" | "not_available" | "busy";
   preferred_load: string;
   canada: boolean;
   mexico: boolean;
-  signs: 'with_signs' | 'without_signs';
+  signs: "with_signs" | "without_signs";
   is_reserved: boolean;
   truck_type_id: number;
 }
@@ -470,38 +480,38 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
   //   ],
   // );
 
-  useEffect(() => {
-    const fetchTrucks = async () => {
-      setIsLoading(true);
-      try {
-        const token = localStorage.getItem('auth-token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/trucks`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const data = await response.json();
-        console.log('trucks response data:', data);
-        if (response.ok) {
-          setTrucks(data);
-        }
-      } catch (e) {
-        console.error('Error fething trucks', e);
-      } finally {
-        setIsLoading(false);
+  const fetchTrucks = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem("auth-token");
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/trucks`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      console.log("trucks response data:", data);
+      if (response.ok) {
+        setTrucks(data);
       }
+    } catch (e) {
+      console.error("Error fething trucks", e);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchTrucks();
   }, []);
 
   // Calculate active filter count
   const getActiveFilterCount = () => {
     const statusCount = statusFilterGroup.options.filter(
-      (o: any) => o.checked,
+      (o: any) => o.checked
     ).length;
     const typeCount = typeFilterGroup.options.filter(
-      (o: any) => o.checked,
+      (o: any) => o.checked
     ).length;
 
     return statusCount + typeCount;
@@ -511,27 +521,27 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
   const handleFilterChange = (
     groupId: string,
     optionId: string,
-    checked: boolean,
+    checked: boolean
   ) => {
     if (groupId === "status") {
       setStatusFilterGroup({
         ...statusFilterGroup,
         options: statusFilterGroup.options.map((option: any) =>
-          option.id === optionId ? { ...option, checked } : option,
+          option.id === optionId ? { ...option, checked } : option
         ),
       });
     } else if (groupId === "type") {
       setTypeFilterGroup({
         ...typeFilterGroup,
         options: typeFilterGroup.options.map((option: any) =>
-          option.id === optionId ? { ...option, checked } : option,
+          option.id === optionId ? { ...option, checked } : option
         ),
       });
     }
   };
 
   // Clear all filters
-  const handleClearFilters = () => {
+  const handleClearFilters = async () => {
     setStatusFilterGroup({
       ...statusFilterGroup,
       options: statusFilterGroup.options.map((option: any) => ({
@@ -548,83 +558,110 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
     });
     setSearchQuery("");
     setAppliedFilters(null);
+
+    const response = await getRequest(`${import.meta.env.VITE_API_URL}/trucks`);
+    const data = await response.json();
+    if (response.ok) {
+      console.log("data:", data);
+      setTrucks(data);
+    } else {
+      console.error("Error fetching filtered trucks:", response);
+    }
   };
 
   // Handle applying advanced filters
-  const handleApplyFilters = (filters: any) => {
+  const handleApplyFiltersAndSearch = async (filters: any) => {
     setAppliedFilters(filters);
+    const cleanedFilters: Record<string, any> = {};
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== null && value !== "") {
+        cleanedFilters[key] = value;
+      }
+    });
+    const query = new URLSearchParams(cleanedFilters).toString();
+    console.log("query:", query);
+    const response = await getRequest(
+      `${import.meta.env.VITE_API_URL}/trucks?${query}`
+    );
+    const data = await response.json();
+    if (response.ok) {
+      console.log("data:", data);
+      setTrucks(data);
+    } else {
+      console.error("Error fetching filtered trucks:", response);
+    }
   };
 
   // Filter trucks based on all filters
-  const filteredTrucks = trucks.filter((truck) => {
-    // Basic search query filter
-    const matchesSearch =
-      searchQuery === "" ||
-      truck.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      truck.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      truck.driver.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      truck.location.toLowerCase().includes(searchQuery.toLowerCase());
+  // const filteredTrucks = trucks.filter((truck: TruckData) => {
+  //   // Basic search query filter
+  //   const matchesSearch =
+  //     searchQuery === "" ||
+  //     truck.id == Number(searchQuery) ||
+  //     truck.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     truck.driver.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     truck.location.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Status filter
-    const selectedStatuses = statusFilterGroup.options
-      .filter((o: any) => o.checked)
-      .map((o: any) => o.id);
-    const matchesStatus =
-      selectedStatuses.length === 0 || selectedStatuses.includes(truck.status);
+  //   // Status filter
+  //   const selectedStatuses = statusFilterGroup.options
+  //     .filter((o: any) => o.checked)
+  //     .map((o: any) => o.id);
+  //   const matchesStatus =
+  //     selectedStatuses.length === 0 || selectedStatuses.includes(truck.status);
 
-    // Type filter
-    const selectedTypes = typeFilterGroup.options
-      .filter((o: any) => o.checked)
-      .map((o: any) => o.id);
-    const matchesType =
-      selectedTypes.length === 0 ||
-      selectedTypes.includes(truck.type.toLowerCase().replace(" ", "_"));
+  //   // Type filter
+  //   const selectedTypes = typeFilterGroup.options
+  //     .filter((o: any) => o.checked)
+  //     .map((o: any) => o.id);
+  //   const matchesType =
+  //     selectedTypes.length === 0 ||
+  //     selectedTypes.includes(truck.type.toLowerCase().replace(" ", "_"));
 
-    // Advanced filters
-    let matchesAdvancedFilters = true;
-    if (appliedFilters) {
-      // Check truck number
-      if (
-        appliedFilters.truckNumber &&
-        !truck.id
-          .toLowerCase()
-          .includes(appliedFilters.truckNumber.toLowerCase())
-      ) {
-        matchesAdvancedFilters = false;
-      }
+  //   // Advanced filters
+  //   let matchesAdvancedFilters = true;
+  //   if (appliedFilters) {
+  //     // Check truck number
+  //     if (
+  //       appliedFilters.truckNumber &&
+  //       !truck.id
+  //         .toLowerCase()
+  //         .includes(appliedFilters.truckNumber.toLowerCase())
+  //     ) {
+  //       matchesAdvancedFilters = false;
+  //     }
 
-      // Check location city
-      if (
-        appliedFilters.locationCity &&
-        !truck.location
-          .toLowerCase()
-          .includes(appliedFilters.locationCity.toLowerCase())
-      ) {
-        matchesAdvancedFilters = false;
-      }
+  //     // Check location city
+  //     if (
+  //       appliedFilters.locationCity &&
+  //       !truck.location
+  //         .toLowerCase()
+  //         .includes(appliedFilters.locationCity.toLowerCase())
+  //     ) {
+  //       matchesAdvancedFilters = false;
+  //     }
 
-      // Check status
-      if (appliedFilters.status && appliedFilters.status !== truck.status) {
-        matchesAdvancedFilters = false;
-      }
+  //     // Check status
+  //     if (appliedFilters.status && appliedFilters.status !== truck.status) {
+  //       matchesAdvancedFilters = false;
+  //     }
 
-      // Check driver
-      if (
-        appliedFilters.driver &&
-        !truck.driver.name
-          .toLowerCase()
-          .includes(appliedFilters.driver.toLowerCase())
-      ) {
-        matchesAdvancedFilters = false;
-      }
+  //     // Check driver
+  //     if (
+  //       appliedFilters.driver &&
+  //       !truck.driver.name
+  //         .toLowerCase()
+  //         .includes(appliedFilters.driver.toLowerCase())
+  //     ) {
+  //       matchesAdvancedFilters = false;
+  //     }
 
-      // Additional filters can be added here as needed
-    }
+  //     // Additional filters can be added here as needed
+  //   }
 
-    return (
-      matchesSearch && matchesStatus && matchesType && matchesAdvancedFilters
-    );
-  });
+  //   return (
+  //     matchesSearch && matchesStatus && matchesType && matchesAdvancedFilters
+  //   );
+  // });
 
   // Handle adding a new truck
   const handleAddTruck = async (data: any, driverId: number) => {
@@ -636,12 +673,17 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
       model: data.model,
       color: data.color,
       year: data.year,
-      dimensions: data.dimensions,
+      height: data.height,
+      length: data.length,
+      width: data.width,
+      gross: data.gross,
+      city: data.city,
+      state: data.state,
+      zip: data.zip,
       payload_capacity: data.payload_capacity,
       door_type: data.door_type,
       team: data.team,
-      address: data.address,
-      status: 'available',
+      status: "available",
       preferred_load: data.preferred_load,
       is_reserved: false,
       canada: data.canada,
@@ -652,22 +694,35 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
 
     try {
       setIsLoading(true);
-      const response = await postRequest(`${import.meta.env.VITE_API_URL}/trucks`, newTruck);
-      
+      const response = await postRequest(
+        `${import.meta.env.VITE_API_URL}/trucks`,
+        newTruck
+      );
+
       if (response.status == 201) {
-        console.log('truck added successfully');
+        console.log("truck added successfully");
         const data = await response.json();
 
         const truck = data.truck;
-        const driverResponse = await patchRequest(`${import.meta.env.VITE_API_URL}/drivers/${driverId}`, {truck_id: truck.id});
-        window.location.reload();
+        const driverResponse = await patchRequest(
+          `${import.meta.env.VITE_API_URL}/drivers/${driverId}`,
+          { truck_id: truck.id }
+        );
+        // window.location.reload();
+        const newResponse = await getRequest(
+          `${import.meta.env.VITE_API_URL}/trucks`
+        );
+        if (newResponse.ok) {
+          const newData = await newResponse.json();
+          setTrucks(newData);
+        }
         if (driverResponse.status == 200) {
-          console.log('driver assigned to truck');
+          console.log("driver assigned to truck");
         } else {
-          console.log('failed to assign driver:', driverResponse);
+          console.log("failed to assign driver:", driverResponse);
         }
 
-        setTrucks([...trucks, newTruck]);
+        // setTrucks([...trucks, newTruck]);
         setShowAddTruckDialog(false);
       } else {
         console.log(await response.json());
@@ -722,11 +777,14 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
     console.log(`View logs for truck ${truckId}`);
   };
 
-  const handleArchiveTruck = async (truckId: string) => {
-
-    const response = await deleteRequest(`${import.meta.env.VITE_API_URL}/trucks/${truckId}`);
+  const handleDeleteTruck = async (truckId: string) => {
+    const response = await deleteRequest(
+      `${import.meta.env.VITE_API_URL}/trucks/${truckId}`
+    );
     if (response.ok) {
-      window.location.reload();
+      // window.location.reload();
+      fetchTrucks();
+
       console.log(`Truck #${truckId} deleted`);
     } else {
       console.log(`Failed to delete Truck #${truckId}`);
@@ -734,7 +792,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
   };
 
   if (isLoading) {
-    return <LoadingSpinner />
+    return <LoadingSpinner />;
   }
 
   return (
@@ -752,7 +810,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
         <TruckFilterPanel
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          onApplyFilters={handleApplyFilters}
+          onApplyFiltersAndSearch={handleApplyFiltersAndSearch}
           onResetFilters={handleClearFilters}
         />
 
@@ -781,12 +839,14 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
                   >
                     <RefreshCw className="h-4 w-4 mr-2" /> Refresh
                   </Button> */}
-                  {
-                    user.role == 'admin' && <Button size="sm" onClick={() => setShowAddTruckDialog(true)}>
+                  {user.role == "admin" && (
+                    <Button
+                      size="sm"
+                      onClick={() => setShowAddTruckDialog(true)}
+                    >
                       <Plus className="h-4 w-4 mr-2" /> Add Truck
                     </Button>
-                  }
-                  
+                  )}
                 </div>
               </div>
 
@@ -798,7 +858,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
                   onViewDetails={handleEditTruckDetails}
                   onEdit={handleEditTruckDetails}
                   onViewLogs={handleViewTruckLogs}
-                  onArchive={handleArchiveTruck}
+                  onArchive={handleDeleteTruck}
                 />
               </div>
 

@@ -39,10 +39,14 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
   const [formData, setFormData] = React.useState({
     owner_id: 0,
     license_plate: "",
-    model: "",
-    color: "",
-    year: 2000,
-    dimensions: "",
+
+    height: 0,
+    length: 0,
+    width: 0,
+    gross: 0,
+    city: "",
+    state: "",
+    zip: "",
     payload_capacity: 0,
     door_type: "",
     team: false,
@@ -83,10 +87,13 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
     setFormData({
       owner_id: 0,
       license_plate: "",
-      model: "",
-      color: "",
-      year: 2000,
-      dimensions: "",
+      height: 0,
+      length: 0,
+      width: 0,
+      gross: 0,
+      city: "",
+      state: "",
+      zip: "",
       payload_capacity: 0,
       door_type: "",
       team: false,
@@ -187,7 +194,7 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="model">Model</Label>
               <Input
@@ -207,7 +214,7 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
                 onChange={(e) => handleChange("color", e.target.value)}
               />
             </div>
-          </div>
+          </div> */}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -265,30 +272,60 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="dimensions">Dimensions</Label>
+              <Label htmlFor="height">Height</Label>
               <Input
-                id="dimensions"
-                placeholder="Dimensions"
-                value={formData.dimensions}
-                onChange={(e) => handleChange("dimensions", e.target.value)}
+                id="height"
+                type="number"
+                value={formData.height}
+                onChange={(e) => handleChange("height", e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="door-type">Door Type</Label>
-              <Select
-                value={formData.door_type}
-                onValueChange={(value) => handleChange("door_type", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Door type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="swing">Swing</SelectItem>
-                  <SelectItem value="roll">Roll</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="width">Width</Label>
+              <Input
+                id="width"
+                type="number"
+                value={formData.width}
+                onChange={(e) => handleChange("width", e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="length">Length</Label>
+              <Input
+                id="length"
+                type="number"
+                value={formData.length}
+                onChange={(e) => handleChange("length", e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                value={formData.city}
+                onChange={(e) => handleChange("city", e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="width">State</Label>
+              <Input
+                id="state"
+                value={formData.state}
+                onChange={(e) => handleChange("state", e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="length">Zip</Label>
+              <Input
+                id="zip"
+                value={formData.zip}
+                onChange={(e) => handleChange("zip", e.target.value)}
+              />
             </div>
           </div>
 
@@ -327,13 +364,19 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="address">Current Location</Label>
-            <Input
-              id="address"
-              placeholder="City, State"
-              value={formData.address}
-              onChange={(e) => handleChange("address", e.target.value)}
-            />
+            <Label htmlFor="door-type">Door Type</Label>
+            <Select
+              value={formData.door_type}
+              onValueChange={(value) => handleChange("door_type", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Door type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="swing">Swing</SelectItem>
+                <SelectItem value="roll">Roll</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -351,6 +394,18 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="gross">Gross (lbs)</Label>
+              <Input
+                id="gross"
+                type="number"
+                min="0"
+                placeholder="0 lbs"
+                value={formData.gross}
+                onChange={(e) => handleChange("gross", Number(e.target.value))}
+              />
+            </div>
+
+            {/* <div className="space-y-2">
               <Label htmlFor="mileage">Year</Label>
               <Input
                 id="year"
@@ -359,7 +414,7 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
                 value={formData.year}
                 onChange={(e) => handleChange("year", e.target.value)}
               />
-            </div>
+            </div> */}
           </div>
 
           {/* <div className="space-y-2">

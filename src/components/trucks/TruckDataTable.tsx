@@ -55,9 +55,13 @@ export interface TruckDataItem {
     language: string;
     citizenship: string;
   };
-  dimensions: string;
+  height: number;
+  width: number;
+  length: number;
   status: string;
-  address: string;
+  // address: string;
+  state: string;
+  city: string;
   is_reserved: number;
 }
 
@@ -239,64 +243,69 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedData.map((truck) => (
-            <TableRow key={truck.id} className="border-b hover:bg-muted/30">
-              <TableCell className="font-medium">
-                {renderDocumentStatus(truck.documentStatus)}
-                TRK-{truck.id}
-              </TableCell>
-              <TableCell>
-                <div className="text-gray-500">ow</div>
-                <div className="font-medium">{truck.owner?.name}</div>
-                {/* {truck.contact.company && (
+          {sortedData.length == 0 ? (
+            <p className="p-5">No trucks found</p>
+          ) : (
+            sortedData.map((truck) => (
+              <TableRow key={truck.id} className="border-b hover:bg-muted/30">
+                <TableCell className="font-medium">
+                  {renderDocumentStatus(truck.documentStatus)}
+                  TRK-{truck.id}
+                </TableCell>
+                <TableCell>
+                  <div className="text-gray-500">ow</div>
+                  <div className="font-medium">{truck.owner?.name}</div>
+                  {/* {truck.contact.company && (
                   <div className="text-xs text-gray-500">
                     {truck.contact.company}
                   </div>
                 )} */}
-                <a
-                  href={`tel:${truck.owner?.phone}`}
-                  className="text-blue-600 hover:underline text-sm flex items-center"
-                >
-                  {truck.owner?.phone}
-                </a>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center mb-1">
-                  {renderLanguageFlag(truck.owner?.language)}
-                  {truck.truck_type_name}
-                </div>
-                {/* {truck.info.features && truck.info.features.length > 0 && (
+                  <a
+                    href={`tel:${truck.owner?.phone}`}
+                    className="text-blue-600 hover:underline text-sm flex items-center"
+                  >
+                    {truck.owner?.phone}
+                  </a>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center mb-1">
+                    {renderLanguageFlag(truck.owner?.language)}
+                    {truck.truck_type_name}
+                  </div>
+                  {/* {truck.info.features && truck.info.features.length > 0 && (
                   <div className="text-xs text-gray-500">
                     {truck.info.features.join(", ")}
                   </div>
                 )} */}
-                {/* {renderRateInfo(
+                  {/* {renderRateInfo(
                   truck.info.flags?.rate,
                   truck.info.flags?.rateUnit,
                 )} */}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center">
-                  {truck.preferred_load == "long" && (
-                    <Badge className="bg-blue-100 text-blue-800 mr-2 text-xs border-0">
-                      LONG
-                    </Badge>
-                  )}
-                  {truck.preferred_load == "local" && (
-                    <Badge className="bg-blue-100 text-blue-800 mr-2 text-xs border-0">
-                      LOCAL
-                    </Badge>
-                  )}
-                  <span>{truck.dimensions}</span>
-                </div>
-                <div className="text-gray-600">
-                  {truck.payload_capacity} lbs
-                </div>
-              </TableCell>
-              <TableCell className="text-center">
-                {renderStatusIcon(truck.status)}
-              </TableCell>
-              {/* <TableCell>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center mb-2">
+                    {truck.preferred_load == "long" && (
+                      <Badge className="bg-blue-100 text-blue-800 mr-2 text-xs border-0">
+                        LONG
+                      </Badge>
+                    )}
+                    {truck.preferred_load == "local" && (
+                      <Badge className="bg-blue-100 text-blue-800 mr-2 text-xs border-0">
+                        LOCAL
+                      </Badge>
+                    )}
+                    <span>
+                      {truck.length}" x {truck.width}" x {truck.height}"
+                    </span>
+                  </div>
+                  <div className="text-gray-600">
+                    {truck.payload_capacity} lbs
+                  </div>
+                </TableCell>
+                <TableCell className="text-center">
+                  {renderStatusIcon(truck.status)}
+                </TableCell>
+                {/* <TableCell>
                 {truck.availability.needsUpdate ? (
                   <div className="text-gray-400 italic">need to update</div>
                 ) : (
@@ -308,75 +317,82 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
                   </>
                 )}
               </TableCell>  */}
-              <TableCell>
-                <div className="flex items-center">
-                  <MapPin className="h-4 w-4 text-gray-400 mr-1 flex-shrink-0" />
-                  <span>{truck.address}</span>
-                </div>
-                {/* <div className="text-xs text-gray-500">
+                <TableCell>
+                  <div className="flex items-center">
+                    <MapPin className="h-4 w-4 text-gray-400 mr-1 flex-shrink-0" />
+                    <span>
+                      {truck.city}, {truck.state}
+                    </span>
+                  </div>
+                  {/* <div className="text-xs text-gray-500">
                   {truck.lastKnown.datetime}
                 </div> */}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center justify-center space-x-2">
-                  {truck.is_reserved == 0 ? (
-                    <Button
-                      className="bg-green-500 hover:bg-green-600 text-white text-xs py-1 h-8"
-                      onClick={() => onReserve && onReserve(truck.id)}
-                    >
-                      RESERVE
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      className="text-gray-400 border-gray-200 text-xs py-1 h-8"
-                      disabled
-                    >
-                      NO ACTIONS
-                    </Button>
-                  )}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center justify-center space-x-2">
+                    {truck.is_reserved == 0 ? (
+                      <Button
+                        className="bg-green-500 hover:bg-green-600 text-white text-xs py-1 h-8"
+                        onClick={() => onReserve && onReserve(truck.id)}
+                      >
+                        RESERVE
                       </Button>
-                    </DropdownMenuTrigger>
-                    {user.role == "admin" && (
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            onViewDetails && onViewDetails(truck.id)
-                          }
+                    ) : (
+                      <Button
+                        variant="outline"
+                        className="text-gray-400 border-gray-200 text-xs py-1 h-8"
+                        disabled
+                      >
+                        NO ACTIONS
+                      </Button>
+                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
                         >
-                          <ExternalLink className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        {/* <DropdownMenuItem
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      {user.role == "admin" && (
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() =>
+                              onViewDetails && onViewDetails(truck.id)
+                            }
+                          >
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            View Details
+                          </DropdownMenuItem>
+                          {/* <DropdownMenuItem
                             onClick={() => onViewLogs && onViewLogs(truck.id)}
                           >
                             <FileText className="mr-2 h-4 w-4" />
                             View Logs
                           </DropdownMenuItem> */}
-                        <DropdownMenuItem
-                          onClick={() => onEdit && onEdit(truck.id)}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onArchive && onArchive(truck.id)}
-                          className="text-red-600"
-                        >
-                          <Archive className="mr-2 h-4 w-4" />
-                          Delete Truck
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    )}
-                  </DropdownMenu>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+                          <DropdownMenuItem
+                            onClick={() => onEdit && onEdit(truck.id)}
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => onArchive && onArchive(truck.id)}
+                            className="text-red-600"
+                          >
+                            <Archive className="mr-2 h-4 w-4" />
+                            Delete Truck
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      )}
+                    </DropdownMenu>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

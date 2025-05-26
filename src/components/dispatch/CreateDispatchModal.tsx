@@ -71,7 +71,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface CreateLoadModalProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onSubmit?: (data: FormValues | any) => void;
+  onSubmit?: (data1: FormValues | any, data2: FormValues | any) => void;
 }
 
 const CreateLoadModal: React.FC<CreateLoadModalProps> = ({
@@ -112,39 +112,31 @@ const CreateLoadModal: React.FC<CreateLoadModalProps> = ({
     },
   });
 
-  const handleSubmit = (data: FormValues) => {
-    // Ensure assignedOfficers is populated from the selectedOfficers state
-    if (
-      selectedOfficers.length > 0 &&
-      (!data.assignedOfficers || data.assignedOfficers.length === 0)
-    ) {
-      data.assignedOfficers = selectedOfficers;
-    }
+  // const handleSubmit = (data1: FormValues, data2: FormValues) => {
 
-    onSubmit(data);
-    onOpenChange(false);
-    // In a real app, this would send the data to the server
-    console.log("Load created:", data);
-  };
+  //   onSubmit(data1, data2);
+  //   onOpenChange(false);
+  //   // In a real app, this would send the data to the server
+  // };
 
-  const handleLoadFormSubmit = (loadData: any) => {
-    // Transform load data to load data format if needed
-    const dispatchData = {
-      ...loadData,
-      title: loadData.commodity || "New Load",
-      origin: loadData.pickupFacility || "",
-      destination: loadData.deliveryFacility || "",
-      weight: loadData.weight || "",
-      vehicleType: loadData.truckType || "Box truck",
-      description: loadData.generalNote || "",
-      priority: "medium",
-      status: "pending",
-    };
+  // const handleLoadFormSubmit = (loadData: any) => {
+  //   // Transform load data to load data format if needed
+  //   const dispatchData = {
+  //     ...loadData,
+  //     title: loadData.commodity || "New Load",
+  //     origin: loadData.pickupFacility || "",
+  //     destination: loadData.deliveryFacility || "",
+  //     weight: loadData.weight || "",
+  //     vehicleType: loadData.truckType || "Box truck",
+  //     description: loadData.generalNote || "",
+  //     priority: "medium",
+  //     status: "pending",
+  //   };
 
-    onSubmit(loadData);
-    onOpenChange(false);
-    console.log("Load created as load:", loadData);
-  };
+  //   onSubmit(loadData);
+  //   onOpenChange(false);
+  //   console.log("Load created as load:", loadData);
+  // };
 
   const toggleOfficerSelection = (officerId: string) => {
     setSelectedOfficers((prev) => {
@@ -310,10 +302,7 @@ const CreateLoadModal: React.FC<CreateLoadModalProps> = ({
           </TabsContent> */}
 
           <TabsContent value="advanced">
-            <LoadCreationForm
-              onSubmit={handleLoadFormSubmit}
-              onCancel={handleCancel}
-            />
+            <LoadCreationForm onSubmit={onSubmit} onCancel={handleCancel} />
           </TabsContent>
         </Tabs>
       </DialogContent>

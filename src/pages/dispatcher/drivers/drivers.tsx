@@ -77,25 +77,25 @@ const DriversPage = () => {
   );
   const { user } = useAuthContext();
 
-  useEffect(() => {
+  const fetchDrivers = async () => {
     setLoading(true);
-    const fetchDrivers = async () => {
-      const response = await getRequest(
-        `${import.meta.env.VITE_API_URL}/drivers`
-      );
-      const data = await response.json();
+    const response = await getRequest(
+      `${import.meta.env.VITE_API_URL}/drivers`
+    );
+    const data = await response.json();
 
-      if (response.ok) {
-        const drivers: DriverModel[] = data.data;
-        setActiveDrivers(drivers.filter((d) => d.is_active));
-        setInactiveDrivers(drivers.filter((d) => !d.is_active));
-      } else {
-        console.error("Failed to fetch drivers:", data);
-      }
+    if (response.ok) {
+      const drivers: DriverModel[] = data.data;
+      setActiveDrivers(drivers.filter((d) => d.is_active));
+      setInactiveDrivers(drivers.filter((d) => !d.is_active));
+    } else {
+      console.error("Failed to fetch drivers:", data);
+    }
 
-      setLoading(false);
-    };
+    setLoading(false);
+  };
 
+  useEffect(() => {
     fetchDrivers();
   }, []);
 
@@ -148,7 +148,8 @@ const DriversPage = () => {
     );
     if (response.ok) {
       setLoading(false);
-      window.location.reload();
+      // window.location.reload();
+      fetchDrivers();
     } else {
       console.error("Failed to deactivate user:", await response.json());
     }
@@ -163,7 +164,8 @@ const DriversPage = () => {
     );
     if (response.ok) {
       setLoading(false);
-      window.location.reload();
+      // window.location.reload();
+      fetchDrivers();
     } else {
       console.error("Failed to deactivate user:", await response.json());
     }

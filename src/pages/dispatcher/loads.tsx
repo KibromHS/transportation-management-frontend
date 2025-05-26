@@ -21,7 +21,9 @@ import {
   FileText,
 } from "lucide-react";
 import CreateDispatchModal from "@/components/dispatch/CreateDispatchModal";
-import { getRequest } from "@/api/request";
+import { deleteRequest, getRequest, postRequest } from "@/api/request";
+import { LoadingButton } from "@/components/ui/loading-button";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface Facility {
   name: string;
@@ -77,23 +79,27 @@ const LoadsPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeLoads, setActiveLoads] = useState<Load[]>([]);
   const [completedLoads, setCompletedLoads] = useState<Load[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchLoads = async () => {
+    setLoading(true);
+    const response = await getRequest(`${import.meta.env.VITE_API_URL}/loads`);
+    const data = await response.json();
+    const loads: Load[] = data.data;
+
+    if (response.ok) {
+      setActiveLoads(loads.filter((d) => d.status != "completed"));
+      setCompletedLoads(loads.filter((d) => d.status == "completed"));
+
+      console.log(activeLoads);
+    } else {
+      console.error("");
+    }
+
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchLoads = async () => {
-      const response = await getRequest(
-        `${import.meta.env.VITE_API_URL}/loads`
-      );
-      const data = await response.json();
-      const loads: Load[] = data.data;
-
-      if (response.ok) {
-        setActiveLoads(loads.filter((d) => d.status != "completed"));
-        setCompletedLoads(loads.filter((d) => d.status == "completed"));
-      } else {
-        console.error("");
-      }
-    };
-
     fetchLoads();
   }, []);
 
@@ -217,11 +223,144 @@ const LoadsPage = () => {
   };
 
   // Handle new load creation
-  const handleCreateLoad = (data: any) => {
-    console.log("New load created:", data);
-    // In a real app, this would send the data to the server
-    setIsCreateModalOpen(false);
+  const handleCreateLoad = async (data1: any, data2: any) => {
+    setLoading(true);
+    const form1Data = {
+      // Step 1: General
+      booked_by: data1.booked_by,
+      customer_company_id: data1.customer_company_id,
+      // agent: "",
+      // dispatcher: "",
+      // sourceBoard: "",
+      reference_number: data1.reference_number,
+      total_charges: data1.total_charges,
+      currency: data1.currency,
+    };
+
+    const form2Data = {
+      // Step 2: Load Info
+      // pickupFacility: "",
+      // pickupDate: null as Date | null,
+      // pickupTime: "",
+      // pickupTimeZone: "EDT",
+      // pickupTimeFrame: "FCFS", // First Come, First Served
+      // pickupAdditionalInfo: "",
+
+      // deliveryFacility: "",
+      // deliveryDate: null as Date | null,
+      // deliveryTime: "",
+      // deliveryTimeZone: "EDT",
+      // deliveryTimeFrame: "FCFS",
+      // deliveryAdditionalInfo: "",
+
+      // commodity: "",
+      // pieces: "1",
+      // weight: "",
+      // length: "",
+      // width: "",
+      // height: "",
+      // stackable: false,
+      // hazmat: false,
+
+      pickups: [
+        {
+          facility_id: data2.pickup_facility_id,
+          priority: data2.pickup_priority,
+          timezone: data2.pickup_timezone,
+          date_from: data2.pickup_date_from,
+          date_to: data2.pickup_date_to,
+          time_from: data2.pickup_time_from,
+          time_to: data2.pickup_time_to,
+          additional_info: data2.pickup_additional_info,
+          commodity: data2.pickup_commodity,
+        },
+      ],
+
+      freights: [
+        {
+          pieces: data2.pieces,
+          weight: data2.weight,
+          length: data2.length,
+          width: data2.width,
+          height: data2.height,
+          stackable: data2.stackable,
+          hazmat: data2.hazmat,
+        },
+      ],
+
+      deliveries: [
+        {
+          facility_id: data2.delivery_facility_id,
+          priority: data2.delivery_priority,
+          timezone: data2.delivery_timezone,
+          time_from: data2.delivery_time_from,
+          time_to: data2.delivery_time_to,
+          date_from: data2.delivery_date_from,
+          date_to: data2.delivery_date_to,
+          additional_info: data2.delivery_additional_info,
+        },
+      ],
+
+      checkin_company_id: data2.checkin_company_id,
+      driver_id: data2.driver_id,
+      truck_type: data2.truck_type,
+      trailer_type: data2.trailer_type,
+      equipment: data2.equipment,
+      general_notes: data2.general_notes,
+      weight_unit_of_measeurement: data2.weight_unit_of_measeurement,
+      length_unit_of_measeurement: data2.length_unit_of_measeurement,
+
+      // Truck Info
+      // truckType: "Box truck",
+      // trailerType: "",
+      // truckEquipment: "",
+      // teamDrivers: false,
+
+      // // General Load Note
+      // generalNote: "",
+
+      // // Step 3: Files
+      // files: [] as File[],
+    };
+
+    setLoading(true);
+
+    const response1 = await postRequest(
+      `${import.meta.env.VITE_API_URL}/loads`,
+      form1Data
+    );
+    const data = await response1.json();
+    if (response1.ok) {
+      const loadId = data.load;
+      const response2 = await postRequest(
+        `${import.meta.env.VITE_API_URL}/loads/${loadId}/details`,
+        form2Data
+      );
+      const data2 = await response2.json();
+      if (response2.ok) {
+        console.log("Load added successfully");
+        setIsCreateModalOpen(false);
+        fetchLoads();
+      } else {
+        console.error("failed to create load");
+        const deleteResponse = await deleteRequest(
+          `${import.meta.env.VITE_API_URL}/loads/${loadId}`
+        );
+        setLoading(false);
+        throw data2.error;
+      }
+    } else {
+      console.error("failed to initiate load");
+      setLoading(false);
+      throw data.error;
+    }
+
+    setLoading(false);
   };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <ThemeAwareDashboardLayout pageTitle="Load Management">
@@ -268,74 +407,82 @@ const LoadsPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {activeLoads.map((load) => (
-                    <div
-                      key={load.id}
-                      className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">{load.id}</Badge>
-                            {getStatusBadge(load.status)}
+                  {activeLoads.length == 0 ? (
+                    <p>No Loads Added</p>
+                  ) : (
+                    activeLoads.map((load) => (
+                      <div
+                        key={load.id}
+                        className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline">{load.id}</Badge>
+                              {getStatusBadge(load.status)}
+                            </div>
+                            {/* <h3 className="font-medium mt-2">{load.title}</h3> */}
+                            <div className="mt-2 flex items-center text-sm">
+                              <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
+                              <span className="font-medium">
+                                {load.pickups[0].facility.address_line1},
+                                {load.pickups[0].facility.location}
+                              </span>
+                              <ArrowRight className="h-4 w-4 mx-2" />
+                              <span className="font-medium">
+                                {load.deliveries[0].facility.address_line1},
+                                {load.deliveries[0].facility.location}
+                              </span>
+                            </div>
+                            <div className="mt-1 text-sm text-muted-foreground">
+                              {load.pickups[0].freight[0].weight}{" "}
+                              {
+                                load.pickups[0].freight[0]
+                                  .weight_unit_of_measurement
+                              }
+                            </div>
                           </div>
-                          {/* <h3 className="font-medium mt-2">{load.title}</h3> */}
-                          <div className="mt-2 flex items-center text-sm">
-                            <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
-                            <span className="font-medium">
-                              {load.pickups[0].facility.address_line1},
-                              {load.pickups[0].facility.location}
-                            </span>
-                            <ArrowRight className="h-4 w-4 mx-2" />
-                            <span className="font-medium">
-                              {load.deliveries[0].facility.address_line1},
-                              {load.deliveries[0].facility.location}
-                            </span>
-                          </div>
-                          <div className="mt-1 text-sm text-muted-foreground">
-                            {load.pickups[0].freight[0].weight}{" "}
-                            {
-                              load.pickups[0].freight[0]
-                                .weight_unit_of_measurement
-                            }
+                          <div className="text-right">
+                            <div className="flex items-center text-sm">
+                              <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
+                              <span>Pickup: {load.pickups[0].date_to}</span>
+                            </div>
+                            <div className="flex items-center text-sm mt-1">
+                              <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
+                              <span>
+                                Delivery: {load.deliveries[0].date_to}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="flex items-center text-sm">
-                            <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
-                            <span>Pickup: {load.pickups[0].date_to}</span>
+                        <Separator className="my-3" />
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">
+                                {load.driver.name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Truck className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">
+                                TRK-{load.driver.truck?.id}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex items-center text-sm mt-1">
-                            <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
-                            <span>Delivery: {load.deliveries[0].date_to}</span>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm">
+                              Track
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              Details
+                            </Button>
                           </div>
                         </div>
                       </div>
-                      <Separator className="my-3" />
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-1">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{load.driver.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Truck className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">
-                              TRK-{load.driver.truck.id}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            Track
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            Details
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -403,58 +550,64 @@ const LoadsPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {completedLoads.map((load) => (
-                    <div
-                      key={load.id}
-                      className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">{load.id}</Badge>
-                            {getStatusBadge(load.status)}
+                  {completedLoads.length == 0 ? (
+                    <p>No Loads completed</p>
+                  ) : (
+                    completedLoads.map((load) => (
+                      <div
+                        key={load.id}
+                        className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline">{load.id}</Badge>
+                              {getStatusBadge(load.status)}
+                            </div>
+                            {/* <h3 className="font-medium mt-2">{load.title}</h3> */}
+                            <div className="mt-2 flex items-center text-sm">
+                              <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
+                              <span className="font-medium">
+                                {load.pickups[0].facility.address_line1},
+                                {load.pickups[0].facility.location}
+                              </span>
+                              <ArrowRight className="h-4 w-4 mx-2" />
+                              <span className="font-medium">
+                                {load.deliveries[0].facility.address_line1},
+                                {load.deliveries[0].facility.location}
+                              </span>
+                            </div>
+                            <div className="mt-1 text-sm text-muted-foreground">
+                              {load.pickups[0].freight[0].weight}{" "}
+                              {
+                                load.pickups[0].freight[0]
+                                  .weight_unit_of_measurement
+                              }
+                            </div>
                           </div>
-                          {/* <h3 className="font-medium mt-2">{load.title}</h3> */}
-                          <div className="mt-2 flex items-center text-sm">
-                            <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
-                            <span className="font-medium">
-                              {load.pickups[0].facility.address_line1},
-                              {load.pickups[0].facility.location}
-                            </span>
-                            <ArrowRight className="h-4 w-4 mx-2" />
-                            <span className="font-medium">
-                              {load.deliveries[0].facility.address_line1},
-                              {load.deliveries[0].facility.location}
-                            </span>
-                          </div>
-                          <div className="mt-1 text-sm text-muted-foreground">
-                            {load.pickups[0].freight[0].weight}{" "}
-                            {
-                              load.pickups[0].freight[0]
-                                .weight_unit_of_measurement
-                            }
+                          <div className="text-right">
+                            <div className="flex items-center text-sm">
+                              <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
+                              <span>
+                                Completed: {load.deliveries[0].date_to}
+                              </span>
+                            </div>
+                            <div className="flex items-center text-sm mt-1">
+                              <Truck className="h-4 w-4 mr-1 text-muted-foreground" />
+                              <span>
+                                TRK-{load.driver.truck?.id} • {load.driver.name}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="flex items-center text-sm">
-                            <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
-                            <span>Completed: {load.deliveries[0].date_to}</span>
-                          </div>
-                          <div className="flex items-center text-sm mt-1">
-                            <Truck className="h-4 w-4 mr-1 text-muted-foreground" />
-                            <span>
-                              TRK-{load.driver.truck.id} • {load.driver.name}
-                            </span>
-                          </div>
+                        <div className="flex justify-end mt-4">
+                          <Button variant="outline" size="sm">
+                            View Report
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex justify-end mt-4">
-                        <Button variant="outline" size="sm">
-                          View Report
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>

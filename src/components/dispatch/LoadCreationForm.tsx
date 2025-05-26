@@ -24,9 +24,13 @@ import { Separator } from "@/components/ui/separator";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Plus, X, Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { useAuthContext } from "@/context/AuthContext";
+import { getRequest } from "@/api/request";
+import UnitSelector from "./UnitSelector";
+import Sel from "react-select";
 
 interface LoadCreationFormProps {
-  onSubmit?: (data: any) => void;
+  onSubmit?: (data1: any, data2: any) => void;
   onCancel?: () => void;
 }
 
@@ -34,85 +38,196 @@ const LoadCreationForm = ({
   onSubmit = () => {},
   onCancel = () => {},
 }: LoadCreationFormProps) => {
+  const { user } = useAuthContext();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [form1Data, setForm1Data] = useState({
     // Step 1: General
-    bookingRep: "",
-    customer: "",
-    agent: "",
-    dispatcher: "",
-    sourceBoard: "",
-    reference: "",
-    totalCharges: "",
+    booked_by: user.id,
+    customer_company_id: null,
+    // agent: "",
+    // dispatcher: "",
+    // sourceBoard: "",
+    reference_number: "",
+    total_charges: "",
     currency: "USD",
-
+  });
+  const [form2Data, setForm2Data] = useState({
     // Step 2: Load Info
-    pickupFacility: "",
-    pickupDate: null as Date | null,
-    pickupTime: "",
-    pickupTimeZone: "EDT",
-    pickupTimeFrame: "FCFS", // First Come, First Served
-    pickupAdditionalInfo: "",
+    // pickupFacility: "",
+    // pickupDate: null as Date | null,
+    // pickupTime: "",
+    // pickupTimeZone: "EDT",
+    // pickupTimeFrame: "FCFS", // First Come, First Served
+    // pickupAdditionalInfo: "",
 
-    deliveryFacility: "",
-    deliveryDate: null as Date | null,
-    deliveryTime: "",
-    deliveryTimeZone: "EDT",
-    deliveryTimeFrame: "FCFS",
-    deliveryAdditionalInfo: "",
+    // deliveryFacility: "",
+    // deliveryDate: null as Date | null,
+    // deliveryTime: "",
+    // deliveryTimeZone: "EDT",
+    // deliveryTimeFrame: "FCFS",
+    // deliveryAdditionalInfo: "",
 
-    commodity: "",
-    pieces: "1",
-    weight: "",
-    length: "",
-    width: "",
-    height: "",
-    isStackable: false,
-    isHazmat: false,
+    // commodity: "",
+    // pieces: "1",
+    // weight: "",
+    // length: "",
+    // width: "",
+    // height: "",
+    // stackable: false,
+    // hazmat: false,
+
+    pickup_facility_id: null,
+    pickup_priority: "",
+    pickup_timezone: "",
+    pickup_date_from: "",
+    pickup_date_to: "",
+    pickup_time_from: "",
+    pickup_time_to: "",
+    pickup_additional_info: "",
+    pickup_commodity: "",
+
+    pieces: null,
+    weight: null,
+    length: null,
+    width: null,
+    height: null,
+    stackable: false,
+    hazmat: false,
+
+    delivery_facility_id: null,
+    delivery_priority: "",
+    delivery_timezone: "",
+    delivery_time_from: "",
+    delivery_time_to: "",
+    delivery_date_from: "",
+    delivery_date_to: "",
+    delivery_additional_info: "",
+
+    checkin_company_id: form1Data.customer_company_id,
+    driver_id: null,
+    truck_type: "",
+    trailer_type: "",
+    equipment: [] as string[],
+    general_notes: "",
+    weight_unit_of_measeurement: "",
+    length_unit_of_measeurement: "",
 
     // Truck Info
-    truckType: "Box truck",
-    trailerType: "",
-    truckEquipment: "",
-    teamDrivers: false,
+    // truckType: "Box truck",
+    // trailerType: "",
+    // truckEquipment: "",
+    // teamDrivers: false,
 
-    // General Load Note
-    generalNote: "",
+    // // General Load Note
+    // generalNote: "",
 
-    // Step 3: Files
-    files: [] as File[],
+    // // Step 3: Files
+    // files: [] as File[],
   });
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  const [companies, setCompanies] = useState([]);
+  const [facilities, setFacilities] = useState([]);
+  const [truckTypes, setTruckTypes] = useState([]);
+  const [trailerTypes, setTrailerTypes] = useState([]);
+  const [equipments, setEquipments] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const [
+        companiesResponse,
+        facilitiesResponse,
+        truckTypesResponse,
+        trailerTypesResponse,
+        equipmentsResponse,
+        driversResponse,
+      ] = await Promise.all([
+        getRequest(`${import.meta.env.VITE_API_URL}/companies`),
+        getRequest(`${import.meta.env.VITE_API_URL}/facilities`),
+        getRequest(`${import.meta.env.VITE_API_URL}/truck-types`),
+        getRequest(`${import.meta.env.VITE_API_URL}/trailer-types`),
+        getRequest(`${import.meta.env.VITE_API_URL}/equipments`),
+        getRequest(`${import.meta.env.VITE_API_URL}/drivers`),
+      ]);
+
+      const companiesData = await companiesResponse.json();
+      if (companiesResponse.ok) {
+        setCompanies(companiesData.data);
+      }
+
+      const facilitiesData = await facilitiesResponse.json();
+      if (facilitiesResponse.ok) {
+        setFacilities(facilitiesData.data);
+      }
+
+      const truckTypesData = await truckTypesResponse.json();
+      if (truckTypesResponse.ok) {
+        setTruckTypes(truckTypesData);
+      }
+
+      const trailerTypesData = await trailerTypesResponse.json();
+      if (trailerTypesResponse.ok) {
+        setTrailerTypes(trailerTypesData);
+      }
+
+      const equipmentsData = await equipmentsResponse.json();
+      if (equipmentsResponse.ok) {
+        setEquipments(equipmentsData);
+      }
+
+      const driversData = await driversResponse.json();
+      if (driversResponse.ok) {
+        setDrivers(driversData.data);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleInput1Change = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setForm1Data((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleInput2Change = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm2Data((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCheckboxChange = (name: string, checked: boolean) => {
-    setFormData((prev) => ({ ...prev, [name]: checked }));
+  const handleSelect1Change = (name: string, value: any) => {
+    setForm1Data((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleDateChange = (name: string, date: Date | undefined) => {
-    setFormData((prev) => ({ ...prev, [name]: date || null }));
+  const handleSelect2Change = (name: string, value: any) => {
+    setForm2Data((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckbox2Change = (name: string, checked: boolean) => {
+    setForm2Data((prev) => ({ ...prev, [name]: checked }));
+  };
+
+  const handleDate2Change = (name: string, date: Date | undefined) => {
+    const formattedDate = date
+      ? date.toISOString().split("T")[0] // 'YYYY-MM-DD'
+      : null;
+    setForm2Data((prev) => ({ ...prev, [name]: formattedDate }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real app, this would send a notification to all drivers
     // about the new load being available for bidding
-    const loadWithId = {
-      ...formData,
-      id: `LD-${Math.floor(Math.random() * 10000)}`,
-      status: "open_for_bidding",
-      createdAt: new Date().toISOString(),
-    };
-    onSubmit(loadWithId);
+    // const loadWithId = {
+    //   ...formData,
+    //   id: `LD-${Math.floor(Math.random() * 10000)}`,
+    //   status: "open_for_bidding",
+    //   createdAt: new Date().toISOString(),
+    // };
+    onSubmit(form1Data, form2Data);
   };
 
   const handleNextStep = () => {
@@ -123,6 +238,14 @@ const LoadCreationForm = ({
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
+  const handleWeight = (w: string) => {
+    setForm2Data((prev) => ({ ...prev, weight_unit_of_measeurement: w }));
+  };
+
+  const handleLength = (l: string) => {
+    setForm2Data((prev) => ({ ...prev, length_unit_of_measeurement: l }));
+  };
+
   const renderTimeFrameOptions = () => (
     <div className="flex items-center space-x-4">
       <div className="flex items-center space-x-2">
@@ -131,8 +254,8 @@ const LoadCreationForm = ({
           id="fcfs"
           name="timeFrame"
           value="FCFS"
-          checked={formData.pickupTimeFrame === "FCFS"}
-          onChange={() => handleSelectChange("pickupTimeFrame", "FCFS")}
+          checked={form2Data.pickup_priority === "FCFS"}
+          onChange={() => handleSelect2Change("pickup_priority", "FCFS")}
           className="h-4 w-4"
         />
         <label htmlFor="fcfs" className="text-sm">
@@ -145,8 +268,8 @@ const LoadCreationForm = ({
           id="appt"
           name="timeFrame"
           value="APPT"
-          checked={formData.pickupTimeFrame === "APPT"}
-          onChange={() => handleSelectChange("pickupTimeFrame", "APPT")}
+          checked={form2Data.pickup_priority === "APPT"}
+          onChange={() => handleSelect2Change("pickup_priority", "APPT")}
           className="h-4 w-4"
         />
         <label htmlFor="appt" className="text-sm">
@@ -159,8 +282,8 @@ const LoadCreationForm = ({
           id="direct"
           name="timeFrame"
           value="DIRECT"
-          checked={formData.pickupTimeFrame === "DIRECT"}
-          onChange={() => handleSelectChange("pickupTimeFrame", "DIRECT")}
+          checked={form2Data.pickup_priority === "DIRECT"}
+          onChange={() => handleSelect2Change("pickup_priority", "DIRECT")}
           className="h-4 w-4"
         />
         <label htmlFor="direct" className="text-sm">
@@ -176,10 +299,10 @@ const LoadCreationForm = ({
         <input
           type="radio"
           id="fcfs-delivery"
-          name="deliveryTimeFrame"
+          name="delivery_priority "
           value="FCFS"
-          checked={formData.deliveryTimeFrame === "FCFS"}
-          onChange={() => handleSelectChange("deliveryTimeFrame", "FCFS")}
+          checked={form2Data.delivery_priority === "FCFS"}
+          onChange={() => handleSelect2Change("delivery_priority", "FCFS")}
           className="h-4 w-4"
         />
         <label htmlFor="fcfs-delivery" className="text-sm">
@@ -190,10 +313,10 @@ const LoadCreationForm = ({
         <input
           type="radio"
           id="appt-delivery"
-          name="deliveryTimeFrame"
+          name="delivery_priority "
           value="APPT"
-          checked={formData.deliveryTimeFrame === "APPT"}
-          onChange={() => handleSelectChange("deliveryTimeFrame", "APPT")}
+          checked={form2Data.delivery_priority === "APPT"}
+          onChange={() => handleSelect2Change("delivery_priority", "APPT")}
           className="h-4 w-4"
         />
         <label htmlFor="appt-delivery" className="text-sm">
@@ -204,10 +327,10 @@ const LoadCreationForm = ({
         <input
           type="radio"
           id="direct-delivery"
-          name="deliveryTimeFrame"
+          name="delivery_priority "
           value="DIRECT"
-          checked={formData.deliveryTimeFrame === "DIRECT"}
-          onChange={() => handleSelectChange("deliveryTimeFrame", "DIRECT")}
+          checked={form2Data.delivery_priority === "DIRECT"}
+          onChange={() => handleSelect2Change("delivery_priority", "DIRECT")}
           className="h-4 w-4"
         />
         <label htmlFor="direct-delivery" className="text-sm">
@@ -217,35 +340,35 @@ const LoadCreationForm = ({
     </div>
   );
 
-  const renderUnitOptions = () => (
-    <div className="flex space-x-2 mb-4">
-      <Button
-        variant="outline"
-        size="sm"
-        className="bg-primary/10 hover:bg-primary/20"
-      >
-        lbs
-      </Button>
-      <Button variant="outline" size="sm">
-        kg
-      </Button>
-      <Button variant="outline" size="sm">
-        ton
-      </Button>
-      <Button variant="outline" size="sm">
-        ft
-      </Button>
-      <Button variant="outline" size="sm">
-        in
-      </Button>
-      <Button variant="outline" size="sm">
-        m
-      </Button>
-      <Button variant="outline" size="sm">
-        cm
-      </Button>
-    </div>
-  );
+  // const renderUnitOptions = () => (
+  //   <div className="flex space-x-2 mb-4">
+  //     <Button
+  //       variant="outline"
+  //       size="sm"
+  //       className="bg-primary/10 hover:bg-primary/20"
+  //     >
+  //       lbs
+  //     </Button>
+  //     <Button variant="outline" size="sm">
+  //       kg
+  //     </Button>
+  //     <Button variant="outline" size="sm">
+  //       ton
+  //     </Button>
+  //     <Button variant="outline" size="sm">
+  //       ft
+  //     </Button>
+  //     <Button variant="outline" size="sm">
+  //       in
+  //     </Button>
+  //     <Button variant="outline" size="sm">
+  //       m
+  //     </Button>
+  //     <Button variant="outline" size="sm">
+  //       cm
+  //     </Button>
+  //   </div>
+  // );
 
   return (
     <Card className="w-full max-w-4xl mx-auto bg-background">
@@ -264,23 +387,24 @@ const LoadCreationForm = ({
           }
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="step-1" disabled={currentStep !== 1}>
               Step 1. General
             </TabsTrigger>
             <TabsTrigger value="step-2" disabled={currentStep !== 2}>
               Step 2. Load Info
             </TabsTrigger>
-            <TabsTrigger value="step-3" disabled={currentStep !== 3}>
+            {/* <TabsTrigger value="step-3" disabled={currentStep !== 3}>
               Step 3. All files
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="step-1" className="space-y-6 mt-6">
             <div>
               <h3 className="text-lg font-medium mb-4">Booked by:</h3>
               <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
+                {user.name}
+                {/* <div className="space-y-2">
                   <Label htmlFor="bookingRep">BOOKING REP *</Label>
                   <div className="flex gap-2">
                     <Select
@@ -302,38 +426,47 @@ const LoadCreationForm = ({
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
 
             <div>
               <h3 className="text-lg font-medium mb-4">Booked with:</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="customer">CUSTOMER *</Label>
                   <div className="flex gap-2">
                     <Select
-                      value={formData.customer}
+                      value={form1Data.customer_company_id?.toString()}
                       onValueChange={(value) =>
-                        handleSelectChange("customer", value)
+                        handleSelect1Change(
+                          "customer_company_id",
+                          Number(value)
+                        )
                       }
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="choose company from the list" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="acme">Acme Corp</SelectItem>
-                        <SelectItem value="globex">Globex Inc</SelectItem>
-                        <SelectItem value="initech">Initech LLC</SelectItem>
+                        {companies.length == 0 ? (
+                          <p>No companies registered</p>
+                        ) : (
+                          companies.map((c) => (
+                            <SelectItem value={c.id?.toString()}>
+                              {c.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
-                    <Button variant="outline" size="icon">
+                    {/* <Button variant="outline" size="icon">
                       <Plus className="h-4 w-4" />
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="agent">AGENT</Label>
                   <div className="flex gap-2">
                     <Select
@@ -355,9 +488,9 @@ const LoadCreationForm = ({
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
+                </div> */}
               </div>
-
+              {/* 
               <div className="mt-4">
                 <div className="flex justify-between items-center">
                   <h4 className="text-sm font-medium">Send updates to:</h4>
@@ -371,10 +504,10 @@ const LoadCreationForm = ({
                 <p className="text-sm text-muted-foreground mt-1">
                   no selected agents
                 </p>
-              </div>
+              </div> */}
             </div>
 
-            <div>
+            {/* <div>
               <h3 className="text-lg font-medium mb-4">Assign to:</h3>
               <div className="space-y-2">
                 <Label htmlFor="dispatcher">DISPATCHER NAME</Label>
@@ -394,9 +527,9 @@ const LoadCreationForm = ({
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            </div> */}
 
-            <div>
+            {/* <div>
               <h3 className="text-lg font-medium mb-4">Source Boards:</h3>
               <div className="space-y-2">
                 <Label htmlFor="sourceBoard">BOARD NAME</Label>
@@ -416,7 +549,7 @@ const LoadCreationForm = ({
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            </div> */}
 
             <div>
               <h3 className="text-lg font-medium mb-4">Billing info:</h3>
@@ -425,10 +558,10 @@ const LoadCreationForm = ({
                   <Label htmlFor="reference">REF#1 *</Label>
                   <Input
                     id="reference"
-                    name="reference"
+                    name="reference_number"
                     placeholder="enter reference number 1"
-                    value={formData.reference}
-                    onChange={handleInputChange}
+                    value={form1Data.reference_number}
+                    onChange={handleInput1Change}
                   />
                 </div>
 
@@ -436,19 +569,19 @@ const LoadCreationForm = ({
                   <Label htmlFor="totalCharges">TOTAL CHARGES *</Label>
                   <Input
                     id="totalCharges"
-                    name="totalCharges"
+                    name="total_charges"
                     placeholder="total rate"
-                    value={formData.totalCharges}
-                    onChange={handleInputChange}
+                    value={form1Data.total_charges}
+                    onChange={handleInput1Change}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="currency">CURRENCY *</Label>
                   <Select
-                    value={formData.currency}
+                    value={form1Data.currency}
                     onValueChange={(value) =>
-                      handleSelectChange("currency", value)
+                      handleSelect1Change("currency", value)
                     }
                   >
                     <SelectTrigger className="w-full">
@@ -465,9 +598,9 @@ const LoadCreationForm = ({
                 </div>
               </div>
 
-              <Button variant="outline" className="mt-4">
+              {/* <Button variant="outline" className="mt-4">
                 <Plus className="h-4 w-4 mr-2" /> add another field
-              </Button>
+              </Button> */}
             </div>
           </TabsContent>
 
@@ -479,9 +612,9 @@ const LoadCreationForm = ({
               <div className="border rounded-md p-4 space-y-4">
                 <div className="flex justify-between items-center">
                   <h4 className="font-medium">Step (1) Pick Up #1</h4>
-                  <Button variant="ghost" size="sm">
+                  {/* <Button variant="ghost" size="sm">
                     <Plus className="h-4 w-4 mr-1" />
-                  </Button>
+                  </Button> */}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -489,34 +622,37 @@ const LoadCreationForm = ({
                     <Label htmlFor="pickupFacility">FACILITY *</Label>
                     <div className="flex gap-2">
                       <Select
-                        value={formData.pickupFacility}
+                        value={form2Data.pickup_facility_id?.toString()}
                         onValueChange={(value) =>
-                          handleSelectChange("pickupFacility", value)
+                          handleSelect2Change(
+                            "pickup_facility_id",
+                            Number(value)
+                          )
                         }
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="choose facility name" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="facility1">
-                            Chicago Warehouse
-                          </SelectItem>
-                          <SelectItem value="facility2">
-                            Detroit Distribution Center
-                          </SelectItem>
-                          <SelectItem value="facility3">
-                            Indianapolis Hub
-                          </SelectItem>
+                          {facilities.length == 0 ? (
+                            <p>No facilities found</p>
+                          ) : (
+                            facilities.map((f) => (
+                              <SelectItem value={f.id?.toString()}>
+                                {f.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
-                      <Button variant="outline" size="icon">
+                      {/* <Button variant="outline" size="icon">
                         <Plus className="h-4 w-4" />
-                      </Button>
+                      </Button> */}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>TIME FRAMES *</Label>
+                    <Label>PRIORITY *</Label>
                     {renderTimeFrameOptions()}
                   </div>
                 </div>
@@ -524,9 +660,9 @@ const LoadCreationForm = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="px-3 py-2 bg-muted border-r">
                     <Select
-                      value={formData.pickupTimeZone}
+                      value={form2Data.pickup_timezone}
                       onValueChange={(value) =>
-                        handleSelectChange("pickupTimeZone", value)
+                        handleSelect2Change("pickup_timezone", value)
                       }
                     >
                       <SelectTrigger>
@@ -549,8 +685,14 @@ const LoadCreationForm = ({
                         <Calendar className="h-4 w-4 text-gray-500" />
                       </div>
                       <DatePicker
-                        date={formData.pickupDate}
-                        setDate={(date) => handleDateChange("pickupDate", date)}
+                        date={
+                          form2Data.pickup_date_from
+                            ? new Date(form2Data.pickup_date_from)
+                            : undefined
+                        }
+                        setDate={(date) =>
+                          handleDate2Change("pickup_date_from", date)
+                        }
                         placeholder="Select date"
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
@@ -564,9 +706,9 @@ const LoadCreationForm = ({
                       </div>
                       <Input
                         type="time"
-                        name="pickupTime"
-                        value={formData.pickupTime}
-                        onChange={handleInputChange}
+                        name="pickup_time_from"
+                        value={form2Data.pickup_time_from}
+                        onChange={handleInput2Change}
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                     </div>
@@ -580,8 +722,14 @@ const LoadCreationForm = ({
                         <Calendar className="h-4 w-4 text-gray-500" />
                       </div>
                       <DatePicker
-                        date={formData.pickupDate}
-                        setDate={(date) => handleDateChange("pickupDate", date)}
+                        date={
+                          form2Data.pickup_date_to
+                            ? new Date(form2Data.pickup_date_to)
+                            : undefined
+                        }
+                        setDate={(date) =>
+                          handleDate2Change("pickup_date_to", date)
+                        }
                         placeholder="Select date"
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
@@ -595,9 +743,9 @@ const LoadCreationForm = ({
                       </div>
                       <Input
                         type="time"
-                        name="pickupTime"
-                        value={formData.pickupTime}
-                        onChange={handleInputChange}
+                        name="pickup_time_to"
+                        value={form2Data.pickup_time_to}
+                        onChange={handleInput2Change}
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                     </div>
@@ -607,9 +755,9 @@ const LoadCreationForm = ({
                 <div className="space-y-2">
                   <Label>ADDITIONAL STOP INFO</Label>
                   <Textarea
-                    name="pickupAdditionalInfo"
-                    value={formData.pickupAdditionalInfo}
-                    onChange={handleInputChange}
+                    name="pickup_additional_info"
+                    value={form2Data.pickup_additional_info}
+                    onChange={handleInput2Change}
                     placeholder="PUP, agent, contact person name and phone#, etc."
                     className="min-h-[80px]"
                   />
@@ -619,16 +767,20 @@ const LoadCreationForm = ({
               {/* Units of Measure */}
               <div className="space-y-2">
                 <Label>Set up units of measure in the stop</Label>
-                {renderUnitOptions()}
+                {/* {renderUnitOptions()} */}
+                <UnitSelector
+                  handleLength={handleLength}
+                  handleWeight={handleWeight}
+                />
               </div>
 
               {/* Commodity */}
               <div className="space-y-2">
                 <Label>COMMODITY</Label>
                 <Input
-                  name="commodity"
-                  value={formData.commodity}
-                  onChange={handleInputChange}
+                  name="pickup_commodity"
+                  value={form2Data.pickup_commodity}
+                  onChange={handleInput2Change}
                   placeholder="enter commodity"
                 />
               </div>
@@ -637,9 +789,9 @@ const LoadCreationForm = ({
               <div className="border rounded-md p-4 space-y-4">
                 <div className="flex justify-between items-center">
                   <h4 className="font-medium">FREIGHT #1</h4>
-                  <Button variant="ghost" size="sm">
+                  {/* <Button variant="ghost" size="sm">
                     <Plus className="h-4 w-4 mr-1" />
-                  </Button>
+                  </Button> */}
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
@@ -647,20 +799,25 @@ const LoadCreationForm = ({
                     <Label>PIECES *</Label>
                     <Input
                       name="pieces"
-                      value={formData.pieces}
-                      onChange={handleInputChange}
+                      value={form2Data.pieces}
+                      onChange={handleInput2Change}
                       type="number"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label>WEIGHT *</Label>
-                    <Input
-                      name="weight"
-                      value={formData.weight}
-                      onChange={handleInputChange}
-                      type="number"
-                    />
+                    <div className="flex items-center">
+                      <Input
+                        name="weight"
+                        value={form2Data.weight}
+                        onChange={handleInput2Change}
+                        type="number"
+                      />
+                      <div className="bg-gray-100 px-2 py-2 border border-l-0 rounded-r-md text-black">
+                        {form2Data.weight_unit_of_measeurement}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -668,13 +825,13 @@ const LoadCreationForm = ({
                     <div className="flex items-center">
                       <Input
                         name="length"
-                        value={formData.length}
-                        onChange={handleInputChange}
+                        value={form2Data.length}
+                        onChange={handleInput2Change}
                         type="number"
                         className="rounded-r-none"
                       />
-                      <div className="bg-gray-100 px-2 py-2 border border-l-0 rounded-r-md">
-                        ft
+                      <div className="bg-gray-100 px-2 py-2 border border-l-0 rounded-r-md text-black">
+                        {form2Data.length_unit_of_measeurement}
                       </div>
                     </div>
                   </div>
@@ -684,13 +841,13 @@ const LoadCreationForm = ({
                     <div className="flex items-center">
                       <Input
                         name="width"
-                        value={formData.width}
-                        onChange={handleInputChange}
+                        value={form2Data.width}
+                        onChange={handleInput2Change}
                         type="number"
                         className="rounded-r-none"
                       />
-                      <div className="bg-gray-100 px-2 py-2 border border-l-0 rounded-r-md">
-                        ft
+                      <div className="bg-gray-100 px-2 py-2 border border-l-0 rounded-r-md text-black">
+                        {form2Data.length_unit_of_measeurement}
                       </div>
                     </div>
                   </div>
@@ -700,42 +857,38 @@ const LoadCreationForm = ({
                     <div className="flex items-center">
                       <Input
                         name="height"
-                        value={formData.height}
-                        onChange={handleInputChange}
+                        value={form2Data.height}
+                        onChange={handleInput2Change}
                         type="number"
                         className="rounded-r-none"
                       />
-                      <div className="bg-gray-100 px-2 py-2 border border-l-0 rounded-r-md">
-                        ft
+                      <div className="bg-gray-100 px-2 py-2 border border-l-0 rounded-r-md text-black">
+                        {form2Data.length_unit_of_measeurement}
                       </div>
                     </div>
                   </div>
+                </div>
+                <div className="flex items-end space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="stackable"
+                      checked={form2Data.stackable}
+                      onCheckedChange={(checked) =>
+                        handleCheckbox2Change("stackable", checked as boolean)
+                      }
+                    />
+                    <Label htmlFor="stackable">STACKABLE</Label>
+                  </div>
 
-                  <div className="flex items-end space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="stackable"
-                        checked={formData.isStackable}
-                        onCheckedChange={(checked) =>
-                          handleCheckboxChange(
-                            "isStackable",
-                            checked as boolean,
-                          )
-                        }
-                      />
-                      <Label htmlFor="stackable">STACKABLE</Label>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="hazmat"
-                        checked={formData.isHazmat}
-                        onCheckedChange={(checked) =>
-                          handleCheckboxChange("isHazmat", checked as boolean)
-                        }
-                      />
-                      <Label htmlFor="hazmat">HAZMAT</Label>
-                    </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="hazmat"
+                      checked={form2Data.hazmat}
+                      onCheckedChange={(checked) =>
+                        handleCheckbox2Change("hazmat", checked as boolean)
+                      }
+                    />
+                    <Label htmlFor="hazmat">HAZMAT</Label>
                   </div>
                 </div>
               </div>
@@ -744,9 +897,9 @@ const LoadCreationForm = ({
               <div className="border rounded-md p-4 space-y-4">
                 <div className="flex justify-between items-center">
                   <h4 className="font-medium">Step (2) Delivery #1</h4>
-                  <Button variant="ghost" size="sm">
+                  {/* <Button variant="ghost" size="sm">
                     <Plus className="h-4 w-4 mr-1" />
-                  </Button>
+                  </Button> */}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -754,34 +907,37 @@ const LoadCreationForm = ({
                     <Label htmlFor="deliveryFacility">FACILITY *</Label>
                     <div className="flex gap-2">
                       <Select
-                        value={formData.deliveryFacility}
+                        value={form2Data.delivery_facility_id?.toString()}
                         onValueChange={(value) =>
-                          handleSelectChange("deliveryFacility", value)
+                          handleSelect2Change(
+                            "delivery_facility_id",
+                            Number(value)
+                          )
                         }
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="choose facility name" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="facility1">
-                            Chicago Warehouse
-                          </SelectItem>
-                          <SelectItem value="facility2">
-                            Detroit Distribution Center
-                          </SelectItem>
-                          <SelectItem value="facility3">
-                            Indianapolis Hub
-                          </SelectItem>
+                          {facilities.length == 0 ? (
+                            <p>No facilities found</p>
+                          ) : (
+                            facilities.map((f) => (
+                              <SelectItem value={f.id?.toString()}>
+                                {f.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
-                      <Button variant="outline" size="icon">
+                      {/* <Button variant="outline" size="icon">
                         <Plus className="h-4 w-4" />
-                      </Button>
+                      </Button> */}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>TIME FRAMES *</Label>
+                    <Label>PRIORITY *</Label>
                     {renderDeliveryTimeFrameOptions()}
                   </div>
                 </div>
@@ -789,9 +945,9 @@ const LoadCreationForm = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="px-3 py-2 bg-muted border-r">
                     <Select
-                      value={formData.deliveryTimeZone}
+                      value={form2Data.delivery_timezone}
                       onValueChange={(value) =>
-                        handleSelectChange("deliveryTimeZone", value)
+                        handleSelect2Change("delivery_timezone", value)
                       }
                     >
                       <SelectTrigger>
@@ -814,9 +970,13 @@ const LoadCreationForm = ({
                         <Calendar className="h-4 w-4 text-gray-500" />
                       </div>
                       <DatePicker
-                        date={formData.deliveryDate}
+                        date={
+                          form2Data.delivery_date_from
+                            ? new Date(form2Data.delivery_date_from)
+                            : undefined
+                        }
                         setDate={(date) =>
-                          handleDateChange("deliveryDate", date)
+                          handleDate2Change("delivery_date_from", date)
                         }
                         placeholder="Select date"
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -831,9 +991,9 @@ const LoadCreationForm = ({
                       </div>
                       <Input
                         type="time"
-                        name="deliveryTime"
-                        value={formData.deliveryTime}
-                        onChange={handleInputChange}
+                        name="delivery_time_from"
+                        value={form2Data.delivery_time_from}
+                        onChange={handleInput2Change}
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                     </div>
@@ -847,9 +1007,13 @@ const LoadCreationForm = ({
                         <Calendar className="h-4 w-4 text-gray-500" />
                       </div>
                       <DatePicker
-                        date={formData.deliveryDate}
+                        date={
+                          form2Data.delivery_date_to
+                            ? new Date(form2Data.delivery_date_to)
+                            : undefined
+                        }
                         setDate={(date) =>
-                          handleDateChange("deliveryDate", date)
+                          handleDate2Change("delivery_date_to", date)
                         }
                         placeholder="Select date"
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -864,9 +1028,9 @@ const LoadCreationForm = ({
                       </div>
                       <Input
                         type="time"
-                        name="deliveryTime"
-                        value={formData.deliveryTime}
-                        onChange={handleInputChange}
+                        name="delivery_time_to"
+                        value={form2Data.delivery_time_to}
+                        onChange={handleInput2Change}
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                     </div>
@@ -876,9 +1040,9 @@ const LoadCreationForm = ({
                 <div className="space-y-2">
                   <Label>ADDITIONAL STOP INFO</Label>
                   <Textarea
-                    name="deliveryAdditionalInfo"
-                    value={formData.deliveryAdditionalInfo}
-                    onChange={handleInputChange}
+                    name="delivery_additional_info"
+                    value={form2Data.delivery_additional_info}
+                    onChange={handleInput2Change}
                     placeholder="PUP, agent, contact person name and phone#, etc."
                     className="min-h-[80px]"
                   />
@@ -887,10 +1051,66 @@ const LoadCreationForm = ({
 
               {/* Check in as */}
               <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="agent">DRIVER</Label>
+                  <div className="flex gap-2">
+                    <Select
+                      value={form2Data.driver_id?.toString()}
+                      onValueChange={(value) =>
+                        handleSelect2Change("driver_id", Number(value))
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="choose driver from the list" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {drivers.length == 0 ? (
+                          <p>No drivers found</p>
+                        ) : (
+                          drivers.map((d) => (
+                            <SelectItem value={d.id.toString()}>
+                              {d.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {/* <Button variant="outline" size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button> */}
+                  </div>
+                </div>
+
                 <h3 className="text-lg font-medium">Check in as:</h3>
                 <div className="space-y-2">
-                  <Label>CONTRAGENT NAME / COMPANY NAME *</Label>
-                  <Input placeholder="YELLOW DIAMOND" />
+                  <Label>CONTRAGENT NAME / COMPANY NAME</Label>
+                  <div className="flex gap-2">
+                    <Select
+                      required
+                      value={form2Data.checkin_company_id?.toString()}
+                      onValueChange={(value) =>
+                        handleSelect2Change("checkin_company_id", Number(value))
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select company" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {companies.length == 0 ? (
+                          <p>No companies found</p>
+                        ) : (
+                          companies.map((type) => (
+                            <SelectItem
+                              key={type.id}
+                              value={type.id?.toString()}
+                            >
+                              {type.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
 
@@ -902,50 +1122,121 @@ const LoadCreationForm = ({
                     <Label>TRUCK TYPE</Label>
                     <div className="flex gap-2">
                       <Select
-                        value={formData.truckType}
+                        value={form2Data.truck_type}
                         onValueChange={(value) =>
-                          handleSelectChange("truckType", value)
+                          handleSelect2Change("truck_type", value)
                         }
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select truck type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Box truck">Box truck</SelectItem>
-                          <SelectItem value="Cargo van">Cargo van</SelectItem>
-                          <SelectItem value="Straight truck">
-                            Straight truck
-                          </SelectItem>
-                          <SelectItem value="Refrigerated truck">
-                            Refrigerated truck
-                          </SelectItem>
+                          {truckTypes.length == 0 ? (
+                            <p>No truck types found</p>
+                          ) : (
+                            truckTypes.map((type) => (
+                              <SelectItem value={type.name}>
+                                {type.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>TRAILER TYPE</Label>
-                    <Input
-                      name="trailerType"
-                      value={formData.trailerType}
-                      onChange={handleInputChange}
-                      placeholder="choose or enter the trailer type"
-                    />
+                    <Label>TAILER TYPE</Label>
+                    <div className="flex gap-2">
+                      <Select
+                        value={form2Data.trailer_type}
+                        onValueChange={(value) =>
+                          handleSelect2Change("trailer_type", value)
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select trailer type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {trailerTypes.length == 0 ? (
+                            <p>No tailer types found</p>
+                          ) : (
+                            trailerTypes.map((type) => (
+                              <SelectItem value={type.name}>
+                                {type.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label>TRUCK EQUIPMENT (optional)</Label>
-                  <Input
-                    name="truckEquipment"
-                    value={formData.truckEquipment}
-                    onChange={handleInputChange}
-                    placeholder="choose or enter the required equipment"
-                  />
+                  <div className="flex gap-2">
+                    <Sel
+                      isMulti
+                      className="w-full"
+                      options={equipments.map((e) => ({
+                        value: e.name,
+                        label: e.name,
+                      }))}
+                      value={form2Data.equipment.map((name) => ({
+                        value: name,
+                        label: name,
+                      }))}
+                      onChange={(selected) =>
+                        handleSelect2Change(
+                          "equipment",
+                          selected.map((item) => item.value)
+                        )
+                      }
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          backgroundColor: "#f4f4f5", // light gray background
+                          color: "#000", // black text
+                          borderColor: "#d1d5db", // tailwind's gray-300
+                          boxShadow: "none",
+                        }),
+                        menu: (base) => ({
+                          ...base,
+                          backgroundColor: "#f4f4f5", // menu dropdown background
+                          color: "#000",
+                        }),
+                        option: (base, state) => ({
+                          ...base,
+                          backgroundColor: state.isSelected
+                            ? "#3b82f6" // selected: Tailwind blue-500
+                            : state.isFocused
+                            ? "#e5e7eb" // hover: Tailwind gray-200
+                            : "#f4f4f5", // default
+                          color: state.isSelected ? "#fff" : "#000",
+                        }),
+                        multiValue: (base) => ({
+                          ...base,
+                          backgroundColor: "#e0f2fe", // Tailwind blue-100
+                        }),
+                        multiValueLabel: (base) => ({
+                          ...base,
+                          color: "#0369a1", // Tailwind blue-700
+                        }),
+                        multiValueRemove: (base) => ({
+                          ...base,
+                          color: "#0369a1",
+                          ":hover": {
+                            backgroundColor: "#bae6fd", // Tailwind blue-200
+                            color: "#000",
+                          },
+                        }),
+                      }}
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                {/* <div className="flex items-center space-x-2">
                   <Checkbox
                     id="teamDrivers"
                     checked={formData.teamDrivers}
@@ -954,16 +1245,16 @@ const LoadCreationForm = ({
                     }
                   />
                   <Label htmlFor="teamDrivers">Team Drivers</Label>
-                </div>
+                </div> */}
               </div>
 
               {/* General Load Note */}
               <div className="space-y-2">
                 <Label>General Load Note:</Label>
                 <Textarea
-                  name="generalNote"
-                  value={formData.generalNote}
-                  onChange={handleInputChange}
+                  name="general_notes"
+                  value={form2Data.general_notes}
+                  onChange={handleInput2Change}
                   placeholder="enter information about the current load"
                   className="min-h-[100px]"
                 />
@@ -971,7 +1262,7 @@ const LoadCreationForm = ({
             </div>
           </TabsContent>
 
-          <TabsContent value="step-3" className="space-y-6 mt-6">
+          {/* <TabsContent value="step-3" className="space-y-6 mt-6">
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Upload Documents</h3>
               <div className="border-2 border-dashed border-border rounded-md p-6 text-center">
@@ -992,7 +1283,7 @@ const LoadCreationForm = ({
                 </p>
               </div>
             </div>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </CardContent>
 
@@ -1006,7 +1297,7 @@ const LoadCreationForm = ({
               Previous Step
             </Button>
           )}
-          {currentStep < 3 ? (
+          {currentStep < 2 ? (
             <Button onClick={handleNextStep}>Next Step</Button>
           ) : (
             <Button onClick={handleSubmit}>Create Load</Button>

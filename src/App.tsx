@@ -82,9 +82,9 @@ const MapPage = lazy(
 const AnalyticsPage = lazy(
   () => import("./pages/analytics" /* webpackChunkName: "analytics-page" */)
 );
-// const LoadsPage = lazy(
-//   () => import("./pages/dispatcher/loads" /* webpackChunkName: "loads-page" */)
-// );
+const LoadsPage = lazy(
+  () => import("./pages/dispatcher/loads" /* webpackChunkName: "loads-page" */)
+);
 const ReportsPage = lazy(
   () => import("./pages/reports" /* webpackChunkName: "reports-page" */)
 );
@@ -111,12 +111,9 @@ const TripMonitorPage = lazy(
       "./pages/dispatcher/trip-monitor" /* webpackChunkName: "dispatcher-trip" */
     )
 );
-const LoadsPage = lazy(
-  () =>
-    import(
-      "./pages/dispatcher/loads" /* webpackChunkName: "dispatcher-loads" */
-    )
-);
+// const Loads = lazy(
+//   () => import("./pages/loads" /* webpackChunkName: "dispatcher-loads" */)
+// );
 const OwnersPage = lazy(() => import("./pages/dispatcher/owners/owners"));
 const DriversPage = lazy(
   () =>
@@ -322,14 +319,14 @@ function App() {
                   </ErrorBoundary>
                 }
               />
-              <Route
+              {/* <Route
                 path="/loads"
                 element={
                   <ErrorBoundary>
-                    {isAuthenticated ? <LoadsPage /> : <Navigate to="/" />}
+                    {isAuthenticated ? <Loads /> : <Navigate to="/" />}
                   </ErrorBoundary>
                 }
-              />
+              /> */}
               <Route
                 path="/messages"
                 element={

@@ -41,11 +41,11 @@ interface Load {
     date_to: string;
     time_from: string;
     time_to: string;
+    weight_unit_of_measeurement: string;
+    length_unit_of_measeurement: string;
     freight: {
       pieces: number;
       weight: number;
-      weight_unit_of_measurement: string;
-      length_unit_of_measurement: string;
     }[];
     facility: Facility;
   }[];
@@ -229,39 +229,12 @@ const LoadsPage = () => {
       // Step 1: General
       booked_by: data1.booked_by,
       customer_company_id: data1.customer_company_id,
-      // agent: "",
-      // dispatcher: "",
-      // sourceBoard: "",
       reference_number: data1.reference_number,
       total_charges: data1.total_charges,
       currency: data1.currency,
     };
 
     const form2Data = {
-      // Step 2: Load Info
-      // pickupFacility: "",
-      // pickupDate: null as Date | null,
-      // pickupTime: "",
-      // pickupTimeZone: "EDT",
-      // pickupTimeFrame: "FCFS", // First Come, First Served
-      // pickupAdditionalInfo: "",
-
-      // deliveryFacility: "",
-      // deliveryDate: null as Date | null,
-      // deliveryTime: "",
-      // deliveryTimeZone: "EDT",
-      // deliveryTimeFrame: "FCFS",
-      // deliveryAdditionalInfo: "",
-
-      // commodity: "",
-      // pieces: "1",
-      // weight: "",
-      // length: "",
-      // width: "",
-      // height: "",
-      // stackable: false,
-      // hazmat: false,
-
       pickups: [
         {
           facility_id: data2.pickup_facility_id,
@@ -309,18 +282,6 @@ const LoadsPage = () => {
       general_notes: data2.general_notes,
       weight_unit_of_measeurement: data2.weight_unit_of_measeurement,
       length_unit_of_measeurement: data2.length_unit_of_measeurement,
-
-      // Truck Info
-      // truckType: "Box truck",
-      // trailerType: "",
-      // truckEquipment: "",
-      // teamDrivers: false,
-
-      // // General Load Note
-      // generalNote: "",
-
-      // // Step 3: Files
-      // files: [] as File[],
     };
 
     setLoading(true);
@@ -341,6 +302,26 @@ const LoadsPage = () => {
         console.log("Load added successfully");
         setIsCreateModalOpen(false);
         fetchLoads();
+        getRequest(`${import.meta.env.VITE_API_URL}/loads/${loadId}/pdf`)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.blob();
+          })
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `load_${form1Data.reference_number}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+          })
+          .catch((error) => {
+            console.error("PDF download failed:", error);
+          });
       } else {
         console.error("failed to create load");
         const deleteResponse = await deleteRequest(
@@ -436,10 +417,7 @@ const LoadsPage = () => {
                             </div>
                             <div className="mt-1 text-sm text-muted-foreground">
                               {load.pickups[0].freight[0].weight}{" "}
-                              {
-                                load.pickups[0].freight[0]
-                                  .weight_unit_of_measurement
-                              }
+                              {load.pickups[0].weight_unit_of_measeurement}
                             </div>
                           </div>
                           <div className="text-right">
@@ -461,13 +439,13 @@ const LoadsPage = () => {
                             <div className="flex items-center gap-1">
                               <User className="h-4 w-4 text-muted-foreground" />
                               <span className="text-sm">
-                                {load.driver.name}
+                                {load.driver?.name}
                               </span>
                             </div>
                             <div className="flex items-center gap-1">
                               <Truck className="h-4 w-4 text-muted-foreground" />
                               <span className="text-sm">
-                                TRK-{load.driver.truck?.id}
+                                TRK-{load.driver?.truck?.id}
                               </span>
                             </div>
                           </div>
@@ -579,10 +557,7 @@ const LoadsPage = () => {
                             </div>
                             <div className="mt-1 text-sm text-muted-foreground">
                               {load.pickups[0].freight[0].weight}{" "}
-                              {
-                                load.pickups[0].freight[0]
-                                  .weight_unit_of_measurement
-                              }
+                              {load.pickups[0].weight_unit_of_measeurement}
                             </div>
                           </div>
                           <div className="text-right">
@@ -595,7 +570,8 @@ const LoadsPage = () => {
                             <div className="flex items-center text-sm mt-1">
                               <Truck className="h-4 w-4 mr-1 text-muted-foreground" />
                               <span>
-                                TRK-{load.driver.truck?.id} • {load.driver.name}
+                                TRK-{load.driver?.truck?.id} •{" "}
+                                {load.driver?.name}
                               </span>
                             </div>
                           </div>

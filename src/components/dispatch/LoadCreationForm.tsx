@@ -210,11 +210,26 @@ const LoadCreationForm = ({
     setForm2Data((prev) => ({ ...prev, [name]: checked }));
   };
 
+  // const handleDate2Change = (name: string, date: Date | undefined) => {
+  //   const formattedDate = date
+  //     ? date.toISOString().split("T")[0] // 'YYYY-MM-DD'
+  //     : null;
+  //   setForm2Data((prev) => ({ ...prev, [name]: formattedDate }));
+  // };
+
   const handleDate2Change = (name: string, date: Date | undefined) => {
     const formattedDate = date
-      ? date.toISOString().split("T")[0] // 'YYYY-MM-DD'
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+          2,
+          "0"
+        )}-${String(date.getDate()).padStart(2, "0")}`
       : null;
     setForm2Data((prev) => ({ ...prev, [name]: formattedDate }));
+  };
+
+  const parseLocalDate = (dateStr: string) => {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    return new Date(year, month - 1, day); // local time, not UTC
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -687,7 +702,7 @@ const LoadCreationForm = ({
                       <DatePicker
                         date={
                           form2Data.pickup_date_from
-                            ? new Date(form2Data.pickup_date_from)
+                            ? parseLocalDate(form2Data.pickup_date_from)
                             : undefined
                         }
                         setDate={(date) =>

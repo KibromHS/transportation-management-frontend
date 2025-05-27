@@ -58,6 +58,8 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
     signs: "without_signs",
     is_reserved: false,
     truck_type_id: 0,
+    trailer_type_id: 0,
+    equipment: [],
   });
   const [truckTypes, setTruckTypes] = React.useState<TruckType[]>([]);
   const [drivers, setDrivers] = React.useState<
@@ -74,6 +76,7 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
   >([]);
   const [driverId, setDriverId] = React.useState(0);
   const [loading, setLoading] = React.useState(false);
+  const [trailerTypes, setTrailerTypes] = React.useState([]);
 
   const handleChange = (field: string, value: string | number) => {
     if (field == "driverId") setDriverId(Number(value));
@@ -105,6 +108,8 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
       signs: "without_signs",
       is_reserved: false,
       truck_type_id: 0,
+      trailer_type_id: 0,
+      equipment: [],
     });
   };
 
@@ -112,28 +117,35 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
     // setLoading(true);
     const fetchTruckTypes = async () => {
       try {
-        const response = await getRequest(
-          `${import.meta.env.VITE_API_URL}/truck-types`
-        );
-        const data = await response.json();
-        if (response.ok) {
+        const [
+          truckTypesResponse,
+          ownerResponse,
+          driverResponse,
+          trailerTypesResponse,
+        ] = await Promise.all([
+          getRequest(`${import.meta.env.VITE_API_URL}/truck-types`),
+          getRequest(`${import.meta.env.VITE_API_URL}/owners`),
+          getRequest(`${import.meta.env.VITE_API_URL}/drivers`),
+          getRequest(`${import.meta.env.VITE_API_URL}/trailer-types`),
+        ]);
+        const data = await truckTypesResponse.json();
+        if (truckTypesResponse.ok) {
           setTruckTypes(data);
         }
 
-        const ownerResponse = await getRequest(
-          `${import.meta.env.VITE_API_URL}/owners`
-        );
         const ownerData = await ownerResponse.json();
         if (ownerResponse.ok) {
           setOwners(ownerData["data"]);
         }
 
-        const driverResponse = await getRequest(
-          `${import.meta.env.VITE_API_URL}/drivers`
-        );
         const driverData = await driverResponse.json();
         if (driverResponse.ok) {
           setDrivers(driverData["data"]);
+        }
+
+        const trailerTypesData = await trailerTypesResponse.json();
+        if (trailerTypesResponse.ok) {
+          setTrailerTypes(trailerTypesData);
         }
       } catch (e) {
         console.error(e);
@@ -377,6 +389,62 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
                 <SelectItem value="roll">Roll</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="trailer_type_id">Trailer Type</Label>
+              <Select
+                value={formData.trailer_type_id.toString()}
+                onValueChange={(value) =>
+                  handleChange("trailer_type_id", Number(value))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select trailer type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {trailerTypes.length == 0 ? (
+                    <p>No trailers found</p>
+                  ) : (
+                    trailerTypes.map((d) => {
+                      return (
+                        <SelectItem key={d.id} value={d.id.toString()}>
+                          {d.name}
+                        </SelectItem>
+                      );
+                    })
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* <div className="space-y-2">
+              <Label htmlFor="owner">Assign Driver</Label>
+              <Select
+                value={driverId.toString()}
+                onValueChange={(value) =>
+                  handleChange("driverId", Number(value))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select driver" />
+                </SelectTrigger>
+                <SelectContent>
+                  {drivers.length == 0 ? (
+                    <p>No drivers found</p>
+                  ) : (
+                    drivers.map((d) => {
+                      return (
+                        <SelectItem key={d.id} value={d.id.toString()}>
+                          {d.name}
+                        </SelectItem>
+                      );
+                    })
+                  )}
+                </SelectContent>
+              </Select>
+            </div> */}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

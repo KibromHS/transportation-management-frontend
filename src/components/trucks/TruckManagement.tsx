@@ -71,6 +71,8 @@ export interface TruckData {
   signs: "with_signs" | "without_signs";
   is_reserved: boolean;
   truck_type_id: number;
+  trailer_type_id: number;
+  equipment: number[];
 }
 
 interface TruckManagementProps {
@@ -690,6 +692,8 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
       mexico: data.mexico,
       signs: data.signs,
       truck_type_id: data.truck_type_id,
+      trailer_type_id: data.trailer_type_id,
+      equipment: [],
     };
 
     try {
@@ -788,6 +792,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
       console.log(`Truck #${truckId} deleted`);
     } else {
       console.log(`Failed to delete Truck #${truckId}`);
+      throw new Error("Failed to delete truck");
     }
   };
 

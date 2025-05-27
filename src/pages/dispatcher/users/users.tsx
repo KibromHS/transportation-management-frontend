@@ -70,23 +70,21 @@ const UsersPage = () => {
     null
   );
 
-  useEffect(() => {
+  const fetchUsers = async () => {
     setLoading(true);
-    const fetchUsers = async () => {
-      const response = await getRequest(
-        `${import.meta.env.VITE_API_URL}/users`
-      );
-      const data = await response.json();
+    const response = await getRequest(`${import.meta.env.VITE_API_URL}/users`);
+    const data = await response.json();
 
-      if (response.ok) {
-        setActiveUsers(data.data);
-      } else {
-        console.error("Failed to fetch users:", data);
-      }
+    if (response.ok) {
+      setActiveUsers(data.data);
+    } else {
+      console.error("Failed to fetch users:", data);
+    }
 
-      setLoading(false);
-    };
+    setLoading(false);
+  };
 
+  useEffect(() => {
     fetchUsers();
   }, []);
 
@@ -97,9 +95,12 @@ const UsersPage = () => {
     );
     if (response.ok) {
       setLoading(false);
-      window.location.reload();
+      // window.location.reload();
+      fetchUsers();
     } else {
+      setLoading(false);
       console.error(`Failed to delete user #${userId}:`, await response.json());
+      throw new Error("Failed to delete user");
     }
     setLoading(false);
   };
@@ -120,9 +121,12 @@ const UsersPage = () => {
     );
     if (response.ok) {
       setLoading(false);
-      window.location.reload();
+      // window.location.reload();
+      setShowAddUser(false);
+      fetchUsers();
     } else {
       console.error("Failed to add user:", await response.json());
+      throw new Error("Failed to add user");
     }
   };
 
@@ -133,10 +137,14 @@ const UsersPage = () => {
       { password: data.password }
     );
     if (response.ok) {
-      setLoading(true);
-      window.location.reload();
+      setLoading(false);
+      // window.location.reload();
+      setShowResetPassword(false);
+      fetchUsers();
     } else {
+      setLoading(false);
       console.error("Failed to reset password", response);
+      throw new Error("Failed to reset password");
     }
     setLoading(false);
   };

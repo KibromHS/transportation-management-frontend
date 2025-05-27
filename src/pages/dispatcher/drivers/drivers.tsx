@@ -108,6 +108,7 @@ const DriversPage = () => {
       language: data.language,
       citizenship: data.citizenship,
       address: data.address,
+      password: data.password,
     };
 
     const response = await postRequest(
@@ -116,7 +117,9 @@ const DriversPage = () => {
     );
     if (response.ok) {
       setLoading(false);
-      window.location.reload();
+      setShowAddDriver(false);
+      fetchDrivers();
+      // window.location.reload();
     } else {
       console.error("Failed to add driver:", await response.json());
     }
@@ -132,9 +135,12 @@ const DriversPage = () => {
 
     if (response.ok) {
       setLoading(false);
-      window.location.reload();
+      setShowAssignVehicle(false);
+      fetchDrivers();
+      // window.location.reload();
     } else {
       console.error("Failed to assign vehicle:", await response.json());
+      throw new Error("Failed to assign vehicle");
     }
 
     setLoading(false);
@@ -152,6 +158,7 @@ const DriversPage = () => {
       fetchDrivers();
     } else {
       console.error("Failed to deactivate user:", await response.json());
+      throw new Error("Failed to deactivate driver");
     }
     setLoading(false);
   };
@@ -167,7 +174,8 @@ const DriversPage = () => {
       // window.location.reload();
       fetchDrivers();
     } else {
-      console.error("Failed to deactivate user:", await response.json());
+      console.error("Failed to reactivate user:", await response.json());
+      throw new Error("Failed to reactivate driver");
     }
     setLoading(false);
   };
@@ -179,9 +187,12 @@ const DriversPage = () => {
     );
     if (response.ok) {
       setLoading(false);
-      window.location.reload();
+      // window.location.reload();
+      fetchDrivers();
     } else {
       console.error("Failed to delete driver:", await response.json());
+      setLoading(false);
+      throw new Error("Failed to delete driver");
     }
   };
 

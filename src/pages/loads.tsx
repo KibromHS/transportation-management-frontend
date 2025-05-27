@@ -285,7 +285,7 @@ const LoadsPage = () => {
       searchQuery === "" ||
       load.id == Number(searchQuery) ||
       load.reference_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      load.driver.truck.company?.name
+      load.driver?.truck.company?.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
       load.pickups[0].name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -305,7 +305,7 @@ const LoadsPage = () => {
     const matchesCustomer =
       selectedCustomers.length === 0 ||
       selectedCustomers.some((c) =>
-        load.driver.truck.company?.name
+        load.driver?.truck.company?.name
           .toLowerCase()
           .includes(c.replace("-", " "))
       );
@@ -483,7 +483,7 @@ const LoadsPage = () => {
                             </TableCell>
                             <TableCell>{load.reference_number}</TableCell>
                             <TableCell>
-                              {load.driver.truck.company?.name}
+                              {load.driver?.truck.company?.name}
                             </TableCell>
                             <TableCell>{load.pickups[0].name}</TableCell>
                             <TableCell>{load.deliveries[0].name}</TableCell>

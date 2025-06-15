@@ -29,10 +29,10 @@ import {
   InfoWindowF,
   PolylineF,
 } from "@react-google-maps/api";
-
-const libraries: ("places" | "drawing" | "geometry")[] = ["places", "geometry"];
-
-// Define interfaces for your data (Keep these as they are correct)
+const maplibraries: ("places" | "drawing" | "geometry" | "visualization")[] = [
+  "places",
+];
+// Define interfaces for your data
 interface Vehicle {
   id: string;
   type: string;
@@ -53,7 +53,85 @@ interface RouteData {
   assignedDriver: string;
 }
 
-// Map configuration (Keep these as they are correct)
+// Dummy Data
+const dummyVehicles: Vehicle[] = [
+  {
+    id: "TRK-1001",
+    type: "Box Truck",
+    status: "In Transit",
+    lastUpdate: "5 mins ago",
+    currentLocation: { lat: 34.0522, lng: -118.2437 }, // Los Angeles
+    driver: "John Doe",
+  },
+  {
+    id: "TRK-1002",
+    type: "Cargo Van",
+    status: "Available",
+    lastUpdate: "10 mins ago",
+    currentLocation: { lat: 34.058, lng: -118.258 }, // Near Los Angeles
+    driver: "Jane Smith",
+  },
+  {
+    id: "TRK-1003",
+    type: "Refrigerated",
+    status: "Maintenance",
+    lastUpdate: "30 mins ago",
+    currentLocation: { lat: 34.065, lng: -118.225 }, // Near Los Angeles
+    driver: "Mike Brown",
+  },
+  {
+    id: "TRK-1004",
+    type: "Flatbed",
+    status: "In Transit",
+    lastUpdate: "15 mins ago",
+    currentLocation: { lat: 34.045, lng: -118.265 }, // Near Los Angeles
+    driver: "Emily White",
+  },
+  {
+    id: "TRK-1005",
+    type: "Box Truck",
+    status: "Available",
+    lastUpdate: "20 mins ago",
+    currentLocation: { lat: 34.05, lng: -118.24 }, // Near Los Angeles
+    driver: "Chris Green",
+  },
+];
+
+const dummyRoutes: RouteData[] = [
+  {
+    id: "R-001",
+    name: "LA to Vegas Express",
+    status: "Active",
+    origin: { lat: 34.0522, lng: -118.2437, name: "Los Angeles, CA" },
+    destination: { lat: 36.1699, lng: -115.1398, name: "Las Vegas, NV" },
+    path: [
+      { lat: 34.0522, lng: -118.2437 },
+      { lat: 34.1, lng: -117.8 },
+      { lat: 34.5, lng: -117.0 },
+      { lat: 35.0, lng: -116.5 },
+      { lat: 35.5, lng: -116.0 },
+      { lat: 36.1699, lng: -115.1398 },
+    ],
+    assignedVehicleId: "TRK-1001",
+    assignedDriver: "John Doe",
+  },
+  {
+    id: "R-002",
+    name: "Valley Local Loop",
+    status: "Scheduled",
+    origin: { lat: 34.058, lng: -118.258, name: "Downtown LA" },
+    destination: { lat: 34.07, lng: -118.3, name: "Hollywood" },
+    path: [
+      { lat: 34.058, lng: -118.258 },
+      { lat: 34.065, lng: -118.27 },
+      { lat: 34.07, lng: -118.3 },
+    ],
+    assignedVehicleId: "TRK-1002",
+    assignedDriver: "Jane Smith",
+  },
+];
+
+// Map configuration
 const containerStyle = {
   width: "100%",
   height: "100%", // Card will control height
@@ -74,75 +152,25 @@ const MapPage = () => {
   const [mapZoom, setMapZoom] = useState(12); // Default zoom level
   const [mapCenter, setMapCenter] = useState({ lat: 34.0522, lng: -118.2437 }); // Default center: Los Angeles
 
-  // State for real data
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [routes, setRoutes] = useState<RouteData[]>([]);
-  const [isLoadingData, setIsLoadingData] = useState(true); // New loading state for data
-  const [dataError, setDataError] = useState<string | null>(null); // New error state for data fetching
-
   // Google Maps API loading
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: import.meta.env.VITE_MAPS_API_KEY as string,
-    libraries: libraries,
+    libraries: maplibraries,
   });
 
   const mapRef = useRef<google.maps.Map | null>(null);
-
-  const onLoad = useCallback(
-    function callback(map: google.maps.Map) {
-      mapRef.current = map;
-      // Optionally set initial center based on first vehicle if available
-      if (vehicles.length > 0) {
-        // Use the 'vehicles' state here
-        setMapCenter(vehicles[0].currentLocation);
-      }
-    },
-    [vehicles]
-  ); // Dependency on 'vehicles' to update center when data loads
+  const onLoad = useCallback(function callback(map: google.maps.Map) {
+    mapRef.current = map;
+    // Optionally set initial center based on first vehicle if available
+    if (dummyVehicles.length > 0) {
+      setMapCenter(dummyVehicles[0].currentLocation);
+    }
+  }, []);
 
   const onUnmount = useCallback(function callback(map: google.maps.Map) {
     mapRef.current = null;
   }, []);
-
-  // --- Data Fetching Effect ---
-  useEffect(() => {
-    const fetchRealData = async () => {
-      setIsLoadingData(true);
-      setDataError(null);
-      try {
-        // --- Replace these with your actual API calls ---
-        // Example: Fetch vehicles
-        const vehiclesResponse = await fetch("/api/vehicles"); // Replace with your actual API endpoint
-        if (!vehiclesResponse.ok) {
-          throw new Error(`HTTP error! status: ${vehiclesResponse.status}`);
-        }
-        const vehiclesData: Vehicle[] = await vehiclesResponse.json();
-        setVehicles(vehiclesData);
-
-        // Example: Fetch routes
-        const routesResponse = await fetch("/api/routes"); // Replace with your actual API endpoint
-        if (!routesResponse.ok) {
-          throw new Error(`HTTP error! status: ${routesResponse.status}`);
-        }
-        const routesData: RouteData[] = await routesResponse.json();
-        setRoutes(routesData);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-        setDataError(
-          "Failed to load vehicle and route data. Please try again."
-        );
-      } finally {
-        setIsLoadingData(false);
-      }
-    };
-
-    fetchRealData(); // Call the fetch function
-
-    // You might want to set up polling for real-time updates:
-    // const interval = setInterval(fetchRealData, 30000); // Refresh every 30 seconds
-    // return () => clearInterval(interval); // Cleanup on unmount
-  }, []); // Empty dependency array means this runs once on mount
 
   // Handler for vehicle marker click
   const handleVehicleClick = (vehicle: Vehicle) => {
@@ -151,10 +179,12 @@ const MapPage = () => {
     setMapCenter(vehicle.currentLocation); // Center map on selected vehicle
   };
 
-  // Handler for route polyline click
+  // Handler for route polyline click (this might be tricky to implement directly on PolylineF without a custom overlay)
+  // For simplicity, we'll assume clicking on a route in the list highlights it on the map and opens its info window.
   const handleRouteClick = (route: RouteData) => {
     setSelectedRoute(route);
     setSelectedVehicle(null); // Close vehicle info window if open
+    // You might want to adjust map zoom/center to show the entire route
     if (mapRef.current) {
       const bounds = new google.maps.LatLngBounds();
       route.path.forEach((point) => bounds.extend(point));
@@ -170,47 +200,12 @@ const MapPage = () => {
       case "Available":
         return "bg-blue-500";
       case "Maintenance":
-      case "Offline": // Combining these as per original styling logic
-      default:
-        return "bg-gray-500"; // Fallback for undefined statuses
-    }
-  };
-
-  // Marker icon utility (ensure this uses `window.google.maps.SymbolPath` directly)
-  const getMarkerIcon = (status: Vehicle["status"]) => {
-    let color = "#6B7280"; // Default to gray
-    switch (status) {
-      case "In Transit":
-        color = "#22C55E"; // green-500
-        break;
-      case "Available":
-        color = "#3B82F6"; // blue-500
-        break;
-      case "Maintenance":
-        color = "#F59E0B"; // yellow-500
-        break;
+        return "bg-yellow-500";
       case "Offline":
-        color = "#6B7280"; // gray-500
-        break;
+        return "bg-gray-500";
+      default:
+        return "bg-gray-500";
     }
-
-    if (
-      !window.google ||
-      !window.google.maps ||
-      !window.google.maps.SymbolPath
-    ) {
-      // Fallback or error handling if Google Maps API or SymbolPath is not yet loaded
-      return { path: "M 0,0 0,0" }; // A tiny, invisible path
-    }
-
-    return {
-      path: window.google.maps.SymbolPath.CIRCLE, // Using SymbolPath
-      fillColor: color,
-      fillOpacity: 0.9,
-      strokeColor: "#FFF", // White border for better visibility
-      strokeWeight: 2,
-      scale: 8, // Size of the marker
-    };
   };
 
   const getRouteStatusColor = (status: RouteData["status"]) => {
@@ -228,39 +223,6 @@ const MapPage = () => {
 
   if (loadError) {
     return <div>Error loading Google Maps: {loadError.message}</div>;
-  }
-
-  // Display loading indicator for data or error if fetching fails
-  if (isLoadingData) {
-    return (
-      <DashboardLayout>
-        <div className="p-6">
-          <Card className="h-[700px] flex items-center justify-center">
-            <CardContent>
-              <h3 className="text-lg font-medium">Loading Data...</h3>
-              <p className="text-sm text-muted-foreground">
-                Fetching vehicle and route information.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (dataError) {
-    return (
-      <DashboardLayout>
-        <div className="p-6">
-          <Card className="h-[700px] flex items-center justify-center bg-red-50">
-            <CardContent>
-              <h3 className="text-lg font-medium text-red-700">Error!</h3>
-              <p className="text-sm text-red-600">{dataError}</p>
-            </CardContent>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
   }
 
   return (
@@ -410,13 +372,21 @@ const MapPage = () => {
                     onUnmount={onUnmount}
                     options={defaultMapOptions}
                   >
-                    {/* Vehicle Markers - Now using 'vehicles' state */}
-                    {vehicles.map((vehicle) => (
+                    {/* Vehicle Markers */}
+                    {dummyVehicles.map((vehicle) => (
                       <MarkerF
                         key={vehicle.id}
                         position={vehicle.currentLocation}
                         onClick={() => handleVehicleClick(vehicle)}
-                        icon={getMarkerIcon(vehicle.status)} // Using the updated icon function
+                        icon={{
+                          path: google.maps.SymbolPath.CIRCLE, // Example icon
+                          scale: 10,
+                          fillColor: "#FF0000", // Convert Tailwind to hex, add opacity
+                          fillOpacity: 1,
+                          strokeColor: "#FFFFFF",
+                          strokeWeight: 1,
+                          rotation: 90, // To make the arrow point correctly for vehicles
+                        }}
                       >
                         {selectedVehicle?.id === vehicle.id && (
                           <InfoWindowF
@@ -447,8 +417,8 @@ const MapPage = () => {
                       </MarkerF>
                     ))}
 
-                    {/* Route Polylines - Now using 'routes' state */}
-                    {routes.map((route) => (
+                    {/* Route Polylines */}
+                    {dummyRoutes.map((route) => (
                       <PolylineF
                         key={route.id}
                         path={route.path}
@@ -473,7 +443,7 @@ const MapPage = () => {
                       />
                     ))}
 
-                    {/* InfoWindow for selected Route */}
+                    {/* InfoWindow for selected Route (can appear anywhere along the route) */}
                     {selectedRoute && (
                       <InfoWindowF
                         position={selectedRoute.origin} // Or try to center it on the route for better visibility
@@ -523,7 +493,7 @@ const MapPage = () => {
                 </div>
 
                 <div className="space-y-2 max-h-[550px] overflow-y-auto pr-2">
-                  {vehicles.map((vehicle) => (
+                  {dummyVehicles.map((vehicle) => (
                     <Card
                       key={vehicle.id}
                       className={`hover:bg-muted/50 cursor-pointer ${
@@ -576,7 +546,7 @@ const MapPage = () => {
                 </div>
 
                 <div className="space-y-2 max-h-[550px] overflow-y-auto pr-2">
-                  {routes.map((route) => (
+                  {dummyRoutes.map((route) => (
                     <Card
                       key={route.id}
                       className={`hover:bg-muted/50 cursor-pointer ${

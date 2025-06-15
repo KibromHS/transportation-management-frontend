@@ -36,6 +36,10 @@ interface Load {
   reference_number: string;
   status: string;
   total_charges: string;
+  trip: {
+    id: number;
+    status: string;
+  };
   pickups: {
     date_from: string;
     date_to: string;
@@ -88,8 +92,10 @@ const LoadsPage = () => {
     const loads: Load[] = data.data;
 
     if (response.ok) {
-      setActiveLoads(loads.filter((d) => d.status != "completed"));
-      setCompletedLoads(loads.filter((d) => d.status == "completed"));
+      setActiveLoads(loads.filter((d) => d.trip.status != "DeliveryConfirmed"));
+      setCompletedLoads(
+        loads.filter((d) => d.trip.status == "DeliveryConfirmed")
+      );
 
       console.log(activeLoads);
     } else {
@@ -324,16 +330,17 @@ const LoadsPage = () => {
           });
       } else {
         console.error("failed to create load");
+        console.error(response2.body);
         const deleteResponse = await deleteRequest(
           `${import.meta.env.VITE_API_URL}/loads/${loadId}`
         );
         setLoading(false);
-        throw data2.error;
+        throw new Error(data2.message);
       }
     } else {
       console.error("failed to initiate load");
       setLoading(false);
-      throw data.error;
+      throw new Error(data.message);
     }
 
     setLoading(false);

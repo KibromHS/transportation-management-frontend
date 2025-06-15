@@ -17,7 +17,10 @@ export async function getRequest(url: string): Promise<Response> {
   }
 }
 
-export async function postRequest(url: string, body: Object) {
+export async function postRequest(
+  url: string,
+  body: Object
+): Promise<Response | null> {
   try {
     const response = await fetch(url, {
       method: "POST",

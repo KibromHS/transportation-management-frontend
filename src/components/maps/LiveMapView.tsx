@@ -1,13 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { MapPin, Navigation, Truck, User, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Slider } from "@/components/ui/slider";
+import { Slider } from "@/components/ui/slider"; // Still imported but not used in the provided code
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
+// Import Google Maps components
+import {
+  GoogleMap,
+  useJsApiLoader,
+  MarkerF,
+  InfoWindowF,
+} from "@react-google-maps/api";
+
+const maplibraries: ("places" | "drawing" | "geometry" | "visualization")[] = [
+  "places",
+];
 interface Officer {
   id: string;
   name: string;
@@ -35,6 +46,12 @@ interface LiveMapViewProps {
   onIncidentSelect?: (incidentId: string) => void;
   onDispatchOfficer?: (officerId: string, incidentId: string) => void;
 }
+
+// Define Google Map styles
+const containerStyle = {
+  width: "100%",
+  height: "600px", // Increased height for better map visibility
+};
 
 const LiveMapView = ({
   officers = [
@@ -109,8 +126,47 @@ const LiveMapView = ({
   const [mapZoom, setMapZoom] = useState(14);
   const [showOfficers, setShowOfficers] = useState(true);
   const [showIncidents, setShowIncidents] = useState(true);
-  const [selectedOfficer, setSelectedOfficer] = useState<string | null>(null);
-  const [selectedIncident, setSelectedIncident] = useState<string | null>(null);
+  const [selectedOfficer, setSelectedOfficer] = useState<Officer | null>(null); // Changed to store full object
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(
+    null
+  ); // Changed to store full object
+
+  // Google Maps API loading
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: "google-map-script",
+    // IMPORTANT: Ensure this matches your .env variable name (e.g., VITE_Maps_API_KEY)
+    googleMapsApiKey: import.meta.env.VITE_MAPS_API_KEY as string,
+    libraries: maplibraries,
+  });
+
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const onLoad = useCallback(function callback(map: google.maps.Map) {
+    mapRef.current = map;
+  }, []);
+
+  const onUnmount = useCallback(function callback(map: google.maps.Map) {
+    mapRef.current = null;
+  }, []);
+
+  // Determine initial center for the map
+  const defaultCenter = { lat: 34.0522, lng: -118.2437 }; // Default to Los Angeles area
+  const initialCenter =
+    officers && officers.length > 0
+      ? officers[0].position
+      : incidents && incidents.length > 0
+      ? incidents[0].position
+      : defaultCenter;
+
+  const [mapCenter, setMapCenter] = useState(initialCenter);
+
+  // Update map center if the initial data changes (optional, useful for dynamic data)
+  useEffect(() => {
+    if (officers && officers.length > 0) {
+      setMapCenter(officers[0].position);
+    } else if (incidents && incidents.length > 0) {
+      setMapCenter(incidents[0].position);
+    }
+  }, [officers, incidents]);
 
   // Get status color for officer markers
   const getStatusColor = (status: Officer["status"]) => {
@@ -144,19 +200,24 @@ const LiveMapView = ({
 
   // Format timestamp
   const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString();
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   // Handle officer selection
-  const handleOfficerClick = (officerId: string) => {
-    setSelectedOfficer(officerId);
-    onOfficerSelect(officerId);
+  const handleOfficerClick = (officer: Officer) => {
+    setSelectedOfficer(officer);
+    setSelectedIncident(null); // Close incident info window if open
+    onOfficerSelect(officer.id);
   };
 
   // Handle incident selection
-  const handleIncidentClick = (incidentId: string) => {
-    setSelectedIncident(incidentId);
-    onIncidentSelect(incidentId);
+  const handleIncidentClick = (incident: Incident) => {
+    setSelectedIncident(incident);
+    setSelectedOfficer(null); // Close officer info window if open
+    onIncidentSelect(incident.id);
   };
 
   // Handle dispatch
@@ -164,112 +225,143 @@ const LiveMapView = ({
     onDispatchOfficer(officerId, incidentId);
   };
 
+  if (loadError) {
+    return <div>Error loading Google Maps: {loadError.message}</div>;
+  }
+
   return (
     <div className="h-full flex flex-col bg-background">
       <div className="flex-1 relative overflow-hidden rounded-lg border">
-        {/* Map placeholder - in a real app, this would be a map component */}
-        <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-          <div className="text-center">
-            <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">
-              Map view would be displayed here with officer and incident markers
-            </p>
+        {/* Google Map Component */}
+        {!isLoaded ? (
+          <div
+            style={containerStyle}
+            className="flex items-center justify-center bg-gray-100 text-gray-500"
+          >
+            Loading Map...
           </div>
-        </div>
-
-        {/* Officer markers - these would be positioned on the map */}
-        {showOfficers &&
-          officers.map((officer) => (
-            <div
-              key={officer.id}
-              className="absolute cursor-pointer"
-              style={{
-                left: `${officer.position.lng * 5 - 590}px`,
-                top: `${officer.position.lat * 5 - 170}px`,
-              }}
-              onClick={() => handleOfficerClick(officer.id)}
-            >
-              <div
-                className={`h-4 w-4 rounded-full ${getStatusColor(
-                  officer.status,
-                )} ring-2 ring-white`}
-              ></div>
-              {selectedOfficer === officer.id && (
-                <div className="absolute z-10 mt-1 w-48 rounded-md bg-white shadow-lg dark:bg-gray-800 p-2">
-                  <p className="font-medium">{officer.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {officer.vehicle || "On foot"}
-                  </p>
-                  <div className="flex items-center mt-1">
-                    <Badge
-                      variant="outline"
-                      className={`${getStatusColor(officer.status)} text-white`}
+        ) : (
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={mapCenter}
+            zoom={mapZoom} // Use dynamic zoom state
+            onLoad={onLoad}
+            onUnmount={onUnmount}
+            options={{ disableDefaultUI: false }}
+          >
+            {/* Officer markers */}
+            {showOfficers &&
+              officers.map((officer) => (
+                <MarkerF
+                  key={officer.id}
+                  position={officer.position}
+                  onClick={() => handleOfficerClick(officer)}
+                  // Custom icon for officers (optional)
+                  icon={{
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 8,
+                    fillColor: getStatusColor(officer.status)
+                      .replace("bg-", "#")
+                      .replace("-500", "50"), // Convert Tailwind bg-color to hex
+                    fillOpacity: 0.9,
+                    strokeColor: "#FFFFFF",
+                    strokeWeight: 2,
+                  }}
+                >
+                  {selectedOfficer && selectedOfficer.id === officer.id && (
+                    <InfoWindowF
+                      position={officer.position}
+                      onCloseClick={() => setSelectedOfficer(null)}
                     >
-                      {officer.status}
-                    </Badge>
-                    <span className="text-xs ml-2">
-                      Updated: {formatTime(officer.lastUpdate)}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-
-        {/* Incident markers - these would be positioned on the map */}
-        {showIncidents &&
-          incidents.map((incident) => (
-            <div
-              key={incident.id}
-              className="absolute cursor-pointer"
-              style={{
-                left: `${incident.position.lng * 5 - 590}px`,
-                top: `${incident.position.lat * 5 - 170}px`,
-              }}
-              onClick={() => handleIncidentClick(incident.id)}
-            >
-              <div
-                className={`h-5 w-5 ${getPriorityColor(
-                  incident.priority,
-                )} flex items-center justify-center rounded-full`}
-              >
-                <AlertTriangle className="h-3 w-3 text-white" />
-              </div>
-              {selectedIncident === incident.id && (
-                <div className="absolute z-10 mt-1 w-64 rounded-md bg-white shadow-lg dark:bg-gray-800 p-2">
-                  <div className="flex justify-between items-start">
-                    <p className="font-medium">{incident.title}</p>
-                    <Badge
-                      variant={
-                        incident.status === "active" ? "default" : "outline"
-                      }
-                    >
-                      {incident.status}
-                    </Badge>
-                  </div>
-                  <p className="text-xs mt-1">{incident.description}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Reported: {formatTime(incident.timestamp)}
-                  </p>
-                  {selectedOfficer && incident.status === "active" && (
-                    <Button
-                      size="sm"
-                      className="mt-2 w-full"
-                      onClick={() =>
-                        handleDispatch(selectedOfficer, incident.id)
-                      }
-                    >
-                      Dispatch Officer
-                    </Button>
+                      <div className="p-2">
+                        <p className="font-medium">{officer.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {officer.vehicle || "On foot"}
+                        </p>
+                        <div className="flex items-center mt-1">
+                          <Badge
+                            variant="outline"
+                            className={`${getStatusColor(
+                              officer.status
+                            )} text-white`}
+                          >
+                            {officer.status}
+                          </Badge>
+                          <span className="text-xs ml-2">
+                            Updated: {formatTime(officer.lastUpdate)}
+                          </span>
+                        </div>
+                      </div>
+                    </InfoWindowF>
                   )}
-                </div>
-              )}
-            </div>
-          ))}
+                </MarkerF>
+              ))}
+
+            {/* Incident markers */}
+            {showIncidents &&
+              incidents.map((incident) => (
+                <MarkerF
+                  key={incident.id}
+                  position={incident.position}
+                  onClick={() => handleIncidentClick(incident)}
+                  // Custom icon for incidents (optional)
+                  icon={{
+                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, // or a custom SVG path
+                    scale: 5,
+                    fillColor: getPriorityColor(incident.priority)
+                      .replace("bg-", "#")
+                      .replace("-500", "50"),
+                    fillOpacity: 0.9,
+                    strokeColor: "#FFFFFF",
+                    strokeWeight: 2,
+                  }}
+                >
+                  {selectedIncident && selectedIncident.id === incident.id && (
+                    <InfoWindowF
+                      position={incident.position}
+                      onCloseClick={() => setSelectedIncident(null)}
+                    >
+                      <div className="p-2">
+                        <div className="flex justify-between items-start">
+                          <p className="font-medium">{incident.title}</p>
+                          <Badge
+                            variant={
+                              incident.status === "active"
+                                ? "default"
+                                : "outline"
+                            }
+                            className="ml-2"
+                          >
+                            {incident.status}
+                          </Badge>
+                        </div>
+                        <p className="text-xs mt-1">{incident.description}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Reported: {formatTime(incident.timestamp)}
+                        </p>
+                        {selectedOfficer && incident.status === "active" && (
+                          <Button
+                            size="sm"
+                            className="mt-2 w-full"
+                            onClick={
+                              () =>
+                                handleDispatch(selectedOfficer.id, incident.id) // Pass selectedOfficer.id
+                            }
+                          >
+                            Dispatch Officer
+                          </Button>
+                        )}
+                      </div>
+                    </InfoWindowF>
+                  )}
+                </MarkerF>
+              ))}
+          </GoogleMap>
+        )}
 
         {/* Map controls */}
-        <div className="absolute bottom-4 right-4 space-y-2">
-          <Card className="w-10 shadow-md">
+        <div className="absolute bottom-4 right-4 space-y-2 z-[1000]">
+          <Card className="w-10 shadow-md flex flex-col">
             <Button
               variant="ghost"
               size="icon"
@@ -343,7 +435,7 @@ const LiveMapView = ({
                 <p className="text-2xl font-bold text-red-500">
                   {
                     incidents.filter(
-                      (i) => i.priority === "high" && i.status === "active",
+                      (i) => i.priority === "high" && i.status === "active"
                     ).length
                   }
                 </p>
@@ -364,15 +456,19 @@ const LiveMapView = ({
             {officers.map((officer) => (
               <Card
                 key={officer.id}
-                className={`cursor-pointer ${selectedOfficer === officer.id ? "ring-2 ring-primary" : ""}`}
-                onClick={() => handleOfficerClick(officer.id)}
+                className={`cursor-pointer ${
+                  selectedOfficer?.id === officer.id
+                    ? "ring-2 ring-primary"
+                    : ""
+                }`}
+                onClick={() => handleOfficerClick(officer)} // Pass full officer object
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center">
                       <div
                         className={`h-10 w-10 rounded-full flex items-center justify-center ${getStatusColor(
-                          officer.status,
+                          officer.status
                         )}`}
                       >
                         <User className="h-5 w-5 text-white" />
@@ -401,8 +497,12 @@ const LiveMapView = ({
             {incidents.map((incident) => (
               <Card
                 key={incident.id}
-                className={`cursor-pointer ${selectedIncident === incident.id ? "ring-2 ring-primary" : ""}`}
-                onClick={() => handleIncidentClick(incident.id)}
+                className={`cursor-pointer ${
+                  selectedIncident?.id === incident.id
+                    ? "ring-2 ring-primary"
+                    : ""
+                }`}
+                onClick={() => handleIncidentClick(incident)} // Pass full incident object
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
@@ -410,7 +510,7 @@ const LiveMapView = ({
                       <div className="flex items-center">
                         <div
                           className={`h-6 w-6 rounded-full flex items-center justify-center ${getPriorityColor(
-                            incident.priority,
+                            incident.priority
                           )}`}
                         >
                           <AlertTriangle className="h-3 w-3 text-white" />
@@ -441,7 +541,7 @@ const LiveMapView = ({
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDispatch(selectedOfficer, incident.id);
+                          handleDispatch(selectedOfficer.id, incident.id); // Pass selectedOfficer.id
                         }}
                       >
                         Dispatch

@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useNavigate } from "react-router-dom"; // Add this line
 import {
   Truck,
   MapPin,
@@ -27,6 +28,7 @@ import {
 
 const TripMonitorPage = () => {
   // Mock trips data
+  const navigate = useNavigate();
   const activeTrips = [
     {
       id: "T-1001",
@@ -125,12 +127,16 @@ const TripMonitorPage = () => {
     }
   };
 
+  const handleViewAllOnMapClick = () => {
+    navigate("/map");
+  };
+
   return (
     <ThemeAwareDashboardLayout pageTitle="Trip Monitor">
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Trip Monitor</h1>
-          <Button>
+          <Button onClick={handleViewAllOnMapClick}>
             <Map className="mr-2 h-4 w-4" />
             View All on Map
           </Button>

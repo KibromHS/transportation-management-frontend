@@ -48,7 +48,10 @@ import {
   postRequest,
 } from "@/api/request";
 
+import TruckMap from "@/components/trucks/TruckMap";
+
 export interface TruckData {
+  id: string;
   owner_id: string;
   license_plate: string;
   model: string;
@@ -64,6 +67,13 @@ export interface TruckData {
   payload_capacity: string;
   door_type: string;
   team: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+  driver: {
+    name: string;
+    id: number;
+  };
   status: "available" | "not_available" | "busy";
   preferred_load: string;
   canada: boolean;
@@ -73,6 +83,7 @@ export interface TruckData {
   truck_type_id: number;
   trailer_type_id: number;
   equipment: number[];
+  timestamps: string; // ISO date string
 }
 
 interface TruckManagementProps {
@@ -670,6 +681,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
     console.log("Adding new truck:", data);
 
     const newTruck: TruckData = {
+      id: data.id,
       owner_id: data.owner_id,
       license_plate: data.license_plate,
       model: data.model,
@@ -685,6 +697,13 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
       payload_capacity: data.payload_capacity,
       door_type: data.door_type,
       team: data.team,
+      latitude: data.latitude ?? 0,
+      longitude: data.longitude ?? 0,
+      address: data.address,
+      driver: {
+        name: data.driver.name,
+        id: driverId,
+      },
       status: "available",
       preferred_load: data.preferred_load,
       is_reserved: false,
@@ -694,6 +713,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
       truck_type_id: data.truck_type_id,
       trailer_type_id: data.trailer_type_id,
       equipment: [],
+      timestamps: new Date().toISOString(),
     };
 
     try {
@@ -985,7 +1005,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
             </div>
           </TabsContent>
 
-          {/* <TabsContent value="map" className="mt-4">
+          <TabsContent value="map" className="mt-4">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Truck Locations</h3>
@@ -999,17 +1019,24 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
                 </div>
               </div>
 
-              <div className="border rounded-md bg-slate-100 h-[400px] flex items-center justify-center">
-                <div className="text-center">
-                  <Map className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium">Map View Coming Soon</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    This feature is currently under development.
-                  </p>
-                </div>
+              {/* THIS IS THE UPDATED CONTAINER IN TRUCKMANAGEMENT.TSX */}
+              {/* This div provides the border, background, and fixed height */}
+              <div className="border rounded-md bg-slate-100 h-[400px] relative overflow-hidden">
+                <TruckMap
+                  trucks={trucks}
+                  onViewTruckDetails={handleViewTruckDetails}
+                />
+              </div>
+
+              {/* ... The map legend section and truck cards below */}
+              {/* (Keep the map legend where it is in TruckMap.tsx, it's positioned relative to the div above) */}
+
+              {/* Truck cards section (this part is outside the map container) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* ... your truck cards ... */}
               </div>
             </div>
-          </TabsContent> */}
+          </TabsContent>
 
           <TabsContent value="nearby" className="mt-4">
             <div className="space-y-4">

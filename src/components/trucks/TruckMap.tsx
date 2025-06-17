@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { MapPin } from "lucide-react";
-
 import {
   GoogleMap,
   useJsApiLoader,
@@ -8,18 +7,18 @@ import {
   InfoWindowF,
 } from "@react-google-maps/api";
 
+// --- Google Maps setup ---
 const libraries: ("places" | "drawing" | "geometry")[] = ["places", "geometry"];
+const containerStyle = { width: "100%", height: "100%" };
 
+// --- Interfaces ---
 export interface TruckData {
   id: string;
   license_plate: string;
   status: "available" | "busy" | "not_available" | "offline";
   latitude: number;
   longitude: number;
-  driver: {
-    name: string;
-    id: number;
-  } | null;
+  driver: { name: string; id: number } | null;
   address: string;
   timestamps: string;
   type?: string;
@@ -30,30 +29,22 @@ interface TruckMapProps {
   onViewTruckDetails: (truck: TruckData) => void;
 }
 
-const containerStyle = {
-  width: "100%",
-  height: "100%", // IMPORTANT: Set to 100% to fill the parent container's height
-};
-
+// --- TruckMap Component ---
 const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: import.meta.env.VITE_MAPS_API_KEY as string,
-    libraries: libraries,
+    libraries,
   });
 
   const mapRef = useRef<google.maps.Map | null>(null);
-  const onLoad = useCallback(function callback(map: google.maps.Map) {
+  const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
   }, []);
-
-  const onUnmount = useCallback(function callback(map: google.maps.Map) {
-    mapRef.current = null;
-  }, []);
+  const onUnmount = useCallback(() => (mapRef.current = null), []);
 
   const [selectedTruck, setSelectedTruck] = useState<TruckData | null>(null);
-
-  const defaultCenter = { lat: 38.9072, lng: -77.0369 }; // Default to Washington D.C. area
+  const defaultCenter = { lat: 38.9072, lng: -77.0369 };
 
   const isValidCoordinate = (coord: number | undefined): boolean =>
     typeof coord === "number" && isFinite(coord);
@@ -75,34 +66,31 @@ const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
     setMapCenter(getMapCenter());
   }, [trucks, getMapCenter]);
 
-  // Returns hex color codes for markers and badge backgrounds
   const getStatusColorHex = (status: TruckData["status"]) => {
     switch (status) {
       case "available":
-        return "#22C55E"; // Tailwind green-500
+        return "#22C55E";
       case "busy":
-        return "#3B82F6"; // Tailwind blue-500
+        return "#3B82F6";
       case "not_available":
-        return "#F59E0B"; // Tailwind yellow-500
+        return "#F59E0B";
       case "offline":
       default:
-        return "#6B7280"; // Tailwind gray-500
+        return "#6B7280";
     }
   };
 
-  // Generates a custom SVG icon based on color
   const getMarkerIcon = (color: string) => ({
-    path: window.google.maps.SymbolPath.CIRCLE, // A simple circle
+    path: window.google.maps.SymbolPath.CIRCLE,
     fillColor: color,
     fillOpacity: 0.9,
-    strokeColor: "#FFF", // White border for better visibility
+    strokeColor: "#FFF",
     strokeWeight: 2,
-    scale: 8, // Size of the marker
+    scale: 8,
   });
 
-  if (loadError) {
+  if (loadError)
     return <div>Error loading Google Maps: {loadError.message}</div>;
-  }
 
   return (
     <>
@@ -120,7 +108,6 @@ const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
           zoom={zoom}
           onLoad={onLoad}
           onUnmount={onUnmount}
-          options={{ disableDefaultUI: false }}
         >
           {trucks.map((truck) =>
             isValidCoordinate(truck.latitude) &&
@@ -173,42 +160,89 @@ const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
         </GoogleMap>
       )}
 
-      {/* Map legend: Ensure legend uses the same colors */}
+      {/* Legend */}
       <div className="absolute bottom-4 right-4 bg-white p-2 rounded-md shadow-md z-[1000]">
         <div className="text-sm font-medium mb-1 text-gray-800">Legend</div>
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: getStatusColorHex("available") }}
-            ></div>
-            <span className="text-xs text-gray-700">Available</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: getStatusColorHex("busy") }}
-            ></div>
-            <span className="text-xs text-gray-700">Busy</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: getStatusColorHex("not_available") }}
-            ></div>
-            <span className="text-xs text-gray-700">Not Available</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: getStatusColorHex("offline") }}
-            ></div>
-            <span className="text-xs text-gray-700">Offline</span>
-          </div>
+          {["available", "busy", "not_available", "offline"].map((status) => (
+            <div key={status} className="flex items-center gap-2">
+              <div
+                className="h-3 w-3 rounded-full"
+                style={{
+                  backgroundColor: getStatusColorHex(
+                    status as TruckData["status"]
+                  ),
+                }}
+              />
+              <span className="text-xs text-gray-700 capitalize">
+                {status.replace("_", " ")}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </>
   );
 };
 
-export default TruckMap;
+// --- Dummy Data + Usage ---
+const dummyTrucks: TruckData[] = [
+  {
+    id: "TRUCK001",
+    license_plate: "AB123CD",
+    status: "available",
+    latitude: 38.9072,
+    longitude: -77.0369,
+    driver: { name: "John Doe", id: 1 },
+    address: "Washington, DC",
+    timestamps: new Date().toISOString(),
+  },
+  {
+    id: "TRUCK002",
+    license_plate: "XY456ZT",
+    status: "busy",
+    latitude: 38.9075,
+    longitude: -77.0434,
+    driver: { name: "Jane Smith", id: 2 },
+    address: "Capitol Hill, DC",
+    timestamps: new Date().toISOString(),
+  },
+  {
+    id: "TRUCK003",
+    license_plate: "LM789OP",
+    status: "offline",
+    latitude: 38.8895,
+    longitude: -77.0352,
+    driver: null,
+    address: "National Mall, DC",
+    timestamps: new Date().toISOString(),
+  },
+  {
+    id: "TRUCK004",
+    license_plate: "EF321GH",
+    status: "not_available",
+    latitude: 38.8951,
+    longitude: -77.0691,
+    driver: { name: "Ali Ahmed", id: 3 },
+    address: "Georgetown, DC",
+    timestamps: new Date().toISOString(),
+  },
+];
+
+const TruckMapPage = () => {
+  const handleViewTruckDetails = (truck: TruckData) => {
+    console.log("Viewing truck details:", truck);
+    alert(`Truck ID: ${truck.id}\nStatus: ${truck.status}`);
+  };
+
+  return (
+    <div className="w-full h-screen relative">
+      <TruckMap
+        trucks={dummyTrucks}
+        onViewTruckDetails={handleViewTruckDetails}
+      />
+    </div>
+  );
+};
+
+export default TruckMapPage;

@@ -83,34 +83,34 @@ const CreateLoadModal: React.FC<CreateLoadModalProps> = ({
   const [activeTab, setActiveTab] = useState<"simple" | "advanced">("advanced");
 
   // Mock data for officers
-  const availableOfficers = [
-    { id: "1", name: "John Smith" },
-    { id: "2", name: "Sarah Johnson" },
-    { id: "3", name: "Michael Brown" },
-    { id: "4", name: "Emily Davis" },
-    { id: "5", name: "Robert Wilson" },
-  ];
+  // const availableOfficers = [
+  //   { id: "1", name: "John Smith" },
+  //   { id: "2", name: "Sarah Johnson" },
+  //   { id: "3", name: "Michael Brown" },
+  //   { id: "4", name: "Emily Davis" },
+  //   { id: "5", name: "Robert Wilson" },
+  // ];
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      location: "",
-      origin: "",
-      destination: "",
-      description: "",
-      priority: "medium",
-      estimatedTime: "1h",
-      assignedOfficers: [],
-      scheduledDate: "",
-      pickupTime: "",
-      deliveryTime: "",
-      weight: "",
-      distance: "",
-      vehicleType: "Box truck",
-      reference: "",
-    },
-  });
+  // const form = useForm<FormValues>({
+  //   resolver: zodResolver(formSchema),
+  //   defaultValues: {
+  //     title: "",
+  //     location: "",
+  //     origin: "",
+  //     destination: "",
+  //     description: "",
+  //     priority: "medium",
+  //     estimatedTime: "1h",
+  //     assignedOfficers: [],
+  //     scheduledDate: "",
+  //     pickupTime: "",
+  //     deliveryTime: "",
+  //     weight: "",
+  //     distance: "",
+  //     vehicleType: "Box truck",
+  //     reference: "",
+  //   },
+  // });
 
   // const handleSubmit = (data1: FormValues, data2: FormValues) => {
 
@@ -138,26 +138,26 @@ const CreateLoadModal: React.FC<CreateLoadModalProps> = ({
   //   console.log("Load created as load:", loadData);
   // };
 
-  const toggleOfficerSelection = (officerId: string) => {
-    setSelectedOfficers((prev) => {
-      if (prev.includes(officerId)) {
-        return prev.filter((id) => id !== officerId);
-      } else {
-        return [...prev, officerId];
-      }
-    });
+  // const toggleOfficerSelection = (officerId: string) => {
+  //   setSelectedOfficers((prev) => {
+  //     if (prev.includes(officerId)) {
+  //       return prev.filter((id) => id !== officerId);
+  //     } else {
+  //       return [...prev, officerId];
+  //     }
+  //   });
 
-    // Update form value
-    const currentOfficers = form.getValues().assignedOfficers || [];
-    if (currentOfficers.includes(officerId)) {
-      form.setValue(
-        "assignedOfficers",
-        currentOfficers.filter((id) => id !== officerId)
-      );
-    } else {
-      form.setValue("assignedOfficers", [...currentOfficers, officerId]);
-    }
-  };
+  //   // Update form value
+  //   const currentOfficers = form.getValues().assignedOfficers || [];
+  //   if (currentOfficers.includes(officerId)) {
+  //     form.setValue(
+  //       "assignedOfficers",
+  //       currentOfficers.filter((id) => id !== officerId)
+  //     );
+  //   } else {
+  //     form.setValue("assignedOfficers", [...currentOfficers, officerId]);
+  //   }
+  // };
 
   const handleCancel = () => {
     onOpenChange(false);

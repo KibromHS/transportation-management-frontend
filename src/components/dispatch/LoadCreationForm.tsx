@@ -577,6 +577,7 @@ const LoadCreationForm = ({
                     placeholder="enter reference number 1"
                     value={form1Data.reference_number}
                     onChange={handleInput1Change}
+                    required
                   />
                 </div>
 
@@ -588,6 +589,7 @@ const LoadCreationForm = ({
                     placeholder="total rate"
                     value={form1Data.total_charges}
                     onChange={handleInput1Change}
+                    required
                   />
                 </div>
 
@@ -598,6 +600,7 @@ const LoadCreationForm = ({
                     onValueChange={(value) =>
                       handleSelect1Change("currency", value)
                     }
+                    required
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select currency" />
@@ -644,6 +647,7 @@ const LoadCreationForm = ({
                             Number(value)
                           )
                         }
+                        required
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="choose facility name" />
@@ -679,6 +683,7 @@ const LoadCreationForm = ({
                       onValueChange={(value) =>
                         handleSelect2Change("pickup_timezone", value)
                       }
+                      required
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select time zone" />
@@ -725,6 +730,7 @@ const LoadCreationForm = ({
                         value={form2Data.pickup_time_from}
                         onChange={handleInput2Change}
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        required
                       />
                     </div>
                   </div>
@@ -762,6 +768,7 @@ const LoadCreationForm = ({
                         value={form2Data.pickup_time_to}
                         onChange={handleInput2Change}
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        required
                       />
                     </div>
                   </div>
@@ -817,6 +824,7 @@ const LoadCreationForm = ({
                       value={form2Data.pieces}
                       onChange={handleInput2Change}
                       type="number"
+                      required
                     />
                   </div>
 
@@ -828,6 +836,7 @@ const LoadCreationForm = ({
                         value={form2Data.weight}
                         onChange={handleInput2Change}
                         type="number"
+                        required
                       />
                       <div className="bg-gray-100 px-2 py-2 border border-l-0 rounded-r-md text-black">
                         {form2Data.weight_unit_of_measeurement}
@@ -844,6 +853,7 @@ const LoadCreationForm = ({
                         onChange={handleInput2Change}
                         type="number"
                         className="rounded-r-none"
+                        required
                       />
                       <div className="bg-gray-100 px-2 py-2 border border-l-0 rounded-r-md text-black">
                         {form2Data.length_unit_of_measeurement}
@@ -860,6 +870,7 @@ const LoadCreationForm = ({
                         onChange={handleInput2Change}
                         type="number"
                         className="rounded-r-none"
+                        required
                       />
                       <div className="bg-gray-100 px-2 py-2 border border-l-0 rounded-r-md text-black">
                         {form2Data.length_unit_of_measeurement}
@@ -876,6 +887,7 @@ const LoadCreationForm = ({
                         onChange={handleInput2Change}
                         type="number"
                         className="rounded-r-none"
+                        required
                       />
                       <div className="bg-gray-100 px-2 py-2 border border-l-0 rounded-r-md text-black">
                         {form2Data.length_unit_of_measeurement}
@@ -929,6 +941,7 @@ const LoadCreationForm = ({
                             Number(value)
                           )
                         }
+                        required
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="choose facility name" />
@@ -964,6 +977,7 @@ const LoadCreationForm = ({
                       onValueChange={(value) =>
                         handleSelect2Change("delivery_timezone", value)
                       }
+                      required
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select time zone" />
@@ -1010,6 +1024,7 @@ const LoadCreationForm = ({
                         value={form2Data.delivery_time_from}
                         onChange={handleInput2Change}
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        required
                       />
                     </div>
                   </div>
@@ -1047,6 +1062,7 @@ const LoadCreationForm = ({
                         value={form2Data.delivery_time_to}
                         onChange={handleInput2Change}
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        required
                       />
                     </div>
                   </div>
@@ -1074,6 +1090,7 @@ const LoadCreationForm = ({
                       onValueChange={(value) =>
                         handleSelect2Change("driver_id", Number(value))
                       }
+                      required
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="choose driver from the list" />

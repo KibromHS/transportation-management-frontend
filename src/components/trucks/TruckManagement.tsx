@@ -1021,6 +1021,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
 
               {/* THIS IS THE UPDATED CONTAINER IN TRUCKMANAGEMENT.TSX */}
               {/* This div provides the border, background, and fixed height */}
+
               <div className="border rounded-md bg-slate-100 h-[400px] relative overflow-hidden">
                 <TruckMap
                   trucks={trucks}

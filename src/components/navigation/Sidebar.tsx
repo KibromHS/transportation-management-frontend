@@ -245,11 +245,11 @@ const SidebarContent = ({
         //   icon: <Map className="h-5 w-5" />,
         //   href: "/dispatcher/map",
         // },
-        {
-          title: "Task Management",
-          icon: <CheckCircle className="h-5 w-5" />,
-          href: "/dispatcher/tasks",
-        },
+        // {
+        //   title: "Task Management",
+        //   icon: <CheckCircle className="h-5 w-5" />,
+        //   href: "/dispatcher/tasks",
+        // },
       ],
       Dispatcher: [
         {
@@ -325,11 +325,11 @@ const SidebarContent = ({
         //   icon: <Map className="h-5 w-5" />,
         //   href: "/dispatcher/map",
         // },
-        {
-          title: "Task Management",
-          icon: <CheckCircle className="h-5 w-5" />,
-          href: "/dispatcher/tasks",
-        },
+        // {
+        //   title: "Task Management",
+        //   icon: <CheckCircle className="h-5 w-5" />,
+        //   href: "/dispatcher/tasks",
+        // },
       ],
 
       Officer: [

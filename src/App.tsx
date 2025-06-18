@@ -338,7 +338,7 @@ function App() {
 
               {/* Dispatcher routes */}
               <Route
-                path="/dispatcher/trucks"
+                path="/trucks"
                 element={
                   <ErrorBoundary>
                     {isAuthenticated ? <TrucksPage /> : <Navigate to="/" />}
@@ -346,7 +346,7 @@ function App() {
                 }
               />
               <Route
-                path="/dispatcher/auction"
+                path="/auctions"
                 element={
                   <ErrorBoundary>
                     {isAuthenticated ? <AuctionPage /> : <Navigate to="/" />}
@@ -354,7 +354,7 @@ function App() {
                 }
               />
               <Route
-                path="/dispatcher/loads"
+                path="/loads"
                 element={
                   <ErrorBoundary>
                     {isAuthenticated ? <LoadsPage /> : <Navigate to="/" />}
@@ -362,7 +362,7 @@ function App() {
                 }
               />
               <Route
-                path="/dispatcher/trip-monitor"
+                path="/trip-monitor"
                 element={
                   <ErrorBoundary>
                     {isAuthenticated ? (
@@ -374,7 +374,7 @@ function App() {
                 }
               />
               <Route
-                path="/dispatcher/owners"
+                path="/owners"
                 element={
                   <ErrorBoundary>
                     {isAuthenticated ? <OwnersPage /> : <Navigate to="/" />}
@@ -382,7 +382,7 @@ function App() {
                 }
               />
               <Route
-                path="/dispatcher/drivers"
+                path="/drivers"
                 element={
                   <ErrorBoundary>
                     {isAuthenticated ? <DriversPage /> : <Navigate to="/" />}
@@ -390,7 +390,7 @@ function App() {
                 }
               />
               <Route
-                path="/dispatcher/users"
+                path="/users"
                 element={
                   <ErrorBoundary>
                     {isAuthenticated ? <UsersPage /> : <Navigate to="/" />}
@@ -398,7 +398,7 @@ function App() {
                 }
               />
               <Route
-                path="/dispatcher/contragents"
+                path="/contragents"
                 element={
                   <ErrorBoundary>
                     {isAuthenticated ? (
@@ -410,16 +410,16 @@ function App() {
                 }
               />
 
-              <Route
+              {/* <Route
                 path="/dispatcher/tasks"
                 element={
                   <ErrorBoundary>
                     {isAuthenticated ? <TasksPage /> : <Navigate to="/" />}
                   </ErrorBoundary>
                 }
-              />
+              /> */}
               <Route
-                path="/dispatcher/reports"
+                path="/reports"
                 element={
                   <ErrorBoundary>
                     {isAuthenticated ? <ReportsPage /> : <Navigate to="/" />}
@@ -440,7 +440,7 @@ function App() {
               /> */}
 
               {/* Other role routes */}
-              <Route
+              {/* <Route
                 path="/officer/*"
                 element={
                   <ErrorBoundary>
@@ -499,7 +499,7 @@ function App() {
                     )}
                   </ErrorBoundary>
                 }
-              />
+              /> */}
 
               {/* Add tempobook route before the catch-all */}
               {import.meta.env.VITE_TEMPO === "true" && (

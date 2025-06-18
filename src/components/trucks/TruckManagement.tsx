@@ -496,12 +496,9 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
   const fetchTrucks = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem("auth-token");
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/trucks`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await getRequest(
+        `${import.meta.env.VITE_API_URL}/trucks`
+      );
       const data = await response.json();
       console.log("trucks response data:", data);
       if (response.ok) {
@@ -1025,7 +1022,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
               <div className="border rounded-md bg-slate-100 h-[400px] relative overflow-hidden">
                 <TruckMap
                   trucks={trucks}
-                  onViewTruckDetails={handleViewTruckDetails}
+                  handleViewTruckDetails={handleViewTruckDetails}
                 />
               </div>
 

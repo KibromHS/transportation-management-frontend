@@ -25,8 +25,8 @@ export interface TruckData {
 }
 
 interface TruckMapProps {
-  trucks: TruckData[];
-  onViewTruckDetails: (truck: TruckData) => void;
+  trucks: any[];
+  onViewTruckDetails: (truck: any) => void;
 }
 
 // --- TruckMap Component ---
@@ -110,21 +110,27 @@ const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
           onUnmount={onUnmount}
         >
           {trucks.map((truck) =>
-            isValidCoordinate(truck.latitude) &&
-            isValidCoordinate(truck.longitude) ? (
+            isValidCoordinate(Number(truck.latitude)) &&
+            isValidCoordinate(Number(truck.longitude)) ? (
               <MarkerF
                 key={truck.id}
-                position={{ lat: truck.latitude, lng: truck.longitude }}
+                position={{
+                  lat: Number(truck.latitude),
+                  lng: Number(truck.longitude),
+                }}
                 onClick={() => setSelectedTruck(truck)}
                 icon={getMarkerIcon(getStatusColorHex(truck.status))}
               >
                 {selectedTruck && selectedTruck.id === truck.id && (
                   <InfoWindowF
-                    position={{ lat: truck.latitude, lng: truck.longitude }}
+                    position={{
+                      lat: Number(truck.latitude),
+                      lng: Number(truck.longitude),
+                    }}
                     onCloseClick={() => setSelectedTruck(null)}
                   >
                     <div className="p-2">
-                      <h3 className="font-bold text-base">{truck.id}</h3>
+                      <h3 className="font-bold text-base">TRK-{truck.id}</h3>
                       <p className="text-sm">License: {truck.license_plate}</p>
                       <p className="text-sm">
                         Status:{" "}
@@ -185,62 +191,12 @@ const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
   );
 };
 
-// --- Dummy Data + Usage ---
-const dummyTrucks: TruckData[] = [
-  {
-    id: "TRUCK001",
-    license_plate: "AB123CD",
-    status: "available",
-    latitude: 38.9072,
-    longitude: -77.0369,
-    driver: { name: "John Doe", id: 1 },
-    address: "Washington, DC",
-    timestamps: new Date().toISOString(),
-  },
-  {
-    id: "TRUCK002",
-    license_plate: "XY456ZT",
-    status: "busy",
-    latitude: 38.9075,
-    longitude: -77.0434,
-    driver: { name: "Jane Smith", id: 2 },
-    address: "Capitol Hill, DC",
-    timestamps: new Date().toISOString(),
-  },
-  {
-    id: "TRUCK003",
-    license_plate: "LM789OP",
-    status: "offline",
-    latitude: 38.8895,
-    longitude: -77.0352,
-    driver: null,
-    address: "National Mall, DC",
-    timestamps: new Date().toISOString(),
-  },
-  {
-    id: "TRUCK004",
-    license_plate: "EF321GH",
-    status: "not_available",
-    latitude: 38.8951,
-    longitude: -77.0691,
-    driver: { name: "Ali Ahmed", id: 3 },
-    address: "Georgetown, DC",
-    timestamps: new Date().toISOString(),
-  },
-];
-
-const TruckMapPage = () => {
-  const handleViewTruckDetails = (truck: TruckData) => {
-    console.log("Viewing truck details:", truck);
-    alert(`Truck ID: ${truck.id}\nStatus: ${truck.status}`);
-  };
+const TruckMapPage = ({ trucks, handleViewTruckDetails }) => {
+  console.log("trucks in map:", trucks);
 
   return (
     <div className="w-full h-screen relative">
-      <TruckMap
-        trucks={dummyTrucks}
-        onViewTruckDetails={handleViewTruckDetails}
-      />
+      <TruckMap trucks={trucks} onViewTruckDetails={handleViewTruckDetails} />
     </div>
   );
 };

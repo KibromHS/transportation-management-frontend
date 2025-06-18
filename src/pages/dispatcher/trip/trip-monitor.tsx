@@ -33,47 +33,30 @@ const TripMonitorPage = () => {
   const [completedTrips, setCompletedTrips] = useState([]);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/trips`)
-      .then((res) => res.json())
-      .then((data) => {
-        setActiveTrips(
-          data.filter((d: any) => d.status != "DeliveryConfirmed")
-        );
-        setCompletedTrips(
-          data.filter((d: any) => d.status == "DeliveryConfirmed")
-        );
+    const fetchTrips = () => {
+      fetch(`${import.meta.env.VITE_API_URL}/trips`)
+        .then((res) => res.json())
+        .then((rdata) => {
+          const data = rdata.data;
+          console.log("Trip data:", data);
 
-        data.foreach((trip) => {
-          const source = new EventSource(
-            `${import.meta.env.VITE_API_URL}/trips/${trip.id}/stream`
+          setActiveTrips(
+            data.filter((d: any) => d.status !== "DeliveryConfirmed")
           );
-
-          source.addEventListener("trip_update", (event) => {
-            const update = JSON.parse(event.data);
-            console.log("Trip update received:", update);
-
-            setActiveTrips((prevTrips) =>
-              prevTrips.map((t) =>
-                t.id == update.id
-                  ? {
-                      ...t,
-                      status: update.status,
-                      updated_at: update.updated_at,
-                    }
-                  : t
-              )
-            );
-          });
-
-          source.onerror = (err) => {
-            console.error(`Error with trip ${trip.id} SSE:`, err);
-            source.close();
-          };
+          setCompletedTrips(
+            data.filter((d: any) => d.status === "DeliveryConfirmed")
+          );
+        })
+        .catch((err) => {
+          console.error("Failed to fetch trips:", err);
         });
-      })
-      .catch((err) => {
-        console.error("Failed to fetch trips:", err);
-      });
+    };
+
+    fetchTrips();
+
+    const intervalId = setInterval(fetchTrips, 10000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   // const activeTrips = [
@@ -181,13 +164,13 @@ const TripMonitorPage = () => {
   return (
     <ThemeAwareDashboardLayout pageTitle="Trip Monitor">
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
+        {/* <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Trip Monitor</h1>
           <Button onClick={handleViewAllOnMapClick}>
             <Map className="mr-2 h-4 w-4" />
             View All on Map
           </Button>
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card>
@@ -204,7 +187,7 @@ const TripMonitorPage = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 On Schedule
@@ -216,9 +199,9 @@ const TripMonitorPage = () => {
                 <span className="text-2xl font-bold">2</span>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
 
-          <Card>
+          {/* <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Delayed
@@ -230,18 +213,20 @@ const TripMonitorPage = () => {
                 <span className="text-2xl font-bold">0</span>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
 
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Completed Today
+                Completed
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center">
                 <Activity className="h-5 w-5 text-teal-500 mr-2" />
-                <span className="text-2xl font-bold">3</span>
+                <span className="text-2xl font-bold">
+                  {completedTrips.length}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -279,7 +264,7 @@ const TripMonitorPage = () => {
                       <div>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline">{trip.id}</Badge>
-                          <Badge variant="outline">Load: {trip.loadId}</Badge>
+                          <Badge variant="outline">Load: {trip.load_id}</Badge>
                           {getStatusBadge(trip.status)}
                         </div>
                         <CardTitle className="mt-2">{trip.title}</CardTitle>
@@ -313,7 +298,7 @@ const TripMonitorPage = () => {
                         <div className="flex items-center text-sm mt-2">
                           <Truck className="h-4 w-4 mr-1 text-muted-foreground" />
                           <span>
-                            {trip.driver} • {trip.truck}
+                            {trip.driver.name} • TRK-{trip.truck?.id}
                           </span>
                         </div>
                       </div>
@@ -384,7 +369,7 @@ const TripMonitorPage = () => {
                       <div>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline">{trip.id}</Badge>
-                          <Badge variant="outline">Load: {trip.loadId}</Badge>
+                          <Badge variant="outline">Load: {trip.load_id}</Badge>
                           {getStatusBadge(trip.status)}
                         </div>
                         <CardTitle className="mt-2">{trip.title}</CardTitle>
@@ -411,7 +396,7 @@ const TripMonitorPage = () => {
                         <div className="flex items-center text-sm mt-2">
                           <Truck className="h-4 w-4 mr-1 text-muted-foreground" />
                           <span>
-                            {trip.driver} • {trip.truck}
+                            {trip.driver.name} • TRK-{trip.truck?.id}
                           </span>
                         </div>
                       </div>

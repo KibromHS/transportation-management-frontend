@@ -240,11 +240,11 @@ const SidebarContent = ({
           icon: <FileText className="h-5 w-5" />,
           href: "/dispatcher/reports",
         },
-        {
-          title: "Live Map",
-          icon: <Map className="h-5 w-5" />,
-          href: "/dispatcher/map",
-        },
+        // {
+        //   title: "Live Map",
+        //   icon: <Map className="h-5 w-5" />,
+        //   href: "/dispatcher/map",
+        // },
         {
           title: "Task Management",
           icon: <CheckCircle className="h-5 w-5" />,
@@ -320,11 +320,11 @@ const SidebarContent = ({
           icon: <FileText className="h-5 w-5" />,
           href: "/dispatcher/reports",
         },
-        {
-          title: "Live Map",
-          icon: <Map className="h-5 w-5" />,
-          href: "/dispatcher/map",
-        },
+        // {
+        //   title: "Live Map",
+        //   icon: <Map className="h-5 w-5" />,
+        //   href: "/dispatcher/map",
+        // },
         {
           title: "Task Management",
           icon: <CheckCircle className="h-5 w-5" />,

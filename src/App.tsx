@@ -139,10 +139,10 @@ const TasksPage = lazy(
       "./pages/dispatcher/tasks" /* webpackChunkName: "dispatcher-tasks" */
     )
 );
-const DispatcherMapPage = lazy(
-  () =>
-    import("./pages/dispatcher/map" /* webpackChunkName: "dispatcher-map" */)
-);
+// const DispatcherMapPage = lazy(
+//   () =>
+//     import("./pages/dispatcher/map" /* webpackChunkName: "dispatcher-map" */)
+// );
 
 // Memoized auth check for performance
 const useAuthCheck = () => {
@@ -426,7 +426,7 @@ function App() {
                   </ErrorBoundary>
                 }
               />
-              <Route
+              {/* <Route
                 path="/dispatcher/map"
                 element={
                   <ErrorBoundary>
@@ -437,7 +437,7 @@ function App() {
                     )}
                   </ErrorBoundary>
                 }
-              />
+              /> */}
 
               {/* Other role routes */}
               <Route

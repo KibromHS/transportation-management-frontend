@@ -92,9 +92,11 @@ const LoadsPage = () => {
     const loads: Load[] = data.data;
 
     if (response.ok) {
-      setActiveLoads(loads.filter((d) => d.trip.status != "DeliveryConfirmed"));
+      setActiveLoads(
+        loads.filter((d) => d.trip?.status != "DeliveryConfirmed")
+      );
       setCompletedLoads(
-        loads.filter((d) => d.trip.status == "DeliveryConfirmed")
+        loads.filter((d) => d.trip?.status == "DeliveryConfirmed")
       );
 
       console.log(activeLoads);

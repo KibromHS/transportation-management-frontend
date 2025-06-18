@@ -108,7 +108,7 @@ const AuctionPage = lazy(
 const TripMonitorPage = lazy(
   () =>
     import(
-      "./pages/dispatcher/trip-monitor" /* webpackChunkName: "dispatcher-trip" */
+      "./pages/dispatcher/trip/trip-monitor" /* webpackChunkName: "dispatcher-trip" */
     )
 );
 // const Loads = lazy(

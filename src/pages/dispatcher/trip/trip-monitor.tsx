@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ThemeAwareDashboardLayout from "@/components/layout/ThemeAwareDashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,99 +29,146 @@ import {
 const TripMonitorPage = () => {
   // Mock trips data
   const navigate = useNavigate();
-  const activeTrips = [
-    {
-      id: "T-1001",
-      loadId: "LD-1001",
-      title: "Electronics Shipment",
-      origin: "Chicago, IL",
-      destination: "Detroit, MI",
-      distance: "281 miles",
-      progress: 65,
-      status: "in_transit",
-      driver: "John Doe",
-      truck: "TRK-1001",
-      estimatedArrival: "Today, 4:30 PM",
-      startedAt: "Today, 8:00 AM",
-      currentLocation: "Near Toledo, OH",
-      lastUpdate: "10 minutes ago",
-    },
-    {
-      id: "T-1002",
-      loadId: "LD-1002",
-      title: "Furniture Delivery",
-      origin: "Detroit, MI",
-      destination: "Cleveland, OH",
-      distance: "169 miles",
-      progress: 25,
-      status: "in_transit",
-      driver: "Mike Smith",
-      truck: "TRK-1002",
-      estimatedArrival: "Today, 6:00 PM",
-      startedAt: "Today, 11:00 AM",
-      currentLocation: "Near Ann Arbor, MI",
-      lastUpdate: "5 minutes ago",
-    },
-    {
-      id: "T-1003",
-      loadId: "LD-1003",
-      title: "Medical Supplies",
-      origin: "Indianapolis, IN",
-      destination: "Columbus, OH",
-      distance: "175 miles",
-      progress: 0,
-      status: "scheduled",
-      driver: "Ryan Johnson",
-      truck: "TRK-1003",
-      estimatedArrival: "Tomorrow, 2:00 PM",
-      startedAt: "Tomorrow, 8:00 AM",
-      currentLocation: "Indianapolis, IN",
-      lastUpdate: "1 hour ago",
-    },
-  ];
+  const [activeTrips, setActiveTrips] = useState([]);
+  const [completedTrips, setCompletedTrips] = useState([]);
 
-  const completedTrips = [
-    {
-      id: "T-0998",
-      loadId: "LD-0998",
-      title: "Construction Materials",
-      origin: "St. Louis, MO",
-      destination: "Indianapolis, IN",
-      distance: "243 miles",
-      status: "completed",
-      driver: "Sarah Williams",
-      truck: "TRK-1004",
-      startedAt: "Jul 12, 8:00 AM",
-      completedAt: "Jul 12, 4:45 PM",
-      onTime: true,
-    },
-    {
-      id: "T-0999",
-      loadId: "LD-0999",
-      title: "Food Products",
-      origin: "Minneapolis, MN",
-      destination: "Milwaukee, WI",
-      distance: "337 miles",
-      status: "completed",
-      driver: "Dan Brown",
-      truck: "TRK-1005",
-      startedAt: "Jul 10, 7:00 AM",
-      completedAt: "Jul 10, 5:30 PM",
-      onTime: true,
-    },
-  ];
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/trips`)
+      .then((res) => res.json())
+      .then((data) => {
+        setActiveTrips(
+          data.filter((d: any) => d.status != "DeliveryConfirmed")
+        );
+        setCompletedTrips(
+          data.filter((d: any) => d.status == "DeliveryConfirmed")
+        );
+
+        data.foreach((trip) => {
+          const source = new EventSource(
+            `${import.meta.env.VITE_API_URL}/trips/${trip.id}/stream`
+          );
+
+          source.addEventListener("trip_update", (event) => {
+            const update = JSON.parse(event.data);
+            console.log("Trip update received:", update);
+
+            setActiveTrips((prevTrips) =>
+              prevTrips.map((t) =>
+                t.id == update.id
+                  ? {
+                      ...t,
+                      status: update.status,
+                      updated_at: update.updated_at,
+                    }
+                  : t
+              )
+            );
+          });
+
+          source.onerror = (err) => {
+            console.error(`Error with trip ${trip.id} SSE:`, err);
+            source.close();
+          };
+        });
+      })
+      .catch((err) => {
+        console.error("Failed to fetch trips:", err);
+      });
+  }, []);
+
+  // const activeTrips = [
+  //   {
+  //     id: "T-1001",
+  //     loadId: "LD-1001",
+  //     title: "Electronics Shipment",
+  //     origin: "Chicago, IL",
+  //     destination: "Detroit, MI",
+  //     distance: "281 miles",
+  //     progress: 65,
+  //     status: "in_transit",
+  //     driver: "John Doe",
+  //     truck: "TRK-1001",
+  //     estimatedArrival: "Today, 4:30 PM",
+  //     startedAt: "Today, 8:00 AM",
+  //     currentLocation: "Near Toledo, OH",
+  //     lastUpdate: "10 minutes ago",
+  //   },
+  //   {
+  //     id: "T-1002",
+  //     loadId: "LD-1002",
+  //     title: "Furniture Delivery",
+  //     origin: "Detroit, MI",
+  //     destination: "Cleveland, OH",
+  //     distance: "169 miles",
+  //     progress: 25,
+  //     status: "in_transit",
+  //     driver: "Mike Smith",
+  //     truck: "TRK-1002",
+  //     estimatedArrival: "Today, 6:00 PM",
+  //     startedAt: "Today, 11:00 AM",
+  //     currentLocation: "Near Ann Arbor, MI",
+  //     lastUpdate: "5 minutes ago",
+  //   },
+  //   {
+  //     id: "T-1003",
+  //     loadId: "LD-1003",
+  //     title: "Medical Supplies",
+  //     origin: "Indianapolis, IN",
+  //     destination: "Columbus, OH",
+  //     distance: "175 miles",
+  //     progress: 0,
+  //     status: "scheduled",
+  //     driver: "Ryan Johnson",
+  //     truck: "TRK-1003",
+  //     estimatedArrival: "Tomorrow, 2:00 PM",
+  //     startedAt: "Tomorrow, 8:00 AM",
+  //     currentLocation: "Indianapolis, IN",
+  //     lastUpdate: "1 hour ago",
+  //   },
+  // ];
+
+  // const completedTrips = [
+  //   {
+  //     id: "T-0998",
+  //     loadId: "LD-0998",
+  //     title: "Construction Materials",
+  //     origin: "St. Louis, MO",
+  //     destination: "Indianapolis, IN",
+  //     distance: "243 miles",
+  //     status: "completed",
+  //     driver: "Sarah Williams",
+  //     truck: "TRK-1004",
+  //     startedAt: "Jul 12, 8:00 AM",
+  //     completedAt: "Jul 12, 4:45 PM",
+  //     onTime: true,
+  //   },
+  //   {
+  //     id: "T-0999",
+  //     loadId: "LD-0999",
+  //     title: "Food Products",
+  //     origin: "Minneapolis, MN",
+  //     destination: "Milwaukee, WI",
+  //     distance: "337 miles",
+  //     status: "completed",
+  //     driver: "Dan Brown",
+  //     truck: "TRK-1005",
+  //     startedAt: "Jul 10, 7:00 AM",
+  //     completedAt: "Jul 10, 5:30 PM",
+  //     onTime: true,
+  //   },
+  // ];
 
   // Get status badge
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "in_transit":
-        return <Badge className="bg-green-500">In Transit</Badge>;
-      case "scheduled":
-        return <Badge className="bg-blue-500">Scheduled</Badge>;
-      case "delayed":
-        return <Badge className="bg-yellow-500">Delayed</Badge>;
-      case "completed":
-        return <Badge variant="secondary">Completed</Badge>;
+      case "Accepted":
+        return <Badge className="bg-green-500">Driver Accepted</Badge>;
+      case "PickupCheckedIn":
+        return <Badge className="bg-blue-500">Pickup Checkin</Badge>;
+      case "PickupConfirmed":
+        return <Badge className="bg-yellow-500">Pickup Confirmed</Badge>;
+      case "DeliveryCheckedIn":
+        return <Badge variant="secondary">Delivery Checkin</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }

@@ -1005,7 +1005,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
           <TabsContent value="map" className="mt-4">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Truck Locations</h3>
+                {/* <h3 className="text-lg font-medium">Truck Locations</h3> */}
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm">
                     <Filter className="h-4 w-4 mr-2" /> Filter
@@ -1019,7 +1019,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
               {/* THIS IS THE UPDATED CONTAINER IN TRUCKMANAGEMENT.TSX */}
               {/* This div provides the border, background, and fixed height */}
 
-              <div className="border rounded-md bg-slate-100 h-[400px] relative overflow-hidden">
+              <div className="border rounded-md bg-slate-100 h-[500px] relative overflow-hidden">
                 <TruckMap
                   trucks={trucks}
                   handleViewTruckDetails={handleViewTruckDetails}

@@ -448,7 +448,7 @@ const SidebarContent = ({
           <Shield className="h-8 w-8 text-teal-400 drop-shadow-md" />
           {!isCollapsed && (
             <span className="ml-2 text-xl font-bold tracking-tight bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
-              TMS
+              <a href="/">TMS</a>
             </span>
           )}
         </div>

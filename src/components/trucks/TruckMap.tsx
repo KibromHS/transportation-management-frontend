@@ -38,9 +38,30 @@ const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
   });
 
   const mapRef = useRef<google.maps.Map | null>(null);
-  const onLoad = useCallback((map: google.maps.Map) => {
-    mapRef.current = map;
-  }, []);
+  const onLoad = useCallback(
+    (map: google.maps.Map) => {
+      mapRef.current = map;
+
+      // Fit map to markers when loaded
+      if (trucks.length > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        trucks.forEach((truck) => {
+          if (
+            isValidCoordinate(truck.latitude) &&
+            isValidCoordinate(truck.longitude)
+          ) {
+            bounds.extend({
+              lat: Number(truck.latitude),
+              lng: Number(truck.longitude),
+            });
+          }
+        });
+        map.fitBounds(bounds);
+      }
+    },
+    [trucks]
+  );
+
   const onUnmount = useCallback(() => (mapRef.current = null), []);
 
   const [selectedTruck, setSelectedTruck] = useState<TruckData | null>(null);
@@ -50,21 +71,58 @@ const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
     typeof coord === "number" && isFinite(coord);
 
   const getMapCenter = useCallback(() => {
-    const firstValidTruck = trucks.find(
+    const validTrucks = trucks.filter(
       (truck) =>
         isValidCoordinate(truck.latitude) && isValidCoordinate(truck.longitude)
     );
-    return firstValidTruck
-      ? { lat: firstValidTruck.latitude, lng: firstValidTruck.longitude }
-      : defaultCenter;
+
+    if (validTrucks.length === 0) return defaultCenter;
+
+    // Calculate the average of all truck coordinates to center the map
+    const sumLat = validTrucks.reduce(
+      (sum, truck) => sum + Number(truck.latitude),
+      0
+    );
+    const sumLng = validTrucks.reduce(
+      (sum, truck) => sum + Number(truck.longitude),
+      0
+    );
+
+    return {
+      lat: sumLat / validTrucks.length,
+      lng: sumLng / validTrucks.length,
+    };
   }, [trucks]);
 
   const [mapCenter, setMapCenter] = useState(getMapCenter());
-  const zoom = 10;
+  const zoom = 3;
 
   useEffect(() => {
     setMapCenter(getMapCenter());
-  }, [trucks, getMapCenter]);
+
+    // Update bounds when trucks change
+    if (isLoaded && mapRef.current && trucks.length > 0) {
+      const bounds = new google.maps.LatLngBounds();
+      let hasValidCoordinates = false;
+
+      trucks.forEach((truck) => {
+        if (
+          isValidCoordinate(truck.latitude) &&
+          isValidCoordinate(truck.longitude)
+        ) {
+          bounds.extend({
+            lat: Number(truck.latitude),
+            lng: Number(truck.longitude),
+          });
+          hasValidCoordinates = true;
+        }
+      });
+
+      if (hasValidCoordinates) {
+        mapRef.current.fitBounds(bounds);
+      }
+    }
+  }, [trucks, getMapCenter, isLoaded]);
 
   const getStatusColorHex = (status: TruckData["status"]) => {
     switch (status) {
@@ -86,8 +144,52 @@ const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
     fillOpacity: 0.9,
     strokeColor: "#FFF",
     strokeWeight: 2,
-    scale: 8,
+    scale: 10, // Larger markers
   });
+
+  // Custom map styles for a cleaner look
+  const mapStyles = [
+    {
+      featureType: "administrative",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#444444" }],
+    },
+    {
+      featureType: "landscape",
+      elementType: "all",
+      stylers: [{ color: "#f2f2f2" }],
+    },
+    {
+      featureType: "poi",
+      elementType: "all",
+      stylers: [{ visibility: "off" }],
+    },
+    {
+      featureType: "road",
+      elementType: "all",
+      stylers: [{ saturation: -100 }, { lightness: 45 }],
+    },
+    {
+      featureType: "road.highway",
+      elementType: "all",
+      stylers: [{ visibility: "simplified" }],
+    },
+    {
+      featureType: "road.arterial",
+      elementType: "labels.icon",
+      stylers: [{ visibility: "off" }],
+    },
+    {
+      featureType: "transit",
+      elementType: "all",
+      stylers: [{ visibility: "off" }],
+    },
+    {
+      featureType: "water",
+      elementType: "all",
+      stylers: [{ color: "#b4d4e1" }, { visibility: "on" }],
+    },
+  ];
 
   if (loadError)
     return <div>Error loading Google Maps: {loadError.message}</div>;
@@ -108,6 +210,13 @@ const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
           zoom={zoom}
           onLoad={onLoad}
           onUnmount={onUnmount}
+          options={{
+            styles: mapStyles,
+            fullscreenControl: false,
+            streetViewControl: false,
+            mapTypeControl: false,
+            zoomControl: true,
+          }}
         >
           {trucks.map((truck) =>
             isValidCoordinate(Number(truck.latitude)) &&
@@ -129,26 +238,39 @@ const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
                     }}
                     onCloseClick={() => setSelectedTruck(null)}
                   >
-                    <div className="p-2">
-                      <h3 className="font-bold text-base">TRK-{truck.id}</h3>
-                      <p className="text-sm">License: {truck.license_plate}</p>
-                      <p className="text-sm">
-                        Status:{" "}
+                    <div className="p-3 min-w-[200px]">
+                      <h3 className="font-bold text-black mb-1">
+                        Truck #{truck.id}
+                      </h3>
+                      <p className="text-sm mb-1 text-black">
+                        <strong>License:</strong> {truck.license_plate}
+                      </p>
+                      <p className="text-sm mb-1">
+                        <strong>Status:</strong>{" "}
                         <span
                           style={{
                             backgroundColor: getStatusColorHex(truck.status),
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            color: "white",
+                            fontSize: "0.75rem",
                           }}
-                          className="px-1 rounded text-white"
                         >
-                          {truck.status}
+                          {truck.status.replace("_", " ")}
                         </span>
                       </p>
-                      <p className="text-xs text-gray-600 flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> {truck.address}
+                      {truck.driver && (
+                        <p className="text-sm mb-1">
+                          <strong>Driver:</strong> {truck.driver.name}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-600 flex items-center gap-1 mb-2">
+                        <MapPin className="h-3 w-3" />{" "}
+                        {`${truck.city}, ${truck.state}` ||
+                          "No address provided"}
                       </p>
-                      <a
-                        href="#"
-                        className="text-blue-600 text-sm mt-1 block"
+                      <button
+                        className="text-white bg-blue-600 hover:bg-blue-700 text-sm py-1 px-3 rounded w-full"
                         onClick={(e) => {
                           e.preventDefault();
                           onViewTruckDetails(truck);
@@ -156,7 +278,7 @@ const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
                         }}
                       >
                         View Details
-                      </a>
+                      </button>
                     </div>
                   </InfoWindowF>
                 )}
@@ -167,13 +289,15 @@ const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
       )}
 
       {/* Legend */}
-      <div className="absolute bottom-4 right-4 bg-white p-2 rounded-md shadow-md z-[1000]">
-        <div className="text-sm font-medium mb-1 text-gray-800">Legend</div>
-        <div className="space-y-1">
+      {/* <div className="absolute bottom-4 right-4 bg-white p-3 rounded-md shadow-md z-[1000]">
+        <div className="text-sm font-medium mb-2 text-gray-800">
+          Truck Status
+        </div>
+        <div className="space-y-2">
           {["available", "busy", "not_available", "offline"].map((status) => (
             <div key={status} className="flex items-center gap-2">
               <div
-                className="h-3 w-3 rounded-full"
+                className="h-4 w-4 rounded-full"
                 style={{
                   backgroundColor: getStatusColorHex(
                     status as TruckData["status"]
@@ -186,16 +310,14 @@ const TruckMap: React.FC<TruckMapProps> = ({ trucks, onViewTruckDetails }) => {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
     </>
   );
 };
 
 const TruckMapPage = ({ trucks, handleViewTruckDetails }) => {
-  console.log("trucks in map:", trucks);
-
   return (
-    <div className="w-full h-screen relative">
+    <div className="w-full h-[600px] relative">
       <TruckMap trucks={trucks} onViewTruckDetails={handleViewTruckDetails} />
     </div>
   );

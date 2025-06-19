@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { useNavigate } from "react-router-dom"; // Add this line
+import { useNavigate } from "react-router-dom";
 import {
   Truck,
   MapPin,
@@ -24,13 +24,17 @@ import {
   Map,
   MessageSquare,
   PhoneCall,
+  FileText,
+  FileCheck,
 } from "lucide-react";
+import axios from "axios";
+import { patchRequest, postRequest } from "@/api/request";
 
 const TripMonitorPage = () => {
-  // Mock trips data
   const navigate = useNavigate();
   const [activeTrips, setActiveTrips] = useState([]);
   const [completedTrips, setCompletedTrips] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchTrips = () => {
@@ -40,11 +44,9 @@ const TripMonitorPage = () => {
           const data = rdata.data;
           console.log("Trip data:", data);
 
-          setActiveTrips(
-            data.filter((d: any) => d.status !== "DeliveryConfirmed")
-          );
+          setActiveTrips(data.filter((d) => d.status !== "DeliveryConfirmed"));
           setCompletedTrips(
-            data.filter((d: any) => d.status === "DeliveryConfirmed")
+            data.filter((d) => d.status === "DeliveryConfirmed")
           );
         })
         .catch((err) => {
@@ -59,91 +61,11 @@ const TripMonitorPage = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  // const activeTrips = [
-  //   {
-  //     id: "T-1001",
-  //     loadId: "LD-1001",
-  //     title: "Electronics Shipment",
-  //     origin: "Chicago, IL",
-  //     destination: "Detroit, MI",
-  //     distance: "281 miles",
-  //     progress: 65,
-  //     status: "in_transit",
-  //     driver: "John Doe",
-  //     truck: "TRK-1001",
-  //     estimatedArrival: "Today, 4:30 PM",
-  //     startedAt: "Today, 8:00 AM",
-  //     currentLocation: "Near Toledo, OH",
-  //     lastUpdate: "10 minutes ago",
-  //   },
-  //   {
-  //     id: "T-1002",
-  //     loadId: "LD-1002",
-  //     title: "Furniture Delivery",
-  //     origin: "Detroit, MI",
-  //     destination: "Cleveland, OH",
-  //     distance: "169 miles",
-  //     progress: 25,
-  //     status: "in_transit",
-  //     driver: "Mike Smith",
-  //     truck: "TRK-1002",
-  //     estimatedArrival: "Today, 6:00 PM",
-  //     startedAt: "Today, 11:00 AM",
-  //     currentLocation: "Near Ann Arbor, MI",
-  //     lastUpdate: "5 minutes ago",
-  //   },
-  //   {
-  //     id: "T-1003",
-  //     loadId: "LD-1003",
-  //     title: "Medical Supplies",
-  //     origin: "Indianapolis, IN",
-  //     destination: "Columbus, OH",
-  //     distance: "175 miles",
-  //     progress: 0,
-  //     status: "scheduled",
-  //     driver: "Ryan Johnson",
-  //     truck: "TRK-1003",
-  //     estimatedArrival: "Tomorrow, 2:00 PM",
-  //     startedAt: "Tomorrow, 8:00 AM",
-  //     currentLocation: "Indianapolis, IN",
-  //     lastUpdate: "1 hour ago",
-  //   },
-  // ];
-
-  // const completedTrips = [
-  //   {
-  //     id: "T-0998",
-  //     loadId: "LD-0998",
-  //     title: "Construction Materials",
-  //     origin: "St. Louis, MO",
-  //     destination: "Indianapolis, IN",
-  //     distance: "243 miles",
-  //     status: "completed",
-  //     driver: "Sarah Williams",
-  //     truck: "TRK-1004",
-  //     startedAt: "Jul 12, 8:00 AM",
-  //     completedAt: "Jul 12, 4:45 PM",
-  //     onTime: true,
-  //   },
-  //   {
-  //     id: "T-0999",
-  //     loadId: "LD-0999",
-  //     title: "Food Products",
-  //     origin: "Minneapolis, MN",
-  //     destination: "Milwaukee, WI",
-  //     distance: "337 miles",
-  //     status: "completed",
-  //     driver: "Dan Brown",
-  //     truck: "TRK-1005",
-  //     startedAt: "Jul 10, 7:00 AM",
-  //     completedAt: "Jul 10, 5:30 PM",
-  //     onTime: true,
-  //   },
-  // ];
-
   // Get status badge
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status) => {
     switch (status) {
+      case "Requested":
+        return <Badge className="bg-blue-400">Requested</Badge>;
       case "Accepted":
         return <Badge className="bg-green-500">Driver Accepted</Badge>;
       case "PickupCheckedIn":
@@ -151,9 +73,31 @@ const TripMonitorPage = () => {
       case "PickupConfirmed":
         return <Badge className="bg-yellow-500">Pickup Confirmed</Badge>;
       case "DeliveryCheckedIn":
-        return <Badge variant="secondary">Delivery Checkin</Badge>;
+        return <Badge className="bg-purple-500">Delivery Checkin</Badge>;
+      case "DeliveryConfirmed":
+        return <Badge className="bg-green-600">Delivery Confirmed</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  // Calculate progress based on status
+  const calculateProgress = (status) => {
+    switch (status) {
+      case "Requested":
+        return 0;
+      case "Accepted":
+        return 20;
+      case "PickupCheckedIn":
+        return 40;
+      case "PickupConfirmed":
+        return 60;
+      case "DeliveryCheckedIn":
+        return 80;
+      case "DeliveryConfirmed":
+        return 100;
+      default:
+        return 0;
     }
   };
 
@@ -161,17 +105,121 @@ const TripMonitorPage = () => {
     navigate("/map");
   };
 
+  const confirmPickup = async (loadId, tripId) => {
+    setLoading(true);
+    const url = `${
+      import.meta.env.VITE_API_URL
+    }/trips/${loadId}/pickupconfirmed`;
+    try {
+      const response = await postRequest(url, { status: "PickupConfirmed" });
+      if (response.ok) {
+        setActiveTrips((prevTrips) =>
+          prevTrips.map((trip) =>
+            trip.id == tripId ? { ...trip, status: "PickupConfirmed" } : trip
+          )
+        );
+      }
+    } catch (e) {
+      console.error("Failed to confirm pickup", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmDelivery = async (loadId, tripId) => {
+    setLoading(true);
+    const url = `${
+      import.meta.env.VITE_API_URL
+    }/trips/${loadId}/deliveryconfirmed`;
+    try {
+      const response = await postRequest(url, { status: "DeliveryConfirmed" });
+      if (response.ok) {
+        const tripToMove = activeTrips.find((trip) => trip.id === tripId);
+        if (tripToMove) {
+          setActiveTrips((prevTrips) =>
+            prevTrips.filter((trip) => trip.id !== tripId)
+          );
+          setCompletedTrips((prevTrips) => [
+            ...prevTrips,
+            { ...tripToMove, status: "DeliveryConfirmed" },
+          ]);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to confirm delivery", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Render document viewer
+  const DocumentViewer = ({ documentUrl, documentType }) => {
+    if (!documentUrl) return null;
+
+    return (
+      <div className="mt-2">
+        <div className="flex items-center mb-2">
+          <FileText className="h-4 w-4 mr-2 text-blue-500" />
+          <span className="font-medium">{documentType} Document</span>
+        </div>
+        <div className="border rounded-md p-2 bg-gray-50 dark:bg-gray-800">
+          <a
+            href={`${import.meta.env.VITE_FILE_URL}${documentUrl}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline flex items-center"
+          >
+            <FileCheck className="h-4 w-4 mr-1" />
+            View {documentType} Document
+          </a>
+        </div>
+      </div>
+    );
+  };
+
+  // Render action buttons based on trip status
+  const renderStatusActions = (trip) => {
+    switch (trip.status) {
+      case "PickupCheckedIn":
+        return (
+          <div className="mt-3">
+            <DocumentViewer
+              documentUrl={trip.bolDocumentUrl}
+              documentType="BOL"
+            />
+            <Button
+              className="mt-3 bg-green-600 hover:bg-green-700"
+              disabled={loading || !trip.bolDocumentUrl}
+              onClick={() => confirmPickup(trip.load_id, trip.id)}
+            >
+              Confirm Pickup
+            </Button>
+          </div>
+        );
+      case "DeliveryCheckedIn":
+        return (
+          <div className="mt-3">
+            <DocumentViewer
+              documentUrl={trip.podDocumentUrl}
+              documentType="POD"
+            />
+            <Button
+              className="mt-3 bg-green-600 hover:bg-green-700"
+              disabled={loading || !trip.podDocumentUrl}
+              onClick={() => confirmDelivery(trip.load_id, trip.id)}
+            >
+              Confirm Delivery
+            </Button>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <ThemeAwareDashboardLayout pageTitle="Trip Monitor">
       <div className="p-6">
-        {/* <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Trip Monitor</h1>
-          <Button onClick={handleViewAllOnMapClick}>
-            <Map className="mr-2 h-4 w-4" />
-            View All on Map
-          </Button>
-        </div> */}
-
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardHeader className="pb-2">
@@ -186,34 +234,6 @@ const TripMonitorPage = () => {
               </div>
             </CardContent>
           </Card>
-
-          {/* <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                On Schedule
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                <span className="text-2xl font-bold">2</span>
-              </div>
-            </CardContent>
-          </Card> */}
-
-          {/* <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Delayed
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
-                <span className="text-2xl font-bold">0</span>
-              </div>
-            </CardContent>
-          </Card> */}
 
           <Card>
             <CardHeader className="pb-2">
@@ -263,11 +283,13 @@ const TripMonitorPage = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline">{trip.id}</Badge>
-                          <Badge variant="outline">Load: {trip.load_id}</Badge>
+                          <Badge variant="outline">Trip-{trip.id}</Badge>
+                          <Badge variant="outline">Load-{trip.load_id}</Badge>
                           {getStatusBadge(trip.status)}
                         </div>
-                        <CardTitle className="mt-2">{trip.title}</CardTitle>
+                        <CardTitle className="mt-2">
+                          Load #{trip.load_id}
+                        </CardTitle>
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm">
@@ -285,39 +307,39 @@ const TripMonitorPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="space-y-2">
                         <div className="flex items-center text-sm">
-                          <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
-                          <span className="font-medium">{trip.origin}</span>
-                          <ArrowRight className="h-4 w-4 mx-2" />
-                          <span className="font-medium">
-                            {trip.destination}
-                          </span>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {trip.distance}
-                        </div>
-                        <div className="flex items-center text-sm mt-2">
                           <Truck className="h-4 w-4 mr-1 text-muted-foreground" />
                           <span>
-                            {trip.driver.name} • TRK-{trip.truck?.id}
+                            {trip.driver?.name || "No driver assigned"} •
+                            {trip.driver?.truck
+                              ? ` TRK-${trip.driver.truck.id}`
+                              : " No truck"}
                           </span>
                         </div>
+
+                        {/* Status-specific action area */}
+                        {renderStatusActions(trip)}
                       </div>
 
                       <div className="space-y-2">
                         <h3 className="text-sm font-medium text-muted-foreground">
                           Progress
                         </h3>
-                        <Progress value={trip.progress} className="h-2" />
+                        <Progress
+                          value={calculateProgress(trip.status)}
+                          className="h-2"
+                        />
                         <div className="flex justify-between text-sm">
-                          <span>{trip.progress}% Complete</span>
-                          <span className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            ETA: {trip.estimatedArrival}
+                          <span>
+                            {calculateProgress(trip.status)}% Complete
                           </span>
                         </div>
-                        <div className="flex items-center text-sm mt-2">
-                          <Route className="h-4 w-4 mr-1 text-muted-foreground" />
-                          <span>Current location: {trip.currentLocation}</span>
+                        <div className="mt-2">
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">
+                              Current Status:{" "}
+                            </span>
+                            <span className="font-medium">{trip.status}</span>
+                          </div>
                         </div>
                       </div>
 
@@ -325,23 +347,25 @@ const TripMonitorPage = () => {
                         <div className="grid grid-cols-2 gap-2">
                           <div>
                             <p className="text-sm text-muted-foreground">
-                              Started
+                              Created
                             </p>
                             <p className="text-sm font-medium">
-                              {trip.startedAt}
+                              {new Date(trip.created_at).toLocaleString()}
                             </p>
                           </div>
                           <div>
-                            <p className="text-sm text-muted-foreground">ETA</p>
+                            <p className="text-sm text-muted-foreground">
+                              Last Updated
+                            </p>
                             <p className="text-sm font-medium">
-                              {trip.estimatedArrival}
+                              {new Date(trip.updated_at).toLocaleString()}
                             </p>
                           </div>
                         </div>
                         <Separator className="my-2" />
                         <div className="flex justify-between items-center">
                           <div className="text-sm text-muted-foreground">
-                            Last update: {trip.lastUpdate}
+                            Driver Phone: {trip.driver?.phone || "N/A"}
                           </div>
                           <div className="flex gap-2">
                             <Button variant="ghost" size="sm">
@@ -357,6 +381,12 @@ const TripMonitorPage = () => {
                   </CardContent>
                 </Card>
               ))}
+
+              {activeTrips.length === 0 && (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground">No active trips found</p>
+                </div>
+              )}
             </div>
           </TabsContent>
 
@@ -368,11 +398,13 @@ const TripMonitorPage = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline">{trip.id}</Badge>
-                          <Badge variant="outline">Load: {trip.load_id}</Badge>
+                          <Badge variant="outline">Trip-{trip.id}</Badge>
+                          <Badge variant="outline">Load-{trip.load_id}</Badge>
                           {getStatusBadge(trip.status)}
                         </div>
-                        <CardTitle className="mt-2">{trip.title}</CardTitle>
+                        <CardTitle className="mt-2">
+                          Load #{trip.load_id}
+                        </CardTitle>
                       </div>
                       <Button variant="outline" size="sm">
                         View Report
@@ -382,22 +414,25 @@ const TripMonitorPage = () => {
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <div className="flex items-center text-sm">
-                          <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
-                          <span className="font-medium">{trip.origin}</span>
-                          <ArrowRight className="h-4 w-4 mx-2" />
-                          <span className="font-medium">
-                            {trip.destination}
-                          </span>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {trip.distance}
-                        </div>
                         <div className="flex items-center text-sm mt-2">
                           <Truck className="h-4 w-4 mr-1 text-muted-foreground" />
                           <span>
-                            {trip.driver.name} • TRK-{trip.truck?.id}
+                            {trip.driver?.name || "No driver assigned"} •
+                            {trip.driver?.truck
+                              ? ` TRK-${trip.driver.truck.id}`
+                              : " No truck"}
                           </span>
+                        </div>
+
+                        <div className="mt-4 space-y-3">
+                          <DocumentViewer
+                            documentUrl={trip.bolDocumentUrl}
+                            documentType="BOL"
+                          />
+                          <DocumentViewer
+                            documentUrl={trip.podDocumentUrl}
+                            documentType="POD"
+                          />
                         </div>
                       </div>
 
@@ -405,10 +440,10 @@ const TripMonitorPage = () => {
                         <div className="grid grid-cols-2 gap-2">
                           <div>
                             <p className="text-sm text-muted-foreground">
-                              Started
+                              Created
                             </p>
                             <p className="text-sm font-medium">
-                              {trip.startedAt}
+                              {new Date(trip.created_at).toLocaleString()}
                             </p>
                           </div>
                           <div>
@@ -416,22 +451,26 @@ const TripMonitorPage = () => {
                               Completed
                             </p>
                             <p className="text-sm font-medium">
-                              {trip.completedAt}
+                              {new Date(trip.updated_at).toLocaleString()}
                             </p>
                           </div>
                         </div>
                         <div className="mt-2 flex items-center">
-                          {trip.onTime ? (
-                            <Badge className="bg-green-500">On Time</Badge>
-                          ) : (
-                            <Badge className="bg-yellow-500">Delayed</Badge>
-                          )}
+                          <Badge className="bg-green-500">Completed</Badge>
                         </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               ))}
+
+              {completedTrips.length === 0 && (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground">
+                    No completed trips found
+                  </p>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

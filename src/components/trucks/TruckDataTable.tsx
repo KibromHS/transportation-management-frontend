@@ -37,7 +37,7 @@ import {
 import { useAuthContext } from "@/context/AuthContext";
 
 export interface TruckDataItem {
-  id: string;
+  id: number;
   documentStatus?: "expired" | "warning" | "valid";
   truck_type_name: string;
   preferred_load: string;
@@ -67,10 +67,10 @@ export interface TruckDataItem {
 
 interface TruckDataTableProps {
   data: TruckDataItem[];
-  onReserve?: (truckId: string) => void;
+  onReserve?: (truckId: number) => void;
   onViewDetails?: (truckId: string) => void;
   onEdit?: (truckId: string) => void;
-  onArchive?: (truckId: string) => void;
+  onArchive?: (truckId: number) => void;
   onViewLogs?: (truckId: string) => void;
 }
 
@@ -358,26 +358,26 @@ const TruckDataTable: React.FC<TruckDataTableProps> = ({
                       </DropdownMenuTrigger>
                       {user.role == "admin" && (
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
+                          {/* <DropdownMenuItem
                             onClick={() =>
                               onViewDetails && onViewDetails(truck.id)
                             }
                           >
                             <ExternalLink className="mr-2 h-4 w-4" />
                             View Details
-                          </DropdownMenuItem>
+                          </DropdownMenuItem> */}
                           {/* <DropdownMenuItem
                             onClick={() => onViewLogs && onViewLogs(truck.id)}
                           >
                             <FileText className="mr-2 h-4 w-4" />
                             View Logs
                           </DropdownMenuItem> */}
-                          <DropdownMenuItem
+                          {/* <DropdownMenuItem
                             onClick={() => onEdit && onEdit(truck.id)}
                           >
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
-                          </DropdownMenuItem>
+                          </DropdownMenuItem> */}
                           <DropdownMenuItem
                             onClick={() => onArchive && onArchive(truck.id)}
                             className="text-red-600"

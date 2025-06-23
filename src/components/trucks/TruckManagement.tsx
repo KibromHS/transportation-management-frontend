@@ -70,7 +70,7 @@ export interface TruckData {
   latitude: number;
   longitude: number;
   address: string;
-  driver: {
+  driver?: {
     name: string;
     id: number;
   };
@@ -697,10 +697,10 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
       latitude: data.latitude ?? 0,
       longitude: data.longitude ?? 0,
       address: data.address,
-      driver: {
-        name: data.driver.name,
-        id: driverId,
-      },
+      // driver: {
+      //   name: data.driver.name,
+      //   id: driverId,
+      // },
       status: "available",
       preferred_load: data.preferred_load,
       is_reserved: false,
@@ -789,16 +789,23 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
     }
   };
 
-  // Handle Delta Express truck actions
-  const handleReserveTruck = (truckId: string) => {
+  const handleReserveTruck = async (truckId: number) => {
     console.log(`Reserve truck ${truckId}`);
+    const response = await patchRequest(`${import.meta.env.VITE_API_URL}`, {
+      is_reserved: 1,
+    });
+    if (response.ok) {
+      fetchTrucks();
+    } else {
+      console.error("Failed to reserve truck");
+    }
   };
 
   const handleViewTruckLogs = (truckId: string) => {
     console.log(`View logs for truck ${truckId}`);
   };
 
-  const handleDeleteTruck = async (truckId: string) => {
+  const handleDeleteTruck = async (truckId: number) => {
     const response = await deleteRequest(
       `${import.meta.env.VITE_API_URL}/trucks/${truckId}`
     );

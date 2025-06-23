@@ -176,7 +176,7 @@ const CreateLoadModal: React.FC<CreateLoadModalProps> = ({
             Create New Load
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Fill in the details to create a new load task.
+            Fill in the details to create a new load.
           </DialogDescription>
         </DialogHeader>
 

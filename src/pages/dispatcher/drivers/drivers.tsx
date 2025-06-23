@@ -57,10 +57,11 @@ interface DriverModel {
   phone: string;
   is_active: boolean;
   is_available: boolean;
-  address?: string;
   truck: {
     id: number;
     address: string;
+    city: string;
+    state: string;
   };
 }
 
@@ -510,7 +511,9 @@ const DriversPage = () => {
                         <TableCell>
                           <div className="flex items-center">
                             <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
-                            {driver.address ?? "Unknown"}
+                            {driver.truck == null
+                              ? "Unknown"
+                              : `${driver.truck.city}, ${driver.truck.state}`}
                           </div>
                         </TableCell>
                         <TableCell>

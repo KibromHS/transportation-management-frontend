@@ -111,6 +111,7 @@ const AddTruckForm: React.FC<AddTruckFormProps> = ({
       trailer_type_id: 0,
       equipment: [],
     });
+    setDriverId(0);
   };
 
   useEffect(() => {

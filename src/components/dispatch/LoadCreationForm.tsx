@@ -296,13 +296,13 @@ const LoadCreationForm = ({
           type="radio"
           id="direct"
           name="timeFrame"
-          value="DIRECT"
-          checked={form2Data.pickup_priority === "DIRECT"}
-          onChange={() => handleSelect2Change("pickup_priority", "DIRECT")}
+          value="ASAP"
+          checked={form2Data.pickup_priority === "ASAP"}
+          onChange={() => handleSelect2Change("pickup_priority", "ASAP")}
           className="h-4 w-4"
         />
         <label htmlFor="direct" className="text-sm">
-          DIRECT
+          ASAP
         </label>
       </div>
     </div>
@@ -386,14 +386,14 @@ const LoadCreationForm = ({
   // );
 
   return (
-    <Card className="w-full max-w-4xl mx-auto bg-background">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold">Create Load Card</CardTitle>
-        <CardDescription>
-          Enter the details to create a new load
-        </CardDescription>
-      </CardHeader>
-
+    // <Card className="w-full max-w-4xl mx-auto bg-background">
+    //   <CardHeader>
+    //     <CardTitle className="text-xl font-bold">Create Load Card</CardTitle>
+    //     <CardDescription>
+    //       Enter the details to create a new load
+    //     </CardDescription>
+    //   </CardHeader>
+    <div>
       <CardContent>
         <Tabs
           value={`step-${currentStep}`}
@@ -1336,7 +1336,8 @@ const LoadCreationForm = ({
           )}
         </div>
       </CardFooter>
-    </Card>
+    </div>
+    // </Card>
   );
 };
 

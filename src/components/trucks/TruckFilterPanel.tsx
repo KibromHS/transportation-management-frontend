@@ -581,10 +581,10 @@ const TruckFilterPanel: React.FC<TruckFilterPanelProps> = ({
                     <Select
                       value={filters.truck_type_id?.toString()}
                       onValueChange={(value) =>
-                        handleFilterChange("truckType", Number(value))
+                        handleFilterChange("truck_type_id", Number(value))
                       }
                     >
-                      <SelectTrigger id="truckType">
+                      <SelectTrigger id="truck_type_id">
                         <SelectValue placeholder="Select truck type" />
                       </SelectTrigger>
                       <SelectContent>

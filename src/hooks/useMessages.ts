@@ -37,7 +37,7 @@ export function useMessages(userId: string) {
     try {
       const result = await getUserConversations(userId);
       if ("error" in result) {
-        throw new Error(result.error.message);
+        throw new Error("hey 1");
       }
       setConversations(result.conversations);
     } catch (err: any) {
@@ -55,7 +55,7 @@ export function useMessages(userId: string) {
     try {
       const result = await getUnreadMessageCount(userId);
       if ("error" in result) {
-        throw new Error(result.error.message);
+        throw new Error("hey 2");
       }
       setUnreadCount(result.count);
     } catch (err: any) {
@@ -79,7 +79,7 @@ export function useMessages(userId: string) {
     const messagesQuery = query(
       collection(db, "messages"),
       where("conversationId", "==", currentConversation.id),
-      orderBy("createdAt", "desc"),
+      orderBy("createdAt", "desc")
     );
 
     const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
@@ -125,7 +125,7 @@ export function useMessages(userId: string) {
       try {
         const result = await getConversationMessages(conversationId);
         if ("error" in result) {
-          throw new Error(result.error.message);
+          throw new Error("hey 3");
         }
         setMessages(result.messages);
 
@@ -139,7 +139,7 @@ export function useMessages(userId: string) {
         setLoading(false);
       }
     },
-    [userId, loadUnreadCount],
+    [userId, loadUnreadCount]
   );
 
   // Load more messages (pagination)
@@ -154,10 +154,10 @@ export function useMessages(userId: string) {
         const result = await getConversationMessages(
           conversationId,
           50,
-          oldestMessage.createdAt,
+          oldestMessage.createdAt
         );
         if ("error" in result) {
-          throw new Error(result.error.message);
+          throw new Error("hey 3");
         }
         setMessages((prev) => [...prev, ...result.messages]);
       } catch (err: any) {
@@ -167,7 +167,7 @@ export function useMessages(userId: string) {
         setLoading(false);
       }
     },
-    [messages],
+    [messages]
   );
 
   // Start or open a direct conversation
@@ -176,14 +176,15 @@ export function useMessages(userId: string) {
       setLoading(true);
       setError(null);
       try {
-        const result = await getOrCreateDirectConversation(userId, otherUserId);
-        if ("error" in result) {
-          throw new Error(result.error.message);
-        }
+        // const result = await getOrCreateDirectConversation(userId, otherUserId);
+        // if ("error" in result) {
+        //   throw new Error("hey 5");
+        // }
 
-        setCurrentConversation(result.conversation);
-        await loadMessages(result.conversation.id);
-        return result.conversation;
+        // setCurrentConversation(result.conversation);
+        // await loadMessages(result.conversation.id);
+        // return result.conversation;
+        console.log("other user id:", otherUserId);
       } catch (err: any) {
         console.error("Error starting conversation:", err);
         setError(err.message || "Failed to start conversation");
@@ -192,7 +193,7 @@ export function useMessages(userId: string) {
         setLoading(false);
       }
     },
-    [userId, loadMessages],
+    [userId, loadMessages]
   );
 
   // Create a group conversation
@@ -209,10 +210,10 @@ export function useMessages(userId: string) {
         const result = await createGroupConversation(
           name,
           userId,
-          participantIds,
+          participantIds
         );
         if ("error" in result) {
-          throw new Error(result.error.message);
+          throw new Error("hey 6");
         }
 
         await loadConversations();
@@ -225,7 +226,7 @@ export function useMessages(userId: string) {
         setLoading(false);
       }
     },
-    [userId, loadConversations],
+    [userId, loadConversations]
   );
 
   // Send a message
@@ -237,10 +238,10 @@ export function useMessages(userId: string) {
           userId,
           content,
           conversationId,
-          recipientId,
+          recipientId
         );
         if ("error" in result) {
-          throw new Error(result.error.message);
+          throw new Error("hey 7");
         }
         return { success: true, message: result.message };
       } catch (err: any) {
@@ -249,7 +250,7 @@ export function useMessages(userId: string) {
         return { success: false, error: err.message };
       }
     },
-    [userId],
+    [userId]
   );
 
   // Select a conversation
@@ -258,7 +259,7 @@ export function useMessages(userId: string) {
       setCurrentConversation(conversation);
       await loadMessages(conversation.id);
     },
-    [loadMessages],
+    [loadMessages]
   );
 
   return {

@@ -54,9 +54,29 @@ export interface Conversation {
 export const getUserConversations = async (userId: string) => {
   try {
     // First get all conversations the user is part of
-    
 
-    return { conversations: [] };
+    return {
+      conversations: [
+        {
+          id: 1,
+          name: "Kibrom",
+          createdBy: "Kibrom",
+          participants: [
+            {
+              id: 1,
+              name: "Kibrom",
+            },
+          ],
+          lastMessage: {
+            content: "Hello",
+            senderId: 1,
+            createdAt: "2025-05-04",
+          },
+          // createdAt: "2025-05-04",
+          // updatedAt: "2025-06-23",
+        },
+      ],
+    };
   } catch (error) {
     // return handleSupabaseError(error);
     console.error(error);
@@ -68,7 +88,7 @@ export const getUserConversations = async (userId: string) => {
  */
 export const getOrCreateDirectConversation = async (
   userId1: string,
-  userId2: string,
+  userId2: string
 ) => {
   try {
     // Create a consistent ID for the conversation between these two users
@@ -76,16 +96,22 @@ export const getOrCreateDirectConversation = async (
     const conversationId = `direct_${userIds[0]}_${userIds[1]}`;
 
     // Check if the conversation already exists
-    const { data: existingConversation, error: fetchError } = {data: {}, error: null};
+    const { data: existingConversation, error: fetchError } = {
+      data: {},
+      error: null,
+    };
 
     // If it doesn't exist, create it
     if (fetchError && fetchError.code === "PGRST116") {
-      const { data: newConversation, error: createError } = {data: {}, error: null};
+      const { data: newConversation, error: createError } = {
+        data: {},
+        error: null,
+      };
 
       if (createError) throw createError;
 
       // Add both users as participants
-      const { error: participantsError } = {error: null};
+      const { error: participantsError } = { error: null };
 
       if (participantsError) throw participantsError;
 
@@ -95,7 +121,10 @@ export const getOrCreateDirectConversation = async (
     }
 
     // Get participants
-    const { data: participants, error: participantsError } = {data: [], error: null};
+    const { data: participants, error: participantsError } = {
+      data: [],
+      error: null,
+    };
 
     if (participantsError) throw participantsError;
 
@@ -123,7 +152,7 @@ export const getOrCreateDirectConversation = async (
 export const createGroupConversation = async (
   name: string,
   createdBy: string,
-  participantIds: string[],
+  participantIds: string[]
 ) => {
   try {
     const conversationId = `group_${Date.now()}`;
@@ -136,7 +165,7 @@ export const createGroupConversation = async (
         is_group: true,
       },
       error: null,
-    }
+    };
 
     if (error) throw error;
 
@@ -146,7 +175,7 @@ export const createGroupConversation = async (
       user_id: userId,
     }));
 
-    const { error: participantsError } = {error: null};
+    const { error: participantsError } = { error: null };
 
     if (participantsError) throw participantsError;
 
@@ -163,7 +192,7 @@ export const createGroupConversation = async (
 export const getConversationMessages = async (
   conversationId: string,
   limit = 50,
-  before?: string,
+  before?: string
 ) => {
   try {
     // let query = supabase
@@ -215,10 +244,10 @@ export const sendMessage = async (
   senderId: string,
   content: string,
   conversationId: string,
-  recipientId?: string,
+  recipientId?: string
 ) => {
   try {
-    const data = {id: 1, senderId, content, conversationId, recipientId};
+    const data = { id: 1, senderId, content, conversationId, recipientId };
 
     return {
       message: {
@@ -243,11 +272,9 @@ export const sendMessage = async (
  */
 export const markMessagesAsRead = async (
   conversationId: string,
-  userId: string,
+  userId: string
 ) => {
   try {
-    
-
     return { success: true };
   } catch (error) {
     // return handleSupabaseError(error);

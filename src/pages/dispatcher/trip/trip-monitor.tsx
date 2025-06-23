@@ -28,7 +28,7 @@ import {
   FileCheck,
 } from "lucide-react";
 import axios from "axios";
-import { patchRequest, postRequest } from "@/api/request";
+import { getRequest, postRequest } from "@/api/request";
 
 const TripMonitorPage = () => {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ const TripMonitorPage = () => {
 
   useEffect(() => {
     const fetchTrips = () => {
-      fetch(`${import.meta.env.VITE_API_URL}/trips`)
+      getRequest(`${import.meta.env.VITE_API_URL}/trips`)
         .then((res) => res.json())
         .then((rdata) => {
           const data = rdata.data;

@@ -66,6 +66,7 @@ import {
 import { format, isToday, isYesterday, isThisWeek } from "date-fns";
 import { User } from "@/api/users";
 import { useUsers } from "@/hooks/useUsers";
+import { getRequest } from "@/api/request";
 
 interface ChatInterfaceProps {
   className?: string;
@@ -100,14 +101,32 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [showNewGroupDialog, setShowNewGroupDialog] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
-    [],
+    []
   );
-  const [showConversationList, setShowConversationList] = useState(true);
+  const [showConversationList, setShowConversationList] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // For user selection in new group dialog
-  const { users } = useUsers();
+  const [drivers, setDrivers] = useState([]);
+
+  const fetchDrivers = async () => {
+    try {
+      const response = await getRequest(
+        `${import.meta.env.VITE_API_URL}/drivers`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setDrivers(data.data);
+      }
+    } catch (e) {
+      console.error("Error fetching drivers", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchDrivers();
+  }, []);
 
   // Set initial conversation if provided
   useEffect(() => {
@@ -129,7 +148,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       // For direct messages, search in participant names
       if (!conversation.isGroup) {
         const otherParticipant = conversation.participants.find(
-          (p) => p.id !== userId,
+          (p) => p.id !== userId
         );
         if (
           !otherParticipant?.name
@@ -216,7 +235,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
 
     const otherParticipant = conversation.participants.find(
-      (p) => p.id !== userId,
+      (p) => p.id !== userId
     );
     return otherParticipant?.name || "Chat";
   };
@@ -228,7 +247,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
 
     const otherParticipant = conversation.participants.find(
-      (p) => p.id !== userId,
+      (p) => p.id !== userId
     );
     return otherParticipant?.avatar;
   };
@@ -352,50 +371,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <div className="grid gap-2">
                 <Label>Select Participants</Label>
                 <ScrollArea className="h-[200px] border rounded-md p-2">
-                  {users
-                    .filter((u) => u.id !== userId)
-                    .map((user) => (
-                      <div
-                        key={user.id}
-                        className="flex items-center space-x-2 p-2 hover:bg-muted rounded-md"
+                  {drivers.map((d) => (
+                    <div
+                      key={d.id}
+                      className="flex items-center space-x-2 p-2 hover:bg-muted rounded-md"
+                    >
+                      <Avatar className="h-8 w-8">
+                        {d.avatarUrl ? (
+                          <AvatarImage src={d.avatarUrl} />
+                        ) : (
+                          <AvatarFallback>
+                            {getInitials(d.name || "Driver")}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <Label
+                        htmlFor={`driver-${d.id}`}
+                        className="cursor-pointer"
                       >
-                        <input
-                          type="checkbox"
-                          id={`user-${user.id}`}
-                          checked={selectedParticipants.includes(user.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedParticipants([
-                                ...selectedParticipants,
-                                user.id,
-                              ]);
-                            } else {
-                              setSelectedParticipants(
-                                selectedParticipants.filter(
-                                  (id) => id !== user.id,
-                                ),
-                              );
-                            }
-                          }}
-                          className="rounded text-primary"
-                        />
-                        <Avatar className="h-8 w-8">
-                          {user.avatarUrl ? (
-                            <AvatarImage src={user.avatarUrl} />
-                          ) : (
-                            <AvatarFallback>
-                              {getInitials(user.fullName || "User")}
-                            </AvatarFallback>
-                          )}
-                        </Avatar>
-                        <Label
-                          htmlFor={`user-${user.id}`}
-                          className="cursor-pointer"
-                        >
-                          {user.fullName}
-                        </Label>
-                      </div>
-                    ))}
+                        {d.name}
+                      </Label>
+                    </div>
+                  ))}
                 </ScrollArea>
               </div>
             </div>
@@ -435,7 +432,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   return (
                     <div
                       key={conversation.id}
-                      className={`p-3 hover:bg-muted/50 cursor-pointer transition-colors ${currentConversation?.id === conversation.id ? "bg-muted" : ""}`}
+                      className={`p-3 hover:bg-muted/50 cursor-pointer transition-colors ${
+                        currentConversation?.id === conversation.id
+                          ? "bg-muted"
+                          : ""
+                      }`}
                       onClick={() => {
                         selectConversation(conversation);
                         if (!standalone) {
@@ -495,7 +496,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   );
                 })}
               </div>
-            ),
+            )
           )
         )}
       </ScrollArea>
@@ -514,27 +515,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           }}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a user" />
+            <SelectValue placeholder="Select driver" />
           </SelectTrigger>
           <SelectContent>
-            {users
-              .filter((u) => u.id !== userId)
-              .map((user) => (
-                <SelectItem key={user.id} value={user.id}>
-                  <div className="flex items-center space-x-2">
-                    <Avatar className="h-6 w-6">
-                      {user.avatarUrl ? (
-                        <AvatarImage src={user.avatarUrl} />
-                      ) : (
-                        <AvatarFallback className="text-xs">
-                          {getInitials(user.fullName || "User")}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <span>{user.fullName}</span>
-                  </div>
-                </SelectItem>
-              ))}
+            {drivers.map((d) => (
+              <SelectItem key={d.id} value={d.id}>
+                <div className="flex items-center space-x-2">
+                  <Avatar className="h-6 w-6">
+                    {d.avatarUrl ? (
+                      <AvatarImage src={d.avatarUrl} />
+                    ) : (
+                      <AvatarFallback className="text-xs">
+                        {getInitials(d.name || "Driver")}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <span>{d.name}</span>
+                </div>
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -573,7 +572,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         const group = groups[groupName] || [];
         return { ...groups, [groupName]: [...group, message] };
       },
-      {},
+      {}
     );
 
     return (
@@ -703,7 +702,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     return (
                       <div
                         key={message.id}
-                        className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+                        className={`flex ${
+                          isCurrentUser ? "justify-end" : "justify-start"
+                        }`}
                       >
                         {!isCurrentUser && (
                           <div className="w-8 mr-2 flex-shrink-0">
@@ -721,7 +722,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                           </div>
                         )}
                         <div
-                          className={`max-w-[75%] ${isCurrentUser ? "bg-teal-600 text-white" : "bg-muted"} ${isCurrentUser ? "rounded-tl-2xl rounded-tr-sm rounded-br-sm rounded-bl-2xl" : "rounded-tl-sm rounded-tr-2xl rounded-br-2xl rounded-bl-sm"} p-3 shadow-sm`}
+                          className={`max-w-[75%] ${
+                            isCurrentUser
+                              ? "bg-teal-600 text-white"
+                              : "bg-muted"
+                          } ${
+                            isCurrentUser
+                              ? "rounded-tl-2xl rounded-tr-sm rounded-br-sm rounded-bl-2xl"
+                              : "rounded-tl-sm rounded-tr-2xl rounded-br-2xl rounded-bl-sm"
+                          } p-3 shadow-sm`}
                         >
                           {!isCurrentUser &&
                             currentConversation.isGroup &&
@@ -819,18 +828,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Main render
   return (
     <Card
-      className={`${className} ${standalone ? "h-full" : "h-[600px] w-[350px] md:w-[450px] shadow-xl border-0"} overflow-hidden rounded-lg transition-all`}
+      className={`${className} ${
+        standalone
+          ? "h-full"
+          : "h-[600px] w-[350px] md:w-[600px] shadow-xl border-0"
+      } overflow-hidden rounded-lg transition-all`}
     >
       {standalone ? (
-        <div className="grid md:grid-cols-3 h-full">
+        <div className="grid md:grid-cols-2 h-full">
           <div
-            className={`${showConversationList ? "block" : "hidden"} md:block border-r`}
+            className={`${
+              showConversationList ? "block" : "hidden"
+            } md:block border-r`}
           >
             {renderConversationList()}
           </div>
-          <div
-            className={`${showConversationList ? "hidden" : "block"} md:col-span-2`}
-          >
+          <div className={`${showConversationList ? "hidden" : "block"}`}>
             {renderChatView()}
           </div>
         </div>

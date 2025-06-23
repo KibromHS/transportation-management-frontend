@@ -15,7 +15,7 @@ import { AuthProvider, useAuthContext } from "@/context/AuthContext";
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  userRole?: string
+  userRole?: string;
   userName?: string;
   userAvatar?: string;
   pageTitle?: string;
@@ -63,7 +63,7 @@ const DashboardLayout = ({
         <div
           className={cn(
             "fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 shadow-lg",
-            mobileSidebarOpen ? "translate-x-0" : "-translate-x-full",
+            mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
           <Sidebar
@@ -75,7 +75,7 @@ const DashboardLayout = ({
         {/* Main content */}
         <div
           className={cn(
-            "flex flex-1 flex-col overflow-hidden transition-all duration-300 pr-[70px] pl-[50px]",
+            "flex flex-1 flex-col overflow-hidden transition-all duration-300 pr-[70px] pl-[50px]"
             // sidebarCollapsed ? "md:pl-[70px]" : "md:pl-[170px]",
           )}
         >
@@ -98,7 +98,7 @@ const DashboardLayout = ({
 
             {/* Messaging panel */}
             {messagingPanelOpen && (
-              <div className="hidden md:block w-[450px] border-l overflow-hidden shadow-inner transition-all animate-slide-in-right h-full">
+              <div className="hidden md:block w-3/4 border-l overflow-hidden shadow-inner transition-all animate-slide-in-right h-full">
                 <ChatInterface
                   standalone={true}
                   onClose={() => setMessagingPanelOpen(false)}
@@ -108,10 +108,7 @@ const DashboardLayout = ({
           </div>
           {/* Footer */}
           <footer className="border-t py-4 text-center text-sm text-muted-foreground bg-background/90 backdrop-blur-sm">
-            <p>
-              © {new Date().getFullYear()} TMS. All
-              rights reserved.
-            </p>
+            <p>© {new Date().getFullYear()} TMS. All rights reserved.</p>
           </footer>
 
           {/* Floating chat button (visible on mobile) */}

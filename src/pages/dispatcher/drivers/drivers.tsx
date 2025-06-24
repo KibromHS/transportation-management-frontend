@@ -79,7 +79,7 @@ const DriversPage = () => {
   const { user } = useAuthContext();
 
   const fetchDrivers = async () => {
-    setLoading(true);
+    // setLoading(true);
     const response = await getRequest(
       `${import.meta.env.VITE_API_URL}/drivers`
     );
@@ -93,7 +93,7 @@ const DriversPage = () => {
       console.error("Failed to fetch drivers:", data);
     }
 
-    setLoading(false);
+    // setLoading(false);
   };
 
   useEffect(() => {

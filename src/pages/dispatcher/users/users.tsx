@@ -71,7 +71,7 @@ const UsersPage = () => {
   );
 
   const fetchUsers = async () => {
-    setLoading(true);
+    // setLoading(true);
     const response = await getRequest(`${import.meta.env.VITE_API_URL}/users`);
     const data = await response.json();
 
@@ -81,7 +81,7 @@ const UsersPage = () => {
       console.error("Failed to fetch users:", data);
     }
 
-    setLoading(false);
+    // setLoading(false);
   };
 
   useEffect(() => {

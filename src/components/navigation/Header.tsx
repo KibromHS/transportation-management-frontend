@@ -68,7 +68,7 @@ const HeaderContent = ({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setSearchQuery(e.target.value);
     },
-    [],
+    []
   );
   const { theme, setTheme } = useTheme();
 
@@ -160,7 +160,9 @@ const HeaderContent = ({
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`border-b p-4 ${notification.read ? "" : "bg-muted/50"}`}
+                className={`border-b p-4 ${
+                  notification.read ? "" : "bg-muted/50"
+                }`}
               >
                 <div className="mb-1 flex items-center justify-between">
                   <h5 className="font-medium">{notification.title}</h5>
@@ -231,7 +233,7 @@ const HeaderContent = ({
             </Tooltip>
           </TooltipProvider>
 
-          <NotificationCenter />
+          {/* <NotificationCenter /> */}
 
           <TooltipProvider>
             <Tooltip>
@@ -241,7 +243,7 @@ const HeaderContent = ({
                   size="icon"
                   className={cn(
                     "relative",
-                    messagingPanelOpen && "bg-muted text-primary",
+                    messagingPanelOpen && "bg-muted text-primary"
                   )}
                   aria-label="Messages"
                   onClick={onToggleMessaging}
@@ -284,7 +286,7 @@ const HeaderContent = ({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              {/* <DropdownMenuItem>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
@@ -295,8 +297,8 @@ const HeaderContent = ({
               <DropdownMenuItem>
                 <HelpCircle className="mr-2 h-4 w-4" />
                 <span>Help</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              </DropdownMenuItem> */}
+              {/* <DropdownMenuSeparator /> */}
               <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => {
@@ -320,11 +322,7 @@ const HeaderContent = ({
 const MemoizedHeaderContent = memo(HeaderContent);
 
 const Header = (props: HeaderProps) => {
-  return (
-    
-      <MemoizedHeaderContent {...props} />
-   
-  );
+  return <MemoizedHeaderContent {...props} />;
 };
 
 export default memo(Header);

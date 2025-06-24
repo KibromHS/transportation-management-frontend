@@ -52,7 +52,7 @@ interface OwnerModel {
   company: {
     id: number;
     name: string;
-  };
+  }[];
   trucks: {
     id: number;
   }[];
@@ -72,6 +72,7 @@ const OwnersPage = () => {
       const data = await response.json();
       if (response.ok) {
         setActiveOwners(data.data);
+        console.log("owners", data.data);
       } else {
         console.log("Failed to fetch owners:", data);
       }
@@ -393,7 +394,7 @@ const OwnersPage = () => {
                               {owner.avatar ? (
                                 <img
                                   src={owner.avatar}
-                                  alt={owner.company.name}
+                                  alt={owner.company[0].name}
                                   className="h-full w-full object-cover"
                                 />
                               ) : (
@@ -402,7 +403,10 @@ const OwnersPage = () => {
                             </div>
                             <div>
                               <div className="font-medium">
-                                {owner.company.name ?? "Not Registered"}
+                                {owner.company != undefined &&
+                                owner.company.length > 0
+                                  ? owner.company[0].name
+                                  : "Not Registered"}
                               </div>
                             </div>
                           </div>

@@ -494,7 +494,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
   // );
 
   const fetchTrucks = async () => {
-    setIsLoading(true);
+    // setIsLoading(true);
     try {
       const response = await getRequest(
         `${import.meta.env.VITE_API_URL}/trucks`
@@ -507,7 +507,7 @@ export const TruckManagement: React.FC<TruckManagementProps> = ({
     } catch (e) {
       console.error("Error fething trucks", e);
     } finally {
-      setIsLoading(false);
+      // setIsLoading(false);
     }
   };
 

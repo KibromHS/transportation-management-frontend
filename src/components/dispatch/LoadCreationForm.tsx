@@ -246,6 +246,7 @@ const LoadCreationForm = ({
   };
 
   const handleNextStep = () => {
+    form2Data.checkin_company_id = form1Data.customer_company_id;
     setCurrentStep((prev) => Math.min(prev + 1, 3));
   };
 
@@ -459,6 +460,7 @@ const LoadCreationForm = ({
                           Number(value)
                         )
                       }
+                      required
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="choose company from the list" />
@@ -1147,7 +1149,7 @@ const LoadCreationForm = ({
               </div>
 
               {/* Required Truck Info */}
-              <div className="space-y-4">
+              {/* <div className="space-y-4">
                 <h3 className="text-lg font-medium">Required Truck Info:</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -1268,7 +1270,7 @@ const LoadCreationForm = ({
                   </div>
                 </div>
 
-                {/* <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2">
                   <Checkbox
                     id="teamDrivers"
                     checked={formData.teamDrivers}
@@ -1277,8 +1279,8 @@ const LoadCreationForm = ({
                     }
                   />
                   <Label htmlFor="teamDrivers">Team Drivers</Label>
-                </div> */}
-              </div>
+                </div>
+              </div> */}
 
               {/* General Load Note */}
               <div className="space-y-2">

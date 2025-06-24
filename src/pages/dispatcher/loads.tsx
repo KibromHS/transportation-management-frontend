@@ -86,7 +86,7 @@ const LoadsPage = () => {
   const [loading, setLoading] = useState(false);
 
   const fetchLoads = async () => {
-    setLoading(true);
+    // setLoading(true);
     const response = await getRequest(`${import.meta.env.VITE_API_URL}/loads`);
     const data = await response.json();
     const loads: Load[] = data.data;
@@ -104,7 +104,7 @@ const LoadsPage = () => {
       console.error("");
     }
 
-    setLoading(false);
+    // setLoading(false);
   };
 
   useEffect(() => {

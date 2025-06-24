@@ -196,9 +196,22 @@ const TripMonitorPage = () => {
             </Button>
           </div>
         );
+      case "PickupConfirmed":
+        return (
+          <div className="mt-3">
+            <DocumentViewer
+              documentUrl={trip.bolDocumentUrl}
+              documentType="BOL"
+            />
+          </div>
+        );
       case "DeliveryCheckedIn":
         return (
           <div className="mt-3">
+            <DocumentViewer
+              documentUrl={trip.bolDocumentUrl}
+              documentType="BOL"
+            />
             <DocumentViewer
               documentUrl={trip.podDocumentUrl}
               documentType="POD"
@@ -212,6 +225,7 @@ const TripMonitorPage = () => {
             </Button>
           </div>
         );
+
       default:
         return null;
     }
@@ -252,7 +266,7 @@ const TripMonitorPage = () => {
           </Card>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+        {/* <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Input placeholder="Search trips..." className="w-full pl-10" />
             <div className="absolute left-3 top-2.5">
@@ -267,7 +281,7 @@ const TripMonitorPage = () => {
               <ArrowUpDown className="h-4 w-4 mr-2" /> Sort
             </Button>
           </div>
-        </div>
+        </div> */}
 
         <Tabs defaultValue="active" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6 max-w-md">
@@ -291,7 +305,7 @@ const TripMonitorPage = () => {
                           Load #{trip.load_id}
                         </CardTitle>
                       </div>
-                      <div className="flex gap-2">
+                      {/* <div className="flex gap-2">
                         <Button variant="outline" size="sm">
                           <Map className="h-4 w-4 mr-2" />
                           Track
@@ -300,7 +314,7 @@ const TripMonitorPage = () => {
                           <MessageSquare className="h-4 w-4 mr-2" />
                           Contact
                         </Button>
-                      </div>
+                      </div> */}
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -367,14 +381,14 @@ const TripMonitorPage = () => {
                           <div className="text-sm text-muted-foreground">
                             Driver Phone: {trip.driver?.phone || "N/A"}
                           </div>
-                          <div className="flex gap-2">
+                          {/* <div className="flex gap-2">
                             <Button variant="ghost" size="sm">
                               <PhoneCall className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="sm">
                               <MessageSquare className="h-4 w-4" />
                             </Button>
-                          </div>
+                          </div> */}
                         </div>
                       </div>
                     </div>

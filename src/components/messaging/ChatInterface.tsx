@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useMessages } from "@/hooks/useMessages";
-import { Conversation, Message } from "@/api/messages";
+import { Message } from "@/api/messages";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,14 +9,6 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -68,6 +60,14 @@ import { User } from "@/api/users";
 import { useUsers } from "@/hooks/useUsers";
 import { getRequest } from "@/api/request";
 
+interface Conversation {
+  roomId: string;
+  chatId: string;
+  dispatcherId: string;
+  lastMessage: string;
+  timestamp: number;
+}
+
 interface ChatInterfaceProps {
   className?: string;
   onClose?: () => void;
@@ -88,13 +88,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     currentConversation,
     messages,
     loading,
-    unreadCount,
     loadConversations,
     startDirectConversation,
-    createGroup,
     sendMessage,
     selectConversation,
-  } = useMessages(userId);
+  } = useMessages(user.id.toString());
 
   const [messageText, setMessageText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,7 +105,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // For user selection in new group dialog
   const [drivers, setDrivers] = useState([]);
 
   const fetchDrivers = async () => {
@@ -143,44 +140,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   // Filter conversations based on search query and active filter
   const filteredConversations = conversations.filter((conversation) => {
-    // Filter by search query
     if (searchQuery) {
-      // For direct messages, search in participant names
-      if (!conversation.isGroup) {
-        const otherParticipant = conversation.participants.find(
-          (p) => p.id !== userId
-        );
-        if (
-          !otherParticipant?.name
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase())
-        ) {
-          return false;
-        }
-      } else {
-        // For group conversations, search in the group name
-        if (
-          !conversation.name?.toLowerCase().includes(searchQuery.toLowerCase())
-        ) {
-          return false;
-        }
+      const driverId = conversation.roomId.split("_")[1];
+      const driver = drivers.find((d) => d.id == driverId);
+      if (!driver?.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
       }
     }
-
-    // Filter by active filter
-    if (activeFilter === "unread") {
-      // Implement unread filter logic here
-      return false; // Placeholder - replace with actual logic
-    } else if (activeFilter === "groups") {
-      return conversation.isGroup;
-    } else if (activeFilter === "direct") {
-      return !conversation.isGroup;
-    }
-
     return true;
   });
 
-  // Group conversations by date
   const groupedConversations = filteredConversations.reduce<
     Record<string, Conversation[]>
   >((groups, conversation) => {
@@ -189,7 +158,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       return { ...groups, "No messages": [...group, conversation] };
     }
 
-    const date = new Date(conversation.lastMessage.createdAt);
+    const date = new Date(conversation.timestamp);
     let groupName: string;
 
     if (isToday(date)) {
@@ -211,45 +180,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     e.preventDefault();
     if (!messageText.trim() || !currentConversation) return;
 
-    await sendMessage(messageText, currentConversation.id);
+    await sendMessage(messageText);
     setMessageText("");
   };
 
-  // Handle creating a new group
-  const handleCreateGroup = async () => {
-    if (!newGroupName.trim() || selectedParticipants.length === 0) return;
-
-    const newGroup = await createGroup(newGroupName, selectedParticipants);
-    if (newGroup) {
-      setShowNewGroupDialog(false);
-      setNewGroupName("");
-      setSelectedParticipants([]);
-      await loadConversations();
-    }
-  };
-
-  // Get the name to display for a conversation
   const getConversationName = (conversation: Conversation) => {
-    if (conversation.isGroup) {
-      return conversation.name || "Group Chat";
-    }
-
-    const otherParticipant = conversation.participants.find(
-      (p) => p.id !== userId
-    );
-    return otherParticipant?.name || "Chat";
+    const driverId = conversation.roomId.split("_")[1];
+    const driver = drivers.find((d) => d.id == driverId);
+    return driver?.name;
   };
 
-  // Get the avatar for a conversation
   const getConversationAvatar = (conversation: Conversation) => {
-    if (conversation.isGroup) {
-      return null; // No avatar for groups
-    }
-
-    const otherParticipant = conversation.participants.find(
-      (p) => p.id !== userId
-    );
-    return otherParticipant?.avatar;
+    const driverId = conversation.roomId.split("_")[1];
+    const driver = drivers.find((d) => d.id == driverId);
+    return driver?.avatar;
   };
 
   // Get initials for avatar fallback
@@ -287,26 +231,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const renderConversationList = () => (
     <div className="flex flex-col h-full bg-background">
       <div className="p-4 border-b">
-        <div className="flex items-center justify-between mb-4">
+        {/* <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold tracking-tight">Messages</h2>
           {unreadCount > 0 && (
             <Badge className="bg-teal-600 hover:bg-teal-700 transition-colors shadow-sm">
               {unreadCount}
             </Badge>
           )}
-        </div>
-        <div className="relative">
-          <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
+        </div> */}
+        <div className="relative flex items-center">
+          <Search className="ml-2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search conversations..."
-            className="pl-8 transition-all focus-visible:ring-teal-500"
+            className="pl-2 ml-2 transition-all focus-visible:ring-teal-500"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="flex items-center justify-between p-2 border-b">
+      {/* <div className="flex items-center justify-between p-2 border-b">
         <div className="flex space-x-1 overflow-x-auto pb-1 scrollbar-hide">
           <Button
             variant={activeFilter === null ? "default" : "outline"}
@@ -407,7 +351,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      </div> */}
 
       <ScrollArea className="flex-1">
         {filteredConversations.length === 0 ? (
@@ -424,16 +368,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   {groupName}
                 </div>
                 {groupConversations.map((conversation) => {
-                  const conversationName = getConversationName(conversation);
-                  const avatar = getConversationAvatar(conversation);
+                  const driverId = conversation.roomId.split("_")[1];
+                  const driver = drivers.find((d) => d.id == driverId);
+                  const conversationName = driver?.name || "Driver";
+                  const avatar = driver?.avatar;
                   const lastMessage = conversation.lastMessage;
-                  const hasUnread = false; // TODO: Implement unread indicator
+                  const hasUnread = false; // TODO: Implement unread tracking if needed
 
                   return (
                     <div
-                      key={conversation.id}
+                      key={conversation.roomId}
                       className={`p-3 hover:bg-muted/50 cursor-pointer transition-colors ${
-                        currentConversation?.id === conversation.id
+                        currentConversation?.roomId === conversation.roomId
                           ? "bg-muted"
                           : ""
                       }`}
@@ -445,46 +391,31 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       }}
                     >
                       <div className="flex items-center space-x-3">
-                        {conversation.isGroup ? (
-                          <div className="h-10 w-10 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center">
-                            <Users className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-                          </div>
-                        ) : (
-                          <Avatar className="h-10 w-10 border">
-                            {avatar ? (
-                              <AvatarImage src={avatar} />
-                            ) : (
-                              <AvatarFallback className="bg-gradient-to-br from-teal-400 to-blue-500 text-white">
-                                {getInitials(conversationName)}
-                              </AvatarFallback>
-                            )}
-                          </Avatar>
-                        )}
+                        <Avatar className="h-10 w-10 border">
+                          {avatar ? (
+                            <AvatarImage src={avatar} />
+                          ) : (
+                            <AvatarFallback className="bg-gradient-to-br from-teal-400 to-blue-500 text-white">
+                              {getInitials(conversationName)}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <p className="font-medium truncate">
                               {conversationName}
                             </p>
-                            {lastMessage && (
+                            {conversation.timestamp && (
                               <span className="text-xs text-muted-foreground ml-2">
-                                {formatMessageTime(lastMessage.createdAt)}
+                                {formatMessageTime(
+                                  new Date(conversation.timestamp).toISOString()
+                                )}
                               </span>
                             )}
                           </div>
                           {lastMessage && (
                             <p className="text-sm text-muted-foreground truncate">
-                              {lastMessage.senderId === userId ? (
-                                <span className="flex items-center">
-                                  <span className="mr-1">You:</span>
-                                  <span className="truncate">
-                                    {lastMessage.content}
-                                  </span>
-                                </span>
-                              ) : (
-                                <span className="truncate">
-                                  {lastMessage.content}
-                                </span>
-                              )}
+                              {lastMessage}
                             </p>
                           )}
                         </div>
@@ -558,7 +489,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     // Group messages by date
     const groupedMessages = messages.reduce<Record<string, Message[]>>(
       (groups, message) => {
-        const date = new Date(message.createdAt);
+        const date = new Date(message.timestamp);
         let groupName: string;
 
         if (isToday(date)) {
@@ -590,37 +521,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <ChevronLeft className="h-5 w-5" />
               </Button>
             )}
-            {currentConversation.isGroup ? (
-              <div className="h-10 w-10 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center">
-                <Users className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-              </div>
-            ) : (
-              <Avatar className="h-10 w-10 border">
-                {avatar ? (
-                  <AvatarImage src={avatar} />
-                ) : (
-                  <AvatarFallback className="bg-gradient-to-br from-teal-400 to-blue-500 text-white">
-                    {getInitials(conversationName)}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-            )}
+            <Avatar className="h-10 w-10 border">
+              {avatar ? (
+                <AvatarImage src={avatar} />
+              ) : (
+                <AvatarFallback className="bg-gradient-to-br from-teal-400 to-blue-500 text-white">
+                  {getInitials(conversationName)}
+                </AvatarFallback>
+              )}
+            </Avatar>
             <div>
               <h3 className="font-medium">{conversationName}</h3>
-              {currentConversation.isGroup ? (
+              {/* {currentConversation.isGroup ? (
                 <p className="text-xs text-muted-foreground">
                   {currentConversation.participants.length} members
                 </p>
               ) : (
-                <p className="text-xs text-muted-foreground">
-                  {/* Show online status or last seen */}
-                  Online
-                </p>
-              )}
+                <p className="text-xs text-muted-foreground">Online</p>
+              )} */}
             </div>
           </div>
           <div className="flex items-center space-x-1">
-            <TooltipProvider>
+            {/* <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
@@ -640,9 +562,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 </TooltipTrigger>
                 <TooltipContent>Video call</TooltipContent>
               </Tooltip>
-            </TooltipProvider>
+            </TooltipProvider> */}
 
-            <DropdownMenu>
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
                   <MoreVertical className="h-4 w-4" />
@@ -666,7 +588,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <span>Delete conversation</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
           </div>
         </div>
 
@@ -692,12 +614,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     </div>
                   </div>
 
-                  {dateMessages.map((message, index) => {
-                    const isCurrentUser = message.senderId === userId;
-                    const showAvatar =
-                      !isCurrentUser &&
-                      (index === 0 ||
-                        dateMessages[index - 1]?.senderId !== message.senderId);
+                  {dateMessages.map((message) => {
+                    const isCurrentUser = true; // Always dispatcher sending in this UI
 
                     return (
                       <div
@@ -708,19 +626,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       >
                         {!isCurrentUser && (
                           <div className="w-8 mr-2 flex-shrink-0">
-                            {showAvatar && (
-                              <Avatar className="h-8 w-8">
-                                {message.senderAvatar ? (
-                                  <AvatarImage src={message.senderAvatar} />
-                                ) : (
-                                  <AvatarFallback className="bg-blue-500 text-white text-xs">
-                                    {getInitials(message.senderName || "User")}
-                                  </AvatarFallback>
-                                )}
-                              </Avatar>
-                            )}
+                            {/* If you later show driver messages, avatar logic goes here */}
                           </div>
                         )}
+
                         <div
                           className={`max-w-[75%] ${
                             isCurrentUser
@@ -732,23 +641,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                               : "rounded-tl-sm rounded-tr-2xl rounded-br-2xl rounded-bl-sm"
                           } p-3 shadow-sm`}
                         >
-                          {!isCurrentUser &&
-                            currentConversation.isGroup &&
-                            showAvatar && (
-                              <p className="text-xs font-medium mb-1 text-teal-600 dark:text-teal-400">
-                                {message.senderName || "Unknown User"}
-                              </p>
-                            )}
                           <p className="whitespace-pre-wrap break-words">
-                            {message.content}
+                            {message.message}
                           </p>
                           <div className="flex items-center justify-end mt-1 space-x-1">
                             <p className="text-xs opacity-70">
-                              {formatChatMessageTime(message.createdAt)}
+                              {formatChatMessageTime(
+                                new Date(message.timestamp).toISOString()
+                              )}
                             </p>
-                            {isCurrentUser && message.read && (
-                              <CheckCheck className="h-3 w-3 text-teal-300" />
-                            )}
                           </div>
                         </div>
                       </div>

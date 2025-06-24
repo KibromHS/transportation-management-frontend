@@ -1,31 +1,25 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getAnalytics } from "firebase/analytics";
+import { getDatabase } from "firebase/database";
 
-// Your web app's Firebase configuration
-// Using a temporary configuration to prevent auth/invalid-api-key error
 const firebaseConfig = {
-  apiKey: "AIzaSyDummyKeyForTemporaryUse123456789",
-  authDomain: "dispatch-management-app.firebaseapp.com",
-  projectId: "dispatch-management-app",
-  storageBucket: "dispatch-management-app.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890",
+  apiKey: "AIzaSyAWpHhg7y2DWR_9JX1spGlFXbw8pplD9fw",
+  authDomain: "flutter-chat-app-2146d.firebaseapp.com",
+  databaseURL: "https://flutter-chat-app-2146d-default-rtdb.firebaseio.com",
+  projectId: "flutter-chat-app-2146d",
+  storageBucket: "flutter-chat-app-2146d.firebasestorage.app",
+  messagingSenderId: "634485481911",
+  appId: "1:634485481911:web:de81c7e48395f90f014832",
+  measurementId: "G-YJMCPWKY8Y",
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db = getDatabase(app);
+const storage = getStorage(app);
 
-// Initialize Firebase services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-
-/**
- * Handle Firebase errors
- */
-export const handleFirebaseError = (error: any) => {
+const handleFirebaseError = (error: any) => {
   console.error("Firebase error:", error);
   return {
     error: {
@@ -35,4 +29,4 @@ export const handleFirebaseError = (error: any) => {
   };
 };
 
-export default app;
+export { db, storage, handleFirebaseError };

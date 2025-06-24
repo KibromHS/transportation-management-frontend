@@ -1,23 +1,27 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  Message,
-  Conversation,
   getUserConversations,
-  getOrCreateDirectConversation,
-  createGroupConversation,
   getConversationMessages,
   sendMessage as apiSendMessage,
-  markMessagesAsRead,
-  getUnreadMessageCount,
 } from "@/api/messages";
 import { db } from "@/lib/firebase";
-import {
-  collection,
-  onSnapshot,
-  query,
-  where,
-  orderBy,
-} from "firebase/firestore";
+import { ref, onChildAdded, off } from "firebase/database";
+
+interface Message {
+  id: string;
+  driverId: string;
+  message: string;
+  seen: boolean;
+  timestamp: number;
+}
+
+interface Conversation {
+  roomId: string;
+  chatId: string;
+  dispatcherId: string;
+  lastMessage: string;
+  timestamp: number;
+}
 
 export function useMessages(userId: string) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -26,7 +30,6 @@ export function useMessages(userId: string) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [unreadCount, setUnreadCount] = useState(0);
 
   // Load conversations
   const loadConversations = useCallback(async () => {
@@ -36,10 +39,7 @@ export function useMessages(userId: string) {
     setError(null);
     try {
       const result = await getUserConversations(userId);
-      if ("error" in result) {
-        throw new Error("hey 1");
-      }
-      setConversations(result.conversations);
+      setConversations(result);
     } catch (err: any) {
       console.error("Error loading conversations:", err);
       setError(err.message || "Failed to load conversations");
@@ -48,219 +48,106 @@ export function useMessages(userId: string) {
     }
   }, [userId]);
 
-  // Load unread count
-  const loadUnreadCount = useCallback(async () => {
-    if (!userId) return;
-
+  // Load messages for a conversation
+  const loadMessages = useCallback(async (conversationId: string) => {
+    setLoading(true);
+    setError(null);
     try {
-      const result = await getUnreadMessageCount(userId);
-      if ("error" in result) {
-        throw new Error("hey 2");
-      }
-      setUnreadCount(result.count);
+      const msgs = await getConversationMessages(conversationId, 50);
+      setMessages(msgs);
     } catch (err: any) {
-      console.error("Error loading unread count:", err);
+      console.error("Error loading messages:", err);
+      setError(err.message || "Failed to load messages");
+    } finally {
+      setLoading(false);
     }
-  }, [userId]);
+  }, []);
 
-  // Load conversations and unread count on mount
+  // Real-time listener for new messages
   useEffect(() => {
-    if (userId) {
-      loadConversations();
-      loadUnreadCount();
-    }
-  }, [userId, loadConversations, loadUnreadCount]);
+    if (!currentConversation) return;
 
-  // Set up real-time subscription for new messages
-  useEffect(() => {
-    if (!userId || !currentConversation) return;
+    const msgRef = ref(db, `messages/${currentConversation.roomId}`);
 
-    // Listen for new messages in the current conversation
-    const messagesQuery = query(
-      collection(db, "messages"),
-      where("conversationId", "==", currentConversation.id),
-      orderBy("createdAt", "desc")
-    );
+    const unsubscribe = onChildAdded(msgRef, (snapshot) => {
+      const msgData = snapshot.val();
+      const newMsg: Message = {
+        id: snapshot.key || "",
+        driverId: msgData.driverId,
+        message: msgData.message,
+        seen: msgData.seen,
+        timestamp: msgData.timestamp,
+      };
 
-    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          const newMessage = change.doc.data() as Message;
-
-          // Check if this is a new message (not in our current list)
-          const isNewMessage = !messages.some((m) => m.id === newMessage.id);
-
-          if (isNewMessage) {
-            setMessages((prev) => [newMessage, ...prev]);
-
-            // If the message is not from the current user, mark it as read
-            if (newMessage.senderId !== userId) {
-              markMessagesAsRead(currentConversation.id, userId);
-            }
-          }
-        }
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === newMsg.id);
+        if (exists) return prev;
+        return [...prev, newMsg].sort((a, b) => a.timestamp - b.timestamp);
       });
-
-      // Update unread count and refresh conversations
-      loadUnreadCount();
-      loadConversations();
     });
 
     return () => {
-      unsubscribe();
+      off(msgRef);
     };
-  }, [
-    userId,
-    currentConversation,
-    messages,
-    loadConversations,
-    loadUnreadCount,
-  ]);
-
-  // Load messages for a conversation
-  const loadMessages = useCallback(
-    async (conversationId: string) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await getConversationMessages(conversationId);
-        if ("error" in result) {
-          throw new Error("hey 3");
-        }
-        setMessages(result.messages);
-
-        // Mark messages as read
-        await markMessagesAsRead(conversationId, userId);
-        loadUnreadCount();
-      } catch (err: any) {
-        console.error("Error loading messages:", err);
-        setError(err.message || "Failed to load messages");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [userId, loadUnreadCount]
-  );
-
-  // Load more messages (pagination)
-  const loadMoreMessages = useCallback(
-    async (conversationId: string) => {
-      if (messages.length === 0) return;
-
-      setLoading(true);
-      setError(null);
-      try {
-        const oldestMessage = messages[messages.length - 1];
-        const result = await getConversationMessages(
-          conversationId,
-          50,
-          oldestMessage.createdAt
-        );
-        if ("error" in result) {
-          throw new Error("hey 3");
-        }
-        setMessages((prev) => [...prev, ...result.messages]);
-      } catch (err: any) {
-        console.error("Error loading more messages:", err);
-        setError(err.message || "Failed to load more messages");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [messages]
-  );
+  }, [currentConversation]);
 
   // Start or open a direct conversation
   const startDirectConversation = useCallback(
-    async (otherUserId: string) => {
-      setLoading(true);
-      setError(null);
-      try {
-        // const result = await getOrCreateDirectConversation(userId, otherUserId);
-        // if ("error" in result) {
-        //   throw new Error("hey 5");
-        // }
+    async (driverId: string) => {
+      const conversationId = `${userId}_${driverId}`;
+      const existing = conversations.find((c) => c.roomId === conversationId);
 
-        // setCurrentConversation(result.conversation);
-        // await loadMessages(result.conversation.id);
-        // return result.conversation;
-        console.log("other user id:", otherUserId);
-      } catch (err: any) {
-        console.error("Error starting conversation:", err);
-        setError(err.message || "Failed to start conversation");
-        return null;
-      } finally {
-        setLoading(false);
+      if (existing) {
+        setCurrentConversation(existing);
+        await loadMessages(existing.roomId);
+      } else {
+        // In your structure, conversations auto-create when sending first message
+        const newConv: Conversation = {
+          roomId: conversationId,
+          chatId: conversationId,
+          dispatcherId: userId,
+          lastMessage: "",
+          timestamp: Date.now(),
+        };
+        setCurrentConversation(newConv);
+        setMessages([]);
       }
     },
-    [userId, loadMessages]
-  );
-
-  // Create a group conversation
-  const createGroup = useCallback(
-    async (name: string, participantIds: string[]) => {
-      setLoading(true);
-      setError(null);
-      try {
-        // Make sure the current user is included
-        if (!participantIds.includes(userId)) {
-          participantIds.push(userId);
-        }
-
-        const result = await createGroupConversation(
-          name,
-          userId,
-          participantIds
-        );
-        if ("error" in result) {
-          throw new Error("hey 6");
-        }
-
-        await loadConversations();
-        return result.conversation;
-      } catch (err: any) {
-        console.error("Error creating group:", err);
-        setError(err.message || "Failed to create group");
-        return null;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [userId, loadConversations]
+    [userId, conversations, loadMessages]
   );
 
   // Send a message
   const sendMessage = useCallback(
-    async (content: string, conversationId: string, recipientId?: string) => {
-      setError(null);
+    async (content: string) => {
+      if (!currentConversation) return;
+
       try {
-        const result = await apiSendMessage(
-          userId,
-          content,
-          conversationId,
-          recipientId
-        );
-        if ("error" in result) {
-          throw new Error("hey 7");
-        }
-        return { success: true, message: result.message };
+        await apiSendMessage({
+          conversationId: currentConversation.roomId,
+          message: content,
+        });
       } catch (err: any) {
         console.error("Error sending message:", err);
         setError(err.message || "Failed to send message");
-        return { success: false, error: err.message };
       }
     },
-    [userId]
+    [currentConversation]
   );
 
   // Select a conversation
   const selectConversation = useCallback(
     async (conversation: Conversation) => {
       setCurrentConversation(conversation);
-      await loadMessages(conversation.id);
+      await loadMessages(conversation.roomId);
     },
     [loadMessages]
   );
+
+  useEffect(() => {
+    if (userId) {
+      loadConversations();
+    }
+  }, [userId, loadConversations]);
 
   return {
     conversations,
@@ -268,12 +155,9 @@ export function useMessages(userId: string) {
     messages,
     loading,
     error,
-    unreadCount,
     loadConversations,
     loadMessages,
-    loadMoreMessages,
     startDirectConversation,
-    createGroup,
     sendMessage,
     selectConversation,
   };

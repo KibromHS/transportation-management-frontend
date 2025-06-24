@@ -128,10 +128,10 @@ const AdminDashboard = () => {
         />
 
         <DataCard
-          title="Active Loads"
+          title="All Loads"
           value={analytics.activeLoads}
           icon={<Activity className="h-5 w-5" />}
-          description="Currently in progress"
+          description="Total loads in system"
           animation="fade"
           delay={0.2}
           iconClassName="text-teal-500"
@@ -141,7 +141,7 @@ const AdminDashboard = () => {
           title="Registered Trucks"
           value={analytics.registeredTrucks}
           icon={<Clock className="h-5 w-5" />}
-          description="Last 30 days"
+          description="Total trucks in system"
           animation="fade"
           delay={0.3}
           iconClassName="text-green-500"
@@ -231,7 +231,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Quick Access Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
         <Card
           className="hover:bg-accent/50 cursor-pointer transition-colors"
           onClick={() => (window.location.href = "/admin/users")}
@@ -288,7 +288,7 @@ const AdminDashboard = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
     </div>
   );
 };

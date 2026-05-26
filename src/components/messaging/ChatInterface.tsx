@@ -1,4 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
+
+const EmojiPicker = lazy(() => import("emoji-picker-react"));
 import { useAuthContext } from "@/context/AuthContext";
 import { useMessages } from "@/hooks/useMessages";
 import { Message } from "@/api/messages";
@@ -103,7 +105,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   );
   const [showConversationList, setShowConversationList] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showEmojiPicker]);
 
   const [drivers, setDrivers] = useState([]);
 
@@ -229,7 +247,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   // Render conversation list
   const renderConversationList = () => (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full min-h-0 bg-background overflow-hidden">
       <div className="p-4 border-b">
         {/* <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold tracking-tight">Messages</h2>
@@ -353,7 +371,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </Dialog>
       </div> */}
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         {filteredConversations.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
             {searchQuery
@@ -485,6 +503,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     const conversationName = getConversationName(currentConversation);
     const avatar = getConversationAvatar(currentConversation);
+    // Room id format: "{dispatcherId}_{driverId}". The current logged-in user
+    // is the dispatcher, so any message whose senderId matches the dispatcher
+    // id (or has no senderId — legacy web messages were always sent by the
+    // dispatcher) is "mine"; everything else is from the driver.
+    const dispatcherId = currentConversation.roomId.split("_")[0];
 
     // Group messages by date
     const groupedMessages = messages.reduce<Record<string, Message[]>>(
@@ -507,7 +530,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     );
 
     return (
-      <div className="flex flex-col h-full bg-background">
+      <div className="flex flex-col h-full min-h-0 bg-background overflow-hidden">
         {/* Chat header */}
         <div className="p-3 border-b flex items-center justify-between bg-background/95 backdrop-blur-sm sticky top-0 z-10">
           <div className="flex items-center space-x-3">
@@ -593,7 +616,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </div>
 
         {/* Messages */}
-        <ScrollArea className="flex-1 p-4 bg-gradient-to-b from-background to-muted/20">
+        <ScrollArea className="flex-1 min-h-0 p-4 bg-gradient-to-b from-background to-muted/20">
           <div className="space-y-6">
             {messages.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
@@ -615,37 +638,48 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   </div>
 
                   {dateMessages.map((message) => {
-                    const isCurrentUser = true; // Always dispatcher sending in this UI
+                    const senderId = message.senderId;
+                    const isCurrentUser = senderId
+                      ? String(senderId) === String(dispatcherId)
+                      : true;
 
                     return (
                       <div
                         key={message.id}
-                        className={`flex ${
+                        className={`flex items-end ${
                           isCurrentUser ? "justify-end" : "justify-start"
                         }`}
                       >
                         {!isCurrentUser && (
-                          <div className="w-8 mr-2 flex-shrink-0">
-                            {/* If you later show driver messages, avatar logic goes here */}
-                          </div>
+                          <Avatar className="h-7 w-7 mr-2 flex-shrink-0 border">
+                            {avatar ? (
+                              <AvatarImage src={avatar} />
+                            ) : (
+                              <AvatarFallback className="bg-gradient-to-br from-teal-400 to-blue-500 text-white text-xs">
+                                {getInitials(conversationName || "D")}
+                              </AvatarFallback>
+                            )}
+                          </Avatar>
                         )}
 
                         <div
-                          className={`max-w-[75%] ${
+                          className={`max-w-[75%] p-3 shadow-sm ${
                             isCurrentUser
-                              ? "bg-teal-600 text-white"
-                              : "bg-muted"
-                          } ${
-                            isCurrentUser
-                              ? "rounded-tl-2xl rounded-tr-sm rounded-br-sm rounded-bl-2xl"
-                              : "rounded-tl-sm rounded-tr-2xl rounded-br-2xl rounded-bl-sm"
-                          } p-3 shadow-sm`}
+                              ? "bg-teal-600 text-white rounded-tl-2xl rounded-tr-sm rounded-br-sm rounded-bl-2xl"
+                              : "bg-muted text-foreground rounded-tl-sm rounded-tr-2xl rounded-br-2xl rounded-bl-sm"
+                          }`}
                         >
                           <p className="whitespace-pre-wrap break-words">
                             {message.message}
                           </p>
                           <div className="flex items-center justify-end mt-1 space-x-1">
-                            <p className="text-xs opacity-70">
+                            <p
+                              className={`text-xs ${
+                                isCurrentUser
+                                  ? "text-white/70"
+                                  : "text-muted-foreground"
+                              }`}
+                            >
                               {formatChatMessageTime(
                                 new Date(message.timestamp).toISOString()
                               )}
@@ -676,7 +710,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 className="pr-10 min-h-[2.5rem] py-4"
                 multiline
               />
-              <div className="absolute right-2 bottom-2">
+              <div className="absolute right-2 bottom-2" ref={emojiPickerRef}>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -685,6 +719,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 rounded-full"
+                        onClick={() => setShowEmojiPicker((v) => !v)}
+                        aria-label="Add emoji"
                       >
                         <Smile className="h-4 w-4 text-muted-foreground" />
                       </Button>
@@ -692,6 +728,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <TooltipContent>Add emoji</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+                {showEmojiPicker && (
+                  <div className="absolute bottom-10 right-0 z-50 shadow-lg rounded-lg overflow-hidden">
+                    <Suspense
+                      fallback={
+                        <div className="bg-background border rounded-lg p-4 text-sm text-muted-foreground">
+                          Loading…
+                        </div>
+                      }
+                    >
+                      <EmojiPicker
+                        onEmojiClick={(emojiData) => {
+                          setMessageText((prev) => prev + emojiData.emoji);
+                        }}
+                        autoFocusSearch={false}
+                        skinTonesDisabled
+                        searchPlaceholder="Search emoji"
+                        width={320}
+                        height={380}
+                      />
+                    </Suspense>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex space-x-1">
@@ -736,20 +794,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       } overflow-hidden rounded-lg transition-all`}
     >
       {standalone ? (
-        <div className="grid md:grid-cols-2 h-full">
+        <div className="grid md:grid-cols-2 h-full min-h-0">
           <div
             className={`${
               showConversationList ? "block" : "hidden"
-            } md:block border-r`}
+            } md:block border-r h-full min-h-0 overflow-hidden`}
           >
             {renderConversationList()}
           </div>
-          <div className={`${showConversationList ? "hidden" : "block"}`}>
+          <div
+            className={`${
+              showConversationList ? "hidden" : "block"
+            } h-full min-h-0 overflow-hidden`}
+          >
             {renderChatView()}
           </div>
         </div>
       ) : (
-        <div className="h-full">
+        <div className="h-full min-h-0">
           {showConversationList ? renderConversationList() : renderChatView()}
         </div>
       )}

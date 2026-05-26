@@ -1,0 +1,73 @@
+name: Deploy frontend
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never run two deploys at the same time; cancel any in-progress run when a
+# newer commit lands so we always end up with the latest code on cPanel.
+concurrency:
+  group: frontend-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build & deploy to cPanel
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write production .env
+        run: |
+          cat > .env <<'EOF'
+          VITE_API_URL=${{ secrets.VITE_API_URL }}
+          VITE_FILE_URL=${{ secrets.VITE_FILE_URL }}
+          VITE_MAPS_API_KEY=${{ secrets.VITE_MAPS_API_KEY }}
+          EOF
+
+      - name: Build
+        run: npm run build
+
+      - name: Sanity-check build output
+        run: |
+          test -f dist/index.html
+          test -f dist/.htaccess
+          ls -lh dist | head
+
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.CPANEL_SSH_KEY }}
+
+      - name: Trust cPanel host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${{ secrets.CPANEL_SSH_PORT }}" -H "${{ secrets.CPANEL_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy via rsync
+        run: |
+          rsync -az --delete --human-readable \
+            --exclude='.well-known' \
+            -e "ssh -p ${{ secrets.CPANEL_SSH_PORT }}" \
+            dist/ \
+            "${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:${{ secrets.CPANEL_FRONTEND_PATH }}/"
+
+      - name: Summary
+        run: |
+          echo "### Frontend deployed :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Target: \`${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:${{ secrets.CPANEL_FRONTEND_PATH }}\`" >> $GITHUB_STEP_SUMMARY

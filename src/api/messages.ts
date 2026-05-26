@@ -13,6 +13,7 @@ import {
 export interface Message {
   id: string;
   driverId: string;
+  senderId?: string;
   message: string;
   seen: boolean;
   timestamp: number;
@@ -188,16 +189,21 @@ export const getConversationMessages = async (
         if (
           typeof data === "object" &&
           data !== null &&
-          typeof (data as any).driverId === "string" &&
-          typeof (data as any).message === "string" &&
+          (typeof (data as any).driverId === "string" ||
+            typeof (data as any).driverId === "number") &&
           typeof (data as any).seen === "boolean" &&
-          typeof (data as any).timestamp === "number"
+          typeof (data as any).timestamp === "number" &&
+          Number.isFinite((data as any).timestamp)
         ) {
           return [
             {
               id,
-              driverId: (data as any).driverId,
-              message: (data as any).message,
+              driverId: String((data as any).driverId),
+              senderId:
+                (data as any).senderId !== undefined
+                  ? String((data as any).senderId)
+                  : undefined,
+              message: (data as any).message ?? "",
               seen: (data as any).seen,
               timestamp: (data as any).timestamp,
             },
@@ -273,6 +279,7 @@ export const sendMessage = async ({
 
     const msgData = {
       driverId, // identifies the receiver
+      senderId: dispatcherId,
       message,
       seen: false,
       timestamp: Date.now(),

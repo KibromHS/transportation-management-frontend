@@ -10,6 +10,7 @@ import { ref, onChildAdded, off } from "firebase/database";
 interface Message {
   id: string;
   driverId: string;
+  senderId?: string;
   message: string;
   seen: boolean;
   timestamp: number;
@@ -71,11 +72,22 @@ export function useMessages(userId: string) {
 
     const unsubscribe = onChildAdded(msgRef, (snapshot) => {
       const msgData = snapshot.val();
+      if (
+        snapshot.key === "typingStatus" ||
+        typeof msgData !== "object" ||
+        msgData === null ||
+        typeof msgData.timestamp !== "number" ||
+        !Number.isFinite(msgData.timestamp)
+      ) {
+        return;
+      }
+
       const newMsg: Message = {
         id: snapshot.key || "",
-        driverId: msgData.driverId,
-        message: msgData.message,
-        seen: msgData.seen,
+        driverId: String(msgData.driverId ?? ""),
+        senderId: msgData.senderId ? String(msgData.senderId) : undefined,
+        message: msgData.message ?? "",
+        seen: msgData.seen === true,
         timestamp: msgData.timestamp,
       };
 

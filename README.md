@@ -108,4 +108,4 @@ See [`.github/DEPLOY.md`](.github/DEPLOY.md) for required secrets (SSH key, cPan
 
 ## License
 
-Proprietary. © Cepheus Tech.
+Proprietary. © Cepheus Softwares.
